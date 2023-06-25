@@ -13,7 +13,7 @@ from variableValues.dialogs.base import DesignSpaceSelector
 class VarFontAssistant(DesignSpaceSelector):
     
     title             = 'VarFont Assistant'
-    key               = 'com.hipertipo.varFontAssistant'
+    key               = 'com.fontBureau.varFontAssistant'
 
     _tabsTitles       = ['designspace', 'font values', 'measurements', 'glyph values', 'kerning']
 

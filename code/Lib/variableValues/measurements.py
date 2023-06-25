@@ -30,6 +30,14 @@ def getPointAtIndex(glyph, i):
     ci, pi = points[i]
     return glyph.contours[ci].points[pi]
 
+def getIndexForPoint(glyph, pt):
+    n = 0
+    for ci, c in enumerate(glyph.contours):
+        for pi, p in enumerate(c.points):
+            if p == pt:
+                return n
+            n += 1
+
 def exportMeasurementDescriptionsToCSV(measurements, csvPath):
     '''
     Export list of measurement descriptions to CSV file.
@@ -112,7 +120,7 @@ class FontMeasurements:
 
 class Measurement:
 
-    labels = ['parameter', 'name', 'direction', 'note', 'glyph 1', 'point index 1', 'glyph 2', 'point index 2', 'formula']
+    labels = ['parameter', 'name', 'direction', 'note', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'formula']
 
     def __init__(self, font, mTuple):
         self.font        = font
