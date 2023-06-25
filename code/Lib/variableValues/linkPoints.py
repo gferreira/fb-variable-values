@@ -7,7 +7,39 @@ Tools to work with linked pairs of points.
 
 KEY = 'com.fontBureau.glyphMeasurements'
 
-def makeLink(pt1, pt2):
+def getPointAtIndex(glyph, i):
+    # make a linear index of all points
+    n = 0
+    points = {}
+    for ci, c in enumerate(glyph.contours):
+        for pi, p in enumerate(c.points):
+            points[n] = ci, pi
+            n += 1
+    # n+1 : right margin
+    if i > len(points)-1:
+        P = RPoint()
+        P.x = glyph.width
+        P.y = 0
+        return P
+    # -1 : left margin
+    if i < 0:
+        P = RPoint()
+        P.x = 0
+        P.y = 0
+        return P
+    # get point at index
+    ci, pi = points[i]
+    return glyph.contours[ci].points[pi]
+
+def getIndexForPoint(glyph, pt):
+    n = 0
+    for ci, c in enumerate(glyph.contours):
+        for pi, p in enumerate(c.points):
+            if p == pt:
+                return n
+            n += 1
+
+def makeLink(glyph, pt1, pt2):
     '''
     Create a link between two given points.
 
@@ -19,12 +51,11 @@ def makeLink(pt1, pt2):
         A tuple of two identifiers, one for each point.
 
     '''
-    ID1 = pt1.identifier if pt1.identifier else pt1.getIdentifier()
-    ID2 = pt2.identifier if pt2.identifier else pt2.getIdentifier()
-    return ID1, ID2
+    index1 = getIndexForPoint(glyph, pt1)
+    index2 = getIndexForPoint(glyph, pt2)
+    return index1, index2
 
-def linkSelectedPoints(glyph):
-
+def linkSelectedPoints(glyph, verbose=True):
     '''
     Create a new link between two selected points.
 
@@ -37,13 +68,14 @@ def linkSelectedPoints(glyph):
     '''
 
     if not len(glyph.selectedPoints) == 2:
-        print('please select two points')
+        if verbose:
+            print('please select two points')
         return
 
     pt1 = glyph.selectedPoints[0]
     pt2 = glyph.selectedPoints[1]
 
-    return makeLink(pt1, pt2)
+    return makeLink(glyph, pt1, pt2)
 
 def saveLinkToLib(glyph, link, name=None, direction=None, key=KEY, verbose=True):
     '''
@@ -51,16 +83,16 @@ def saveLinkToLib(glyph, link, name=None, direction=None, key=KEY, verbose=True)
 
     Args:
         glyph (RGlyph): A glyph object.
-        link (tuple): A pair of point identifiers defining a link.
+        link (tuple): A pair of point indexes defining a link.
         name (str): The name of the link. (optional)
-        direction (str): The direction of the measurement (x/y). ### TO-DO: add angled
+        direction (str): The direction of the measurement (x/y/a).
         key (str): The key to the lib where the links will be stored.
 
     '''
     if key not in glyph.lib:
         glyph.lib[key] = {}
 
-    if link in glyph.lib[key]:
+    if link in glyph.lib[key] or reversed(link) in glyph.lib[key]:
         if verbose:
             print('link already in lib')
         return
@@ -68,12 +100,14 @@ def saveLinkToLib(glyph, link, name=None, direction=None, key=KEY, verbose=True)
     linkID = f'{link[0]} {link[1]}'
     glyph.lib[key][linkID] = {}
 
+    if verbose:
+        print(f'saving link "{linkID}" to lib...')
+
     if name is not None:
         glyph.lib[key][linkID]['name'] = name
 
     if direction is not None:
         glyph.lib[key][linkID]['direction'] = direction
-
 
 def linkPoints(glyph, name=None, direction=None, key=KEY):
     '''
@@ -87,7 +121,7 @@ def linkPoints(glyph, name=None, direction=None, key=KEY):
 
     '''
     L = linkSelectedPoints(glyph)
-    if not L:
+    if L is None:
         return
     saveLinkToLib(glyph, L, name=name, direction=direction, key=key)
 
@@ -167,7 +201,7 @@ def setLinks(glyph, links, key=KEY):
     '''
     glyph.lib[key] = links
 
-def getPoint(glyph, pointID):
+def getPointFromID(glyph, pointID):
     '''
     Get point object from a point identifier.
 

@@ -19,17 +19,17 @@ from variableValues.linkPoints import *
 '''
 A tool to measure the distance between specific pairs of points and save them into the lib.
 
-f'{ptID1} {ptID2}' : {
+f'{ptIndex1} {ptIndex2}' : {
     'name'      : 'XTRA',
     'direction' : 'x',
 }
 
-f'{ptID1} {ptID2}' : {
+f'{ptIndex1} {ptIndex2}' : {
     'name'      : 'YTRA',
     'direction' : 'y',
 }
 
-f'{ptID}' : {
+f'{ptIndex1}' : {
     'name'      : 'XXXX',
     'direction' : 'a',
     'side'      : 0,
@@ -120,14 +120,7 @@ class GlyphMeasurements(BaseWindowController):
     def selectedMeasurementIDs(self, glyph):
         if not self.selectedMeasurements:
             return
-        IDs = []
-        for m in self.selectedMeasurements:
-            if 'point 1' in m and 'point 2' in m:
-                p1 = getPointAtIndex(glyph, int(m['point 1']))
-                p2 = getPointAtIndex(glyph, int(m['point 2']))
-                L = makeLink(p1, p2)
-                IDs.append(f'{L[0]} {L[1]}')
-        return IDs
+        return [f"{m['point 1']} {m['point 2']}" for m in self.selectedMeasurements]
 
     # ---------
     # callbacks
@@ -168,14 +161,22 @@ class GlyphMeasurements(BaseWindowController):
         deleteAllLinks(g)
 
         for item in items:       
+            if item['point 1'] is None:
+                continue
+
             name = item.get('name')
             direction = item.get('direction')
             pt1 = getPointAtIndex(g, int(item['point 1']))
             pt2 = getPointAtIndex(g, int(item['point 2']))
-
-            L = makeLink(pt1, pt2)
-
-            saveLinkToLib(g, L, name=name, direction=direction)
+            L = makeLink(g, pt1, pt2)
+            if str(name) != '<null>' and str(direction) == '<null>':
+                if name[0] == 'X':
+                    direction = 'x'
+                    item['direction'] = 'x'
+                if name[0] == 'Y':
+                    direction = 'y'
+                    item['direction'] = 'y'
+            saveLinkToLib(g, L, name=name, direction=direction, verbose=False)
 
     def loadMeasurements(self, sender):
 
@@ -188,14 +189,12 @@ class GlyphMeasurements(BaseWindowController):
 
         listItems = []
         for key in measurements.keys():
-            id1, id2 = key.split()
-            p1 = getPoint(g, id1)
-            p2 = getPoint(g, id2)
+            index1, index2 = key.split()
             listItem = {
                 'name'      : measurements[key].get('name'),
                 'direction' : measurements[key].get('direction'), 
-                'point 1'   : getIndexForPoint(g, p1),
-                'point 2'   : getIndexForPoint(g, p2), 
+                'point 1'   : int(index1),
+                'point 2'   : int(index2), 
             }
             listItems.append(listItem)
 
@@ -254,14 +253,13 @@ class GlyphMeasurements(BaseWindowController):
 
             ctx.textBox(txt, (x, y, w, h), align='center')
 
+        selectedMeasurementIDs = self.selectedMeasurementIDs(glyph)
+
         for linkID, L in links.items():
 
-            ID1, ID2 = linkID.split()
-            pt1 = getPoint(glyph, ID1)
-            pt2 = getPoint(glyph, ID2)
-
-            color = 0, 0.5, 1
-            sw = 3*previewScale
+            index1, index2 = linkID.split()
+            pt1 = getPointAtIndex(glyph, int(index1))
+            pt2 = getPointAtIndex(glyph, int(index2))
 
             if L['direction'] == 'x':
                 P1 = pt1.x, pt1.y
@@ -274,32 +272,31 @@ class GlyphMeasurements(BaseWindowController):
                 P2 = pt2.x, pt2.y
 
             ctx.save()
-            ctx.fill(None)
-            ctx.strokeWidth(sw)
 
-            selectedMeasurementIDs = self.selectedMeasurementIDs(glyph)
+            # draw link
+            ctx.stroke(0, 0, 1)
+            ctx.strokeWidth(1*previewScale)
+            ctx.lineDash(2*previewScale, 2*previewScale)
+            ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
 
             if selectedMeasurementIDs is not None and linkID in selectedMeasurementIDs:
-                # draw link
-                ctx.stroke(*(color + (0.35,)))
+
+                # draw measurement
+                ctx.fill(None)
+                ctx.lineDash(None)
+                ctx.stroke(0, 0, 1, 0.35)
+                ctx.strokeWidth(7*previewScale)
                 ctx.line(P1, P2)
-                ctx.lineDash(sw, sw)
-                ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
-                # draw captions
+
+                # draw caption
                 ctx.stroke(None)
-                ctx.fill(*color)
+                ctx.fill(0, 0, 1)
                 ctx.fontSize(captionFontSize)
                 _drawLinkMeasurement(P1, P2, L['name'], L['direction'])
-
-            else:
-                ctx.stroke(0.5, 0.35)
-                ctx.lineDash(sw, sw)
-                ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
 
             ctx.restore()
 
         ctx.restore()
-
 
 
 if __name__ == '__main__':

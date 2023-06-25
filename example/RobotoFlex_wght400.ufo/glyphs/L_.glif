@@ -16,4 +16,25 @@
       <point x="1052" y="0" type="line"/>
     </contour>
   </outline>
+  <lib>
+    <dict>
+      <key>com.fontBureau.glyphMeasurements</key>
+      <dict>
+        <key>0 3</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XOPQ</string>
+        </dict>
+        <key>4 5</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YOPQ</string>
+        </dict>
+      </dict>
+    </dict>
+  </lib>
 </glyph>

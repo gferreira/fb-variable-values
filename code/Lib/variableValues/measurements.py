@@ -6,38 +6,6 @@ from fontParts.fontshell.point import RPoint
 # functions
 # ---------
 
-def getPointAtIndex(glyph, i):
-    # make a linear index of all points
-    n = 0
-    points = {}
-    for ci, c in enumerate(glyph.contours):
-        for pi, p in enumerate(c.points):
-            points[n] = ci, pi
-            n += 1
-    # n+1 : right margin
-    if i > len(points)-1:
-        P = RPoint()
-        P.x = glyph.width
-        P.y = 0
-        return P
-    # -1 : left margin
-    if i < 0:
-        P = RPoint()
-        P.x = 0
-        P.y = 0
-        return P
-    # get point at index
-    ci, pi = points[i]
-    return glyph.contours[ci].points[pi]
-
-def getIndexForPoint(glyph, pt):
-    n = 0
-    for ci, c in enumerate(glyph.contours):
-        for pi, p in enumerate(c.points):
-            if p == pt:
-                return n
-            n += 1
-
 def exportMeasurementDescriptionsToCSV(measurements, csvPath):
     '''
     Export list of measurement descriptions to CSV file.
