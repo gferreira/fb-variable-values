@@ -53,7 +53,7 @@ class GlyphMeasurements(BaseWindowController):
     _colFontName = 240
     _colValue    = 80
 
-    measurementParameters = ['name', 'direction', 'point 1', 'point 2']
+    measurementParameters = ['name', 'direction', 'point 1', 'point 2', 'distance']
 
     _dataFolder = '/Users/sergiogonzalez/Desktop/hipertipo/tools/VariableValues/example/relationships'
     assert os.path.exists(_dataFolder)
@@ -61,6 +61,8 @@ class GlyphMeasurements(BaseWindowController):
     _fonts = {}
 
     def __init__(self):
+        self.glyph = CurrentGlyph()
+
         self.w = FloatingWindow(
                 (self.width, self.height), title=self.title,
                 minSize=(self.width*0.9, 360))
@@ -74,8 +76,8 @@ class GlyphMeasurements(BaseWindowController):
         y += self.lineHeight + p/2
 
         _columnDescriptions  = [{"title": self.measurementParameters[0], 'width': self._colGlyphs*1.5, 'minWidth': self._colGlyphs, 'editable': True}]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.measurementParameters[1:])]
-        # _columnDescriptions += [{"title": self.measurementParameters[-1], 'width': self._colValue, 'editable': False}]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.measurementParameters[1:-1])]
+        _columnDescriptions += [{"title": self.measurementParameters[-1], 'width': self._colValue, 'editable': False}]
 
         self.w.measurements = List(
                 (x, y, -p, -(self.lineHeight + p*2)),
@@ -96,7 +98,7 @@ class GlyphMeasurements(BaseWindowController):
             )
 
         self.setUpBaseWindowBehavior()
-        addObserver(self, 'loadMeasurements', 'currentGlyphChanged')
+        addObserver(self, "currentGlyphChanged",  "currentGlyphChanged")
         addObserver(self, "backgroundPreview", "drawBackground")
 
         self.loadMeasurements(None)
@@ -117,7 +119,8 @@ class GlyphMeasurements(BaseWindowController):
             return
         return [items[i] for i in selection]
 
-    def selectedMeasurementIDs(self, glyph):
+    @property
+    def selectedMeasurementIDs(self):
         if not self.selectedMeasurements:
             return
         return [f"{m['point 1']} {m['point 2']}" for m in self.selectedMeasurements]
@@ -143,16 +146,14 @@ class GlyphMeasurements(BaseWindowController):
         Create a link between two selected points, and save it in the glyph lib.
 
         '''
-        g = CurrentGlyph()
+        g = self.glyph # CurrentGlyph()
         if not g:
             return
-
         linkPoints(g)
-
         self.loadMeasurements(None)
 
     def editMeasurementCallback(self, sender):
-        g = CurrentGlyph()
+        g = self.glyph # CurrentGlyph()
         if not g:
             return
 
@@ -196,6 +197,10 @@ class GlyphMeasurements(BaseWindowController):
                 'point 1'   : int(index1),
                 'point 2'   : int(index2), 
             }
+            p1 = getPointAtIndex(g, int(index1))
+            p2 = getPointAtIndex(g, int(index2))
+            distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
+            listItem['distance'] = distance
             listItems.append(listItem)
 
         self.w.measurements.set(listItems)
@@ -205,20 +210,36 @@ class GlyphMeasurements(BaseWindowController):
     # ---------
 
     def backgroundPreview(self, notification):
-        g = notification['glyph']
         s = notification['scale']
-        if g is None:
+        if self.glyph is None:
             return
-        self.drawPreview(g, s)
+        self.drawPreview(self.glyph, s)
+
+    def currentGlyphChanged(self, notification):
+
+        if self.glyph is not None:
+            self.glyph.removeObserver(self, "Glyph.Changed")
+
+        self.glyph = notification['glyph']
+
+        if self.glyph is not None:
+            self.glyph.addObserver(self, "glyphChangedCallback", "Glyph.Changed")
+
+        self.loadMeasurements(None)
+
+    def glyphChangedCallback(self, notification):
+        glyph = RGlyph(notification.object)
+        for item in self.w.measurements.get():
+            p1 = getPointAtIndex(glyph, int(item['point 1']))
+            p2 = getPointAtIndex(glyph, int(item['point 2']))
+            distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
+            item['distance'] = distance
 
     # -------
     # methods
     # -------
 
     def drawPreview(self, glyph, previewScale):
-
-        # if not self.selectedMeasurementIDs(glyph):
-        #     return
 
         ctx.save()
 
@@ -230,14 +251,16 @@ class GlyphMeasurements(BaseWindowController):
         captionFontSize = 9 * previewScale
 
         def _drawLinkMeasurement(p1, p2, name, direction):
-            if direction == 'x':
-                value = p2[0] - p1[0]
-            elif direction == 'y':
-                value = p2[1] - p1[1]
-            else:
-                value = sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
+            # if direction == 'x':
+            #     value = p2[0] - p1[0]
+            # elif direction == 'y':
+            #     value = p2[1] - p1[1]
+            # else:
+            #     value = sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
 
-            value = abs(value)
+            # value = abs(value)
+
+            value = getDistance(p1, p2, direction)
             
             if type(value) is int:
                 txt = str(value)
@@ -252,8 +275,6 @@ class GlyphMeasurements(BaseWindowController):
             y -= h * 0.4
 
             ctx.textBox(txt, (x, y, w, h), align='center')
-
-        selectedMeasurementIDs = self.selectedMeasurementIDs(glyph)
 
         for linkID, L in links.items():
 
@@ -279,7 +300,7 @@ class GlyphMeasurements(BaseWindowController):
             ctx.lineDash(2*previewScale, 2*previewScale)
             ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
 
-            if selectedMeasurementIDs is not None and linkID in selectedMeasurementIDs:
+            if self.selectedMeasurementIDs is not None and linkID in self.selectedMeasurementIDs:
 
                 # draw measurement
                 ctx.fill(None)

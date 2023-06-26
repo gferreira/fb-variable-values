@@ -34,7 +34,7 @@
     <dict>
       <key>com.fontBureau.glyphMeasurements</key>
       <dict>
-        <key>0 9</key>
+        <key>0 11</key>
         <dict>
           <key>direction</key>
           <string>x</string>
@@ -69,7 +69,7 @@
           <key>name</key>
           <string>XOPQ</string>
         </dict>
-        <key>9 12</key>
+        <key>8 12</key>
         <dict>
           <key>direction</key>
           <string>y</string>

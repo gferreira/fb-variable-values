@@ -29,4 +29,39 @@
       <point x="334" y="0" type="line"/>
     </contour>
   </outline>
+  <lib>
+    <dict>
+      <key>com.fontBureau.glyphMeasurements</key>
+      <dict>
+        <key>0 18</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XOPQ</string>
+        </dict>
+        <key>12 18</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XTRA</string>
+        </dict>
+        <key>6 15</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YOPQ</string>
+        </dict>
+        <key>9 12</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XOPQ</string>
+        </dict>
+      </dict>
+    </dict>
+  </lib>
 </glyph>

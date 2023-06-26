@@ -1,3 +1,5 @@
+from math import sqrt
+
 '''
 Tools to work with linked pairs of points.
 
@@ -247,4 +249,13 @@ def getSelectedLinks(glyph, key=KEY):
     links = getLinks(glyph)
     IDs = getSelectedIDs(glyph)
     return [(ID1, ID2) for ID1, ID2 in links if (ID1 in IDs or ID2 in IDs)]
+
+def getDistance(p1, p2, direction=None):
+    if direction == 'x':
+        value = p2[0] - p1[0]
+    elif direction == 'y':
+        value = p2[1] - p1[1]
+    else:
+        value = sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
+    return abs(value)
 
