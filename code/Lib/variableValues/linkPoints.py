@@ -41,6 +41,48 @@ def getIndexForPoint(glyph, pt):
                 return n
             n += 1
 
+def getPointFromID(glyph, pointID):
+    '''
+    Get point object from a point identifier.
+
+    Args:
+        glyph (RGlyph): A glyph object.
+        pointID (str): A point identifier.
+
+    Returns:
+        A point object (RPoint).
+
+    '''
+    for contour in glyph:
+        for pt in contour.points:
+            if pt.identifier == pointID:
+                return pt
+
+def getSelectedIDs(glyph):
+    '''
+    Get identifiers of selected points in glyph.
+
+    Args:
+        glyph (RGlyph): A glyph object.
+        key (str): The key to the lib where the links are stored.
+
+    Returns:
+        A list of identifiers of selected points.
+
+    '''
+    return [pt.identifier if pt.identifier else pt.getIdentifier() for pt in glyph.selectedPoints]
+
+def getDistance(p1, p2, direction=None):
+    if direction == 'x':
+        value = p2[0] - p1[0]
+    elif direction == 'y':
+        value = p2[1] - p1[1]
+    else:
+        value = sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
+    return abs(value)
+
+### LINKS (measurements between two points)
+
 def makeLink(glyph, pt1, pt2):
     '''
     Create a link between two given points.
@@ -103,7 +145,7 @@ def saveLinkToLib(glyph, link, name=None, direction=None, key=KEY, verbose=True)
     glyph.lib[key][linkID] = {}
 
     if verbose:
-        print(f'saving link "{linkID}" to lib...')
+        print(f'saving link "{linkID}" to the glyph lib ({glyph.name})...')
 
     if name is not None:
         glyph.lib[key][linkID]['name'] = name
@@ -203,37 +245,6 @@ def setLinks(glyph, links, key=KEY):
     '''
     glyph.lib[key] = links
 
-def getPointFromID(glyph, pointID):
-    '''
-    Get point object from a point identifier.
-
-    Args:
-        glyph (RGlyph): A glyph object.
-        pointID (str): A point identifier.
-
-    Returns:
-        A point object (RPoint).
-
-    '''
-    for contour in glyph:
-        for pt in contour.points:
-            if pt.identifier == pointID:
-                return pt
-
-def getSelectedIDs(glyph, key=KEY):
-    '''
-    Get identifiers of selected points in glyph.
-
-    Args:
-        glyph (RGlyph): A glyph object.
-        key (str): The key to the lib where the links are stored.
-
-    Returns:
-        A list of identifiers of selected points.
-
-    '''
-    return [pt.identifier if pt.identifier else pt.getIdentifier() for pt in glyph.selectedPoints]
-
 def getSelectedLinks(glyph, key=KEY):
     '''
     Get selected links in glyph.
@@ -250,12 +261,34 @@ def getSelectedLinks(glyph, key=KEY):
     IDs = getSelectedIDs(glyph)
     return [(ID1, ID2) for ID1, ID2 in links if (ID1 in IDs or ID2 in IDs)]
 
-def getDistance(p1, p2, direction=None):
-    if direction == 'x':
-        value = p2[0] - p1[0]
-    elif direction == 'y':
-        value = p2[1] - p1[1]
-    else:
-        value = sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
-    return abs(value)
+### MEASUREMENTS (font-level links)
+
+def saveLinkToLib_font(font, name, link, key=KEY, verbose=True):
+    if key not in font.lib:
+        font.lib[key] = {}
+    if verbose:
+        print(f'saving link "{name}" to the font lib ({font.info.familyName} {font.info.styleName})...')
+    if name not in font.lib[key]:
+        font.lib[key][name] = {}
+    for k, v in link.items():
+        if k is None or v is None:
+            continue
+        k, v = str(k), str(v)
+        if k == '<null>' or v == '<null>':
+            continue
+        font.lib[key][name][k] = v
+
+def deleteLink_font(font, name, key=KEY):
+    pass
+
+def deleteAllLinks_font(font, key=KEY):
+    pass
+
+def getLinks_font(font, key=KEY):
+    if key not in font.lib:
+        return {}
+    return font.lib[key]
+
+def setLinks_font(font, links, key=KEY):
+    pass
 

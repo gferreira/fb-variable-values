@@ -949,6 +949,126 @@
         <string>glyphList</string>
       </dict>
     </array>
+    <key>com.fontBureau.glyphMeasurements</key>
+    <dict>
+      <key>XOFI</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>one</string>
+        <key>glyph 2</key>
+        <string>one</string>
+        <key>point 1</key>
+        <string>0</string>
+        <key>point 2</key>
+        <string>6</string>
+      </dict>
+      <key>XOLC</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>n</string>
+        <key>glyph 2</key>
+        <string>n</string>
+        <key>point 1</key>
+        <string>0</string>
+        <key>point 2</key>
+        <string>20</string>
+      </dict>
+      <key>XOPQ</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>H</string>
+        <key>glyph 2</key>
+        <string>H</string>
+        <key>point 1</key>
+        <string>0</string>
+        <key>point 2</key>
+        <string>11</string>
+      </dict>
+      <key>XOUC</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>H</string>
+        <key>glyph 2</key>
+        <string>H</string>
+        <key>point 1</key>
+        <string>0</string>
+        <key>point 2</key>
+        <string>11</string>
+      </dict>
+      <key>XTAB</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>zero</string>
+        <key>glyph 2</key>
+        <string>xtab</string>
+        <key>point 1</key>
+        <string>0</string>
+        <key>point 2</key>
+        <string>8</string>
+      </dict>
+      <key>XTFI</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>zero</string>
+        <key>glyph 2</key>
+        <string>zero</string>
+        <key>point 1</key>
+        <string>14</string>
+        <key>point 2</key>
+        <string>20</string>
+      </dict>
+      <key>XTLC</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>n</string>
+        <key>glyph 2</key>
+        <string>n</string>
+        <key>point 1</key>
+        <string>20</string>
+        <key>point 2</key>
+        <string>12</string>
+      </dict>
+      <key>XTRA</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>H</string>
+        <key>glyph 2</key>
+        <string>H</string>
+        <key>point 1</key>
+        <string>11</string>
+        <key>point 2</key>
+        <string>8</string>
+      </dict>
+      <key>XTUC</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>H</string>
+        <key>glyph 2</key>
+        <string>H</string>
+        <key>point 1</key>
+        <string>11</string>
+        <key>point 2</key>
+        <string>8</string>
+      </dict>
+    </dict>
     <key>com.fontbureau.variableSpacing.kerning</key>
     <dict>
       <key>default</key>

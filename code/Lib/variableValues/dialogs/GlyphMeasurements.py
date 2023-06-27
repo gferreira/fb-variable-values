@@ -37,10 +37,10 @@ f'{ptIndex1}' : {
 
 '''
 
-class GlyphMeasurements(BaseWindowController):
+class FontMeasurements(BaseWindowController):
     
-    title        = 'GlyphMeasurements'
-    key          = 'com.fontBureau.glyphMeasurements'
+    title        = 'Measurements'
+    key          = 'com.fontBureau.measurements'
 
     width        = 123*5
     height       = 640
@@ -49,81 +49,161 @@ class GlyphMeasurements(BaseWindowController):
     verbose      = True
     buttonWidth  = 100
 
-    _colGlyphs   = 140
-    _colFontName = 240
+    _tabsTitles  = ['font', 'glyph', 'options']
+
+    _colGlyphs   = 120
+    # _colFontName = 240
     _colValue    = 80
 
-    measurementParameters = ['name', 'direction', 'point 1', 'point 2', 'distance']
-
-    _dataFolder = '/Users/sergiogonzalez/Desktop/hipertipo/tools/VariableValues/example/relationships'
-    assert os.path.exists(_dataFolder)
+    fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'distance']
+    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'distance']
 
     _fonts = {}
 
     def __init__(self):
-        self.glyph = CurrentGlyph()
 
         self.w = FloatingWindow(
                 (self.width, self.height), title=self.title,
                 minSize=(self.width*0.9, 360))
 
-        p = self.padding
-        x, y = p, p/2
-        self.w.measurementsLabel = TextBox(
-                (x, y, -p, self.lineHeight),
-                'measurements')
+        x = y = p = self.padding
+        self.w.tabs = Tabs((x, y, -p, -p), self._tabsTitles)
 
-        y += self.lineHeight + p/2
-
-        _columnDescriptions  = [{"title": self.measurementParameters[0], 'width': self._colGlyphs*1.5, 'minWidth': self._colGlyphs, 'editable': True}]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.measurementParameters[1:-1])]
-        _columnDescriptions += [{"title": self.measurementParameters[-1], 'width': self._colValue, 'editable': False}]
-
-        self.w.measurements = List(
-                (x, y, -p, -(self.lineHeight + p*2)),
-                [],
-                allowsMultipleSelection=True,
-                allowsEmptySelection=True,
-                selectionCallback=self.updatePreviewCallback,
-                editCallback=self.editMeasurementCallback,
-                enableDelete=True,
-                columnDescriptions=_columnDescriptions,
-            )
-
-        y = -(self.lineHeight + p)
-        self.w.newMeasurement = Button(
-                (x, y, self.buttonWidth, self.lineHeight),
-                'new',
-                callback=self.newMeasurementCallback,
-            )
+        self.initializeFontTab()
+        self.initializeGlyphTab()
+        self.initializeOptionsTab()
 
         self.setUpBaseWindowBehavior()
-        addObserver(self, "currentGlyphChanged",  "currentGlyphChanged")
-        addObserver(self, "backgroundPreview", "drawBackground")
+        addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
+        addObserver(self, "fontBecameCurrent",  "fontBecameCurrent")
+        addObserver(self, "backgroundPreview",   "drawBackground")
 
-        self.loadMeasurements(None)
+        self.font  = CurrentFont()
+        self.glyph = CurrentGlyph()
+
+        self.loadFontMeasurements(None)
+        self.loadGlyphMeasurements(None)
         self.updatePreviewCallback(None)
 
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
         self.w.open()
+
+    def initializeFontTab(self):
+
+        tab = self._tabs['font']
+
+        _columnDescriptions  = [{"title": self.fontMeasurementParameters[0], 'width': self._colGlyphs*1.5, 'minWidth': self._colGlyphs, 'editable': True}]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.fontMeasurementParameters[1:-1])]
+        _columnDescriptions += [{"title": self.fontMeasurementParameters[-1], 'width': self._colValue, 'editable': False}]
+
+        x = y = p = self.padding
+        tab.measurements = List(
+                (x, y, -p, -(self.lineHeight + p*2)),
+                [],
+                columnDescriptions=_columnDescriptions,
+                allowsMultipleSelection=True,
+                allowsEmptySelection=True,
+                enableDelete=True,
+                editCallback=self.editFontMeasurementCallback,
+            )
+
+        y = -(self.lineHeight + p)
+        tab.newMeasurement = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'new',
+                callback=self.newFontMeasurementCallback,
+            )
+
+        x = -self.buttonWidth*2 -p*2
+        tab.importMeasurements = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'import',
+                callback=self.importFontMeasurementsCallback,
+            )
+        x = -self.buttonWidth -p
+        tab.exportMeasurements = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'export',
+                callback=self.exportFontMeasurementsCallback,
+            )
+
+    def initializeGlyphTab(self):
+
+        tab = self._tabs['glyph']
+
+        _columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colGlyphs*1.5, 'minWidth': self._colGlyphs, 'editable': True}]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.glyphMeasurementParameters[1:-1])]
+        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-1], 'width': self._colValue, 'editable': False}]
+
+        x = y = p = self.padding
+        tab.measurements = List(
+                (x, y, -p, -(self.lineHeight + p*2)),
+                [],
+                columnDescriptions=_columnDescriptions,
+                allowsMultipleSelection=True,
+                allowsEmptySelection=True,
+                enableDelete=True,
+                selectionCallback=self.updatePreviewCallback,
+                editCallback=self.editGlyphMeasurementCallback,
+            )
+
+        y = -(self.lineHeight + p)
+        tab.newMeasurement = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'new',
+                callback=self.newGlyphMeasurementCallback,
+            )
+
+        x = -self.buttonWidth*2 -p*2
+        tab.importMeasurements = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'import',
+                callback=self.importGlyphMeasurementsCallback,
+            )
+        x = -self.buttonWidth -p
+        tab.exportMeasurements = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'export',
+                callback=self.exportGlyphMeasurementsCallback,
+            )
+
+    def initializeOptionsTab(self):
+        pass
 
     # -------------
     # dynamic attrs
     # -------------
 
     @property
-    def selectedMeasurements(self):
-        items = self.w.measurements.get()
-        selection = self.w.measurements.getSelection()
+    def _tabs(self):
+        tabsDict = {}
+        for tabTitle in self._tabsTitles:
+            tabIndex = self._tabsTitles.index(tabTitle)
+            tabsDict[tabTitle] = self.w.tabs[tabIndex]
+        return tabsDict
+
+    # font
+
+    @property
+    def selectedFontMeasurements(self):
+        pass
+
+    # glyph
+
+    @property
+    def selectedGlyphMeasurements(self):
+        tab = self._tabs['glyph']
+        items = tab.measurements.get()
+        selection = tab.measurements.getSelection()
         if not selection:
             return
         return [items[i] for i in selection]
 
     @property
-    def selectedMeasurementIDs(self):
-        if not self.selectedMeasurements:
+    def selectedGlyphMeasurementIDs(self):
+        if not self.selectedGlyphMeasurements:
             return
-        return [f"{m['point 1']} {m['point 2']}" for m in self.selectedMeasurements]
+        return [f"{m['point 1']} {m['point 2']}" for m in self.selectedGlyphMeasurements]
 
     # ---------
     # callbacks
@@ -138,26 +218,156 @@ class GlyphMeasurements(BaseWindowController):
         removeObserver(self, "currentGlyphChanged")
         removeObserver(self, "drawBackground")
 
-    def updatePreviewCallback(self, sender):
-        UpdateCurrentGlyphView()
+    # font
 
-    def newMeasurementCallback(self, sender):
+    def newFontMeasurementCallback(self, sender):
         '''
-        Create a link between two selected points, and save it in the glyph lib.
+        Create a link between two points, save it in the font lib, update the measurements list.
 
         '''
-        g = self.glyph # CurrentGlyph()
+        f = self.font
+        if not f:
+            return
+
+        tab = self._tabs['font']
+        newListItem = {
+            'name'      : None,
+            'direction' : None,
+            'glyph 1'   : None,
+            'point 1'   : None,
+            'glyph 2'   : None,
+            'point 2'   : None,
+        }
+        tab.measurements.append(newListItem)
+        self.updateFontDistances()
+
+    def editFontMeasurementCallback(self, sender):
+        f = self.font
+        if not f:
+            return
+
+        items = self._tabs['font'].measurements.get()
+
+        for item in items:
+            name = item.get('name')
+            if name is None or str(name) == '<null>':
+                continue
+            L = {
+                'direction' : item.get('direction'),
+                'glyph 1'   : item.get('glyph 1'),
+                'point 1'   : item.get('point 1'),
+                'glyph 2'   : item.get('glyph 2'),
+                'point 2'   : item.get('point 2'),
+            }
+
+            # guess direction from name
+            if str(L['direction']) == '<null>':
+                if name[0] == 'X':
+                    item['direction'] = 'x'
+                    L['direction'] = 'x'
+                if name[0] == 'Y':
+                    item['direction'] = 'y'
+                    L['direction'] = 'y'
+
+            saveLinkToLib_font(f, name, L, verbose=False)
+
+        self.updateFontDistances()
+
+    def updateFontDistances(self):
+        items = self._tabs['font'].measurements.get()
+        for item in items:
+            gName1 = item.get('glyph 1')
+            gName2 = item.get('glyph 2')
+            if gName1 is None or gName2 is None:
+                continue
+            gName1, gName2 = str(gName1), str(gName2)
+            if gName1 not in self.font or gName2 not in self.font:
+                continue
+            g1 = self.font[gName1]
+            g2 = self.font[gName2]
+            try:
+                index1 = int(item.get('point 1'))
+                index2 = int(item.get('point 2'))
+                p1 = getPointAtIndex(g1, index1)
+                p2 = getPointAtIndex(g2, index2)
+                distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
+                item['distance'] = distance
+            except:
+                pass
+
+    def loadFontMeasurements(self, sender):
+        '''
+        Load current measurements from the font lib into the list.
+
+        '''
+        tab = self._tabs['font']
+
+        f = self.font
+        if not f:
+            tab.measurements.set([])
+            return
+
+        measurements = getLinks_font(f)
+        if measurements is None:
+            tab.measurements.set([])
+            return
+
+        listItems = []
+        for name in measurements.keys():
+            item = {
+                'name'      : name,
+                'direction' : measurements[name].get('direction'), 
+                'glyph 1'   : measurements[name].get('glyph 1'),
+                'point 1'   : measurements[name].get('point 1'),
+                'glyph 2'   : measurements[name].get('glyph 2'),
+                'point 2'   : measurements[name].get('point 2'),
+            }
+            # if all([item.get('glyph 1'), item.get('glyph 2'), item.get('point 1'), item.get('point 2')]):
+            #     g1 = f[measurements[name].get('glyph 1')]
+            #     g2 = f[measurements[name].get('glyph 2')]
+            #     index1 = int(item.get('point 1'))
+            #     index2 = int(item.get('point 2'))
+            #     p1 = getPointAtIndex(g1, index1)
+            #     p2 = getPointAtIndex(g2, index2)
+            #     distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
+            #     item['distance'] = distance
+            listItems.append(item)
+
+        tab.measurements.set(listItems)
+        self.updateFontDistances()
+
+    def importFontMeasurementsCallback(self, sender):
+        pass
+
+    def exportFontMeasurementsCallback(self, sender):
+        pass
+
+    # glyph
+
+    def newGlyphMeasurementCallback(self, sender):
+        '''
+        Create a link between two selected points, save it in the glyph lib, update the measurements list.
+
+        '''
+        g = self.glyph
         if not g:
             return
+
         linkPoints(g)
-        self.loadMeasurements(None)
 
-    def editMeasurementCallback(self, sender):
-        g = self.glyph # CurrentGlyph()
+        self.loadGlyphMeasurements(None)
+
+    def editGlyphMeasurementCallback(self, sender):
+        '''
+        When an item is edited, clear the glyph lib, and save all items in it.
+        If we don't clear the lib, we may end up with duplicate measurements.
+        
+        '''
+        g = self.glyph
         if not g:
             return
 
-        items = self.w.measurements.get()
+        items = self._tabs['glyph'].measurements.get()
 
         deleteAllLinks(g)
 
@@ -165,11 +375,17 @@ class GlyphMeasurements(BaseWindowController):
             if item['point 1'] is None:
                 continue
 
-            name = item.get('name')
+            name      = item.get('name')
             direction = item.get('direction')
-            pt1 = getPointAtIndex(g, int(item['point 1']))
-            pt2 = getPointAtIndex(g, int(item['point 2']))
+            ptIndex1  = int(item['point 1'])
+            ptIndex2  = int(item['point 2'])
+
+            pt1 = getPointAtIndex(g, ptIndex1)
+            pt2 = getPointAtIndex(g, ptIndex2)
+
             L = makeLink(g, pt1, pt2)
+
+            # guess direction from name
             if str(name) != '<null>' and str(direction) == '<null>':
                 if name[0] == 'X':
                     direction = 'x'
@@ -177,13 +393,19 @@ class GlyphMeasurements(BaseWindowController):
                 if name[0] == 'Y':
                     direction = 'y'
                     item['direction'] = 'y'
+
             saveLinkToLib(g, L, name=name, direction=direction, verbose=False)
 
-    def loadMeasurements(self, sender):
+    def loadGlyphMeasurements(self, sender):
+        '''
+        Load current measurements from the glyph lib into the list.
 
-        g = CurrentGlyph()
+        '''
+        tab = self._tabs['glyph']
+
+        g = self.glyph
         if not g:
-            self.w.measurements.set([])
+            tab.measurements.set([])
             return
 
         measurements = getLinks(g)
@@ -191,19 +413,29 @@ class GlyphMeasurements(BaseWindowController):
         listItems = []
         for key in measurements.keys():
             index1, index2 = key.split()
+            index1, index2 = int(index1), int(index2)
             listItem = {
                 'name'      : measurements[key].get('name'),
                 'direction' : measurements[key].get('direction'), 
-                'point 1'   : int(index1),
-                'point 2'   : int(index2), 
+                'point 1'   : index1,
+                'point 2'   : index2, 
             }
-            p1 = getPointAtIndex(g, int(index1))
-            p2 = getPointAtIndex(g, int(index2))
+            p1 = getPointAtIndex(g, index1)
+            p2 = getPointAtIndex(g, index2)
             distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
             listItem['distance'] = distance
             listItems.append(listItem)
 
-        self.w.measurements.set(listItems)
+        tab.measurements.set(listItems)
+
+    def updatePreviewCallback(self, sender):
+        UpdateCurrentGlyphView()
+
+    def importGlyphMeasurementsCallback(self, sender):
+        pass
+
+    def exportGlyphMeasurementsCallback(self, sender):
+        pass
 
     # ---------
     # observers
@@ -215,8 +447,19 @@ class GlyphMeasurements(BaseWindowController):
             return
         self.drawPreview(self.glyph, s)
 
-    def currentGlyphChanged(self, notification):
+    # font
 
+    def fontBecameCurrent(self, notification):
+        self.font = notification['font']
+        self.loadFontMeasurements(None)
+
+    # glyph
+
+    def currentGlyphChanged(self, notification):
+        '''
+        When the current glyph changes, remove/add observer, update the measurements list, update the glyph view.
+
+        '''
         if self.glyph is not None:
             self.glyph.removeObserver(self, "Glyph.Changed")
 
@@ -225,11 +468,12 @@ class GlyphMeasurements(BaseWindowController):
         if self.glyph is not None:
             self.glyph.addObserver(self, "glyphChangedCallback", "Glyph.Changed")
 
-        self.loadMeasurements(None)
+        self.loadGlyphMeasurements(None)
+        self.updatePreviewCallback(None)
 
     def glyphChangedCallback(self, notification):
         glyph = RGlyph(notification.object)
-        for item in self.w.measurements.get():
+        for item in self._tabs['glyph'].measurements.get():
             p1 = getPointAtIndex(glyph, int(item['point 1']))
             p2 = getPointAtIndex(glyph, int(item['point 2']))
             distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
@@ -240,34 +484,23 @@ class GlyphMeasurements(BaseWindowController):
     # -------
 
     def drawPreview(self, glyph, previewScale):
+        '''
+        Draw the current glyph's measurements in the background of the Glyph View.
 
-        ctx.save()
-
+        '''
         links = getLinks(glyph)
-
         if not len(links):
             return
 
-        captionFontSize = 9 * previewScale
-
         def _drawLinkMeasurement(p1, p2, name, direction):
-            # if direction == 'x':
-            #     value = p2[0] - p1[0]
-            # elif direction == 'y':
-            #     value = p2[1] - p1[1]
-            # else:
-            #     value = sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
-
-            # value = abs(value)
-
             value = getDistance(p1, p2, direction)
-            
             if type(value) is int:
                 txt = str(value)
             else:
                 txt = '%.2f' % value if not value.is_integer() else str(int(value))
 
             txt = f'{name}={txt}'
+
             w, h = ctx.textSize(txt)
             x = p1[0] + (p2[0] - p1[0]) * 0.5
             y = p1[1] + (p2[1] - p1[1]) * 0.5
@@ -276,11 +509,13 @@ class GlyphMeasurements(BaseWindowController):
 
             ctx.textBox(txt, (x, y, w, h), align='center')
 
-        for linkID, L in links.items():
+        ctx.save()
 
+        for linkID, L in links.items():
             index1, index2 = linkID.split()
-            pt1 = getPointAtIndex(glyph, int(index1))
-            pt2 = getPointAtIndex(glyph, int(index2))
+            index1, index2 = int(index1), int(index2)
+            pt1 = getPointAtIndex(glyph, index1)
+            pt2 = getPointAtIndex(glyph, index2)
 
             if L['direction'] == 'x':
                 P1 = pt1.x, pt1.y
@@ -300,20 +535,19 @@ class GlyphMeasurements(BaseWindowController):
             ctx.lineDash(2*previewScale, 2*previewScale)
             ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
 
-            if self.selectedMeasurementIDs is not None and linkID in self.selectedMeasurementIDs:
-
-                # draw measurement
-                ctx.fill(None)
-                ctx.lineDash(None)
-                ctx.stroke(0, 0, 1, 0.35)
-                ctx.strokeWidth(7*previewScale)
-                ctx.line(P1, P2)
-
-                # draw caption
-                ctx.stroke(None)
-                ctx.fill(0, 0, 1)
-                ctx.fontSize(captionFontSize)
-                _drawLinkMeasurement(P1, P2, L['name'], L['direction'])
+            if self.selectedGlyphMeasurementIDs is not None:
+                if linkID in self.selectedGlyphMeasurementIDs:
+                    # draw measurement
+                    ctx.fill(None)
+                    ctx.lineDash(None)
+                    ctx.stroke(0, 0, 1, 0.35)
+                    ctx.strokeWidth(7*previewScale)
+                    ctx.line(P1, P2)
+                    # draw caption
+                    ctx.stroke(None)
+                    ctx.fill(0, 0, 1)
+                    ctx.fontSize(9*previewScale)
+                    _drawLinkMeasurement(P1, P2, L['name'], L['direction'])
 
             ctx.restore()
 
@@ -322,5 +556,5 @@ class GlyphMeasurements(BaseWindowController):
 
 if __name__ == '__main__':
 
-    OpenWindow(GlyphMeasurements)
+    OpenWindow(FontMeasurements)
 
