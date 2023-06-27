@@ -8,7 +8,7 @@ from hTools3.modules.sys import pycClear, pyCacheClear, removeGitFiles
 # settings
 # --------
 
-version          = '0.1.1'
+version          = '0.1.2'
 baseFolder       = os.path.dirname(__file__)
 libFolder        = os.path.join(baseFolder, 'code', 'Lib')
 licensePath      = os.path.join(baseFolder, 'LICENSE')
@@ -42,13 +42,23 @@ def buildExtension():
     B.requiresVersionMinor = '4'
     B.addToMenu = [
         {
-            'path'          : 'variableValues/dialogs/varFontAssistant.py',
-            'preferredName' : 'VariableValues',
+            'path'          : 'variableValues/dialogs/VarFontAssistant.py',
+            'preferredName' : 'VarFont Assistant',
+            'shortKey'      : '',
+        },
+        {
+            'path'          : 'variableValues/dialogs/VarGlyphAssistant.py',
+            'preferredName' : 'VarGlyph Assistant',
+            'shortKey'      : '',
+        },
+        {
+            'path'          : 'variableValues/dialogs/GlyphMeasurements.py',
+            'preferredName' : 'Measurements',
             'shortKey'      : '',
         },
     ]
-    # with open(licensePath) as license:
-    #     B.license = license.read()
+    with open(licensePath) as license:
+        B.license = license.read()
 
     if os.path.exists(extensionPath):
         print('\tdeleting existing .roboFontExt package...')

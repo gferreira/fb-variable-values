@@ -1,9 +1,9 @@
 from math import sqrt
 
 '''
-Tools to make various kinds of measurements in a font.
+Tools to work with linked pairs of points.
 
-# based on hTools3.modules.linkPoints
+# forked from hTools3.modules.linkPoints
 
 '''
 
@@ -81,7 +81,7 @@ def getDistance(p1, p2, direction=None):
         value = sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
     return abs(value)
 
-### GLYPH-LEVEL MEASUREMENT
+### LINKS (measurements between two points)
 
 def makeLink(glyph, pt1, pt2):
     '''
@@ -261,7 +261,7 @@ def getSelectedLinks(glyph, key=KEY):
     IDs = getSelectedIDs(glyph)
     return [(ID1, ID2) for ID1, ID2 in links if (ID1 in IDs or ID2 in IDs)]
 
-### FONT-LEVEL MEASUREMENT
+### MEASUREMENTS (font-level links)
 
 def saveLinkToLib_font(font, name, link, key=KEY, verbose=True):
     if key not in font.lib:

@@ -33,6 +33,12 @@ types of changes:
 
 -->
 
+0.1.2
+-----
+
+- <span class='badge'>Added</span> Adding `Measurements` tool to create and visualize measurements at the font and glyph levels.
+- <span class='badge'>Added</span> Adding example font with font- and glyph-level measurements included.
+
 
 0.1.1
 -----

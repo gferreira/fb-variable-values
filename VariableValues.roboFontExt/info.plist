@@ -6,9 +6,25 @@
 	<array>
 		<dict>
 			<key>path</key>
-			<string>variableValues/dialogs/varFontAssistant.py</string>
+			<string>variableValues/dialogs/VarFontAssistant.py</string>
 			<key>preferredName</key>
-			<string>VariableValues</string>
+			<string>VarFont Assistant</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>path</key>
+			<string>variableValues/dialogs/VarGlyphAssistant.py</string>
+			<key>preferredName</key>
+			<string>VarGlyph Assistant</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>path</key>
+			<string>variableValues/dialogs/GlyphMeasurements.py</string>
+			<key>preferredName</key>
+			<string>Measurements</string>
 			<key>shortKey</key>
 			<string></string>
 		</dict>
@@ -32,8 +48,8 @@
 	<key>requiresVersionMinor</key>
 	<string>4</string>
 	<key>timeStamp</key>
-	<real>1686653097.226037</real>
+	<real>1687862871.1683919</real>
 	<key>version</key>
-	<string>0.1.1</string>
+	<string>0.1.2</string>
 </dict>
 </plist>
