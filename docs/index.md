@@ -14,6 +14,13 @@ RoboFont extension to view and edit values across designspace sources.
 
 ## Reference
 
+### APIs
+
+- [fontMeasurements data format](fontMeasurementsFormat)
+- [glyphMeasurements data format](glyphMeasurementsFormat)
+
+### Dialogs
+
 - [Measurements](measurements)
 - [VarFont Assistant](varfont-assistant)
 - [VarGlyph Assistant](varglyph-assistant)

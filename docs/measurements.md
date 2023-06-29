@@ -32,7 +32,7 @@ Create and edit glyph-level measurements.
 ![]({{ site.url }}/images/Measurements-2.png){: .img-fluid}
 
 new
-: Click on the button to add a new empty glyph-level measurement to the list.
+: Select two points and click on the button to add a new empty glyph-level measurement to the list.
 
 import
 : Import measurements from an external CSV file. *(not implemented yet)*
@@ -48,6 +48,7 @@ preview
   
   - a dotted line indicates a measurement between two points
   - name, direction and distance of a measurement are shown by selecting the measurement in the dialog
+
 
 options
 -------

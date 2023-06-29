@@ -33,6 +33,12 @@ types of changes:
 
 -->
 
+0.1.3
+-----
+
+- <span class='badge'>Added</span> Adding support for “ghost points” to measure glyph margins.
+
+
 0.1.2
 -----
 
