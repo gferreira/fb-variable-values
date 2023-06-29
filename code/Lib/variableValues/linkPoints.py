@@ -1,4 +1,5 @@
 from math import sqrt
+from fontParts.fontshell.point import RPoint
 
 '''
 Tools to make various kinds of measurements in a font.
@@ -11,6 +12,7 @@ KEY = 'com.fontBureau.glyphMeasurements'
 
 def getPointAtIndex(glyph, i):
     # make a linear index of all points
+    # supports "ghost points" for left/right edges
     n = 0
     points = {}
     for ci, c in enumerate(glyph.contours):

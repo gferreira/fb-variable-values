@@ -38,14 +38,14 @@
     <dict>
       <key>com.fontBureau.glyphMeasurements</key>
       <dict>
-        <key>12 19</key>
+        <key>1 0</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
           <string>YOPQ</string>
         </dict>
-        <key>2 0</key>
+        <key>12 19</key>
         <dict>
           <key>direction</key>
           <string>y</string>

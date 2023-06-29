@@ -46,19 +46,33 @@
     <dict>
       <key>com.fontBureau.glyphMeasurements</key>
       <dict>
-        <key>0 32</key>
+        <key>0 -1</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XUCS</string>
+        </dict>
+        <key>0 33</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
           <string>XOPQ</string>
         </dict>
-        <key>12 14</key>
+        <key>13 14</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
           <string>XOPQ</string>
+        </dict>
+        <key>99 13</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XUCS</string>
         </dict>
       </dict>
     </dict>

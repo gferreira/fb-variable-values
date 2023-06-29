@@ -51,8 +51,7 @@ class FontMeasurements(BaseWindowController):
 
     _tabsTitles  = ['font', 'glyph', 'options']
 
-    _colGlyphs   = 120
-    # _colFontName = 240
+    _colName     = 120
     _colValue    = 80
 
     fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'distance']
@@ -75,7 +74,7 @@ class FontMeasurements(BaseWindowController):
 
         self.setUpBaseWindowBehavior()
         addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
-        addObserver(self, "fontBecameCurrent",  "fontBecameCurrent")
+        addObserver(self, "fontBecameCurrent",   "fontBecameCurrent")
         addObserver(self, "backgroundPreview",   "drawBackground")
 
         self.font  = CurrentFont()
@@ -92,7 +91,7 @@ class FontMeasurements(BaseWindowController):
 
         tab = self._tabs['font']
 
-        _columnDescriptions  = [{"title": self.fontMeasurementParameters[0], 'width': self._colGlyphs*1.5, 'minWidth': self._colGlyphs, 'editable': True}]
+        _columnDescriptions  = [{"title": self.fontMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]
         _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.fontMeasurementParameters[1:-1])]
         _columnDescriptions += [{"title": self.fontMeasurementParameters[-1], 'width': self._colValue, 'editable': False}]
 
@@ -131,7 +130,7 @@ class FontMeasurements(BaseWindowController):
 
         tab = self._tabs['glyph']
 
-        _columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colGlyphs*1.5, 'minWidth': self._colGlyphs, 'editable': True}]
+        _columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]
         _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.glyphMeasurementParameters[1:-1])]
         _columnDescriptions += [{"title": self.glyphMeasurementParameters[-1], 'width': self._colValue, 'editable': False}]
 
@@ -380,10 +379,7 @@ class FontMeasurements(BaseWindowController):
             ptIndex1  = int(item['point 1'])
             ptIndex2  = int(item['point 2'])
 
-            pt1 = getPointAtIndex(g, ptIndex1)
-            pt2 = getPointAtIndex(g, ptIndex2)
-
-            L = makeLink(g, pt1, pt2)
+            L = ptIndex1, ptIndex2
 
             # guess direction from name
             if str(name) != '<null>' and str(direction) == '<null>':
@@ -419,7 +415,7 @@ class FontMeasurements(BaseWindowController):
                 'direction' : measurements[key].get('direction'), 
                 'point 1'   : index1,
                 'point 2'   : index2, 
-            }
+            }   
             p1 = getPointAtIndex(g, index1)
             p2 = getPointAtIndex(g, index2)
             distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
@@ -531,8 +527,8 @@ class FontMeasurements(BaseWindowController):
 
             # draw link
             ctx.stroke(0, 0, 1)
-            ctx.strokeWidth(1*previewScale)
-            ctx.lineDash(2*previewScale, 2*previewScale)
+            ctx.strokeWidth(2*previewScale)
+            ctx.lineDash(3*previewScale, 3*previewScale)
             ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
 
             if self.selectedGlyphMeasurementIDs is not None:

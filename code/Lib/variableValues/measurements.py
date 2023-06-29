@@ -1,6 +1,5 @@
 import os, csv
 from fontTools.agl import UV2AGL
-from fontParts.fontshell.point import RPoint
 
 # ---------
 # functions

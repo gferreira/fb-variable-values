@@ -7,7 +7,7 @@
   <anchor x="634" y="1456" name="top"/>
   <outline>
     <contour>
-      <point x="170" y="0" type="line"/>
+      <point x="170" y="-1" type="line"/>
       <point x="170" y="1456" type="line"/>
       <point x="1084" y="1456" type="line"/>
       <point x="1084" y="1298" type="line"/>
@@ -18,13 +18,20 @@
       <point x="362" y="672" type="line"/>
       <point x="362" y="158" type="line"/>
       <point x="1094" y="158" type="line"/>
-      <point x="1094" y="0" type="line"/>
+      <point x="1094" y="-1" type="line"/>
     </contour>
   </outline>
   <lib>
     <dict>
       <key>com.fontBureau.glyphMeasurements</key>
       <dict>
+        <key>0 -1</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XUCS</string>
+        </dict>
         <key>0 9</key>
         <dict>
           <key>direction</key>
@@ -46,7 +53,7 @@
           <key>name</key>
           <string>YOPQ</string>
         </dict>
-        <key>6 7</key>
+        <key>5 8</key>
         <dict>
           <key>direction</key>
           <string>y</string>
