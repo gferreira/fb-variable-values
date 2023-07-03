@@ -13,4 +13,18 @@
       <point x="490" y="0" type="line"/>
     </contour>
   </outline>
+  <lib>
+    <dict>
+      <key>com.fontBureau.glyphMeasurements</key>
+      <dict>
+        <key>2 3</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YOFI</string>
+        </dict>
+      </dict>
+    </dict>
+  </lib>
 </glyph>

@@ -43,21 +43,21 @@
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOLC</string>
         </dict>
         <key>12 19</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOLC</string>
         </dict>
         <key>4 9</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XOPQ</string>
+          <string>XOLC</string>
         </dict>
       </dict>
     </dict>

@@ -59,68 +59,75 @@
     <dict>
       <key>com.fontBureau.glyphMeasurements</key>
       <dict>
+        <key>-1 28</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTDE</string>
+        </dict>
         <key>11 34</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOLC</string>
         </dict>
         <key>14 -1</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XUCR</string>
+          <string>XLCR</string>
         </dict>
         <key>15 44</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XOPQ</string>
+          <string>XOLC</string>
         </dict>
         <key>18 41</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOLC</string>
         </dict>
         <key>25 37</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XOPQ</string>
+          <string>XOLC</string>
         </dict>
         <key>34 41</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YTRA</string>
+          <string>YTLC</string>
         </dict>
         <key>37 44</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XTRA</string>
+          <string>XTLC</string>
         </dict>
         <key>4 28</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOLC</string>
         </dict>
         <key>99 25</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XUCR</string>
+          <string>XLCR</string>
         </dict>
       </dict>
     </dict>

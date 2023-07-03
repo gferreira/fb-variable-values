@@ -47,28 +47,28 @@
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XOPQ</string>
+          <string>XOLC</string>
         </dict>
         <key>10 11</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XOPQ</string>
+          <string>XOLC</string>
         </dict>
         <key>3 9</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XTRA</string>
+          <string>XTLC</string>
         </dict>
         <key>6 18</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOLC</string>
         </dict>
         <key>99 12</key>
         <dict>

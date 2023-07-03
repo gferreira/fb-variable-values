@@ -26,14 +26,14 @@
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOUC</string>
         </dict>
         <key>4 7</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XOPQ</string>
+          <string>XOUC</string>
         </dict>
       </dict>
     </dict>

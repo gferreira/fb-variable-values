@@ -73,42 +73,42 @@
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XOPQ</string>
+          <string>XOLC</string>
         </dict>
         <key>12 13</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XOPQ</string>
+          <string>XOLC</string>
         </dict>
         <key>21 41</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XOPQ</string>
+          <string>XOLC</string>
         </dict>
         <key>3 43</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOLC</string>
         </dict>
         <key>32 38</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOLC</string>
         </dict>
         <key>35 41</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XTRA</string>
+          <string>XTLC</string>
         </dict>
         <key>46 21</key>
         <dict>
@@ -122,14 +122,14 @@
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YOPQ</string>
+          <string>YOLC</string>
         </dict>
         <key>8 38</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
-          <string>YTRA</string>
+          <string>YTLC</string>
         </dict>
       </dict>
     </dict>

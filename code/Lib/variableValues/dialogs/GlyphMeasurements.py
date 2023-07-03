@@ -51,11 +51,11 @@ class FontMeasurements(BaseWindowController):
 
     _tabsTitles  = ['font', 'glyph', 'options']
 
-    _colName     = 120
-    _colValue    = 80
+    _colName     = 95
+    _colValue    = 65   
 
     fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'distance']
-    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'distance']
+    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'distance', 'font'] # 'factor'
 
     _fonts = {}
 
@@ -131,8 +131,8 @@ class FontMeasurements(BaseWindowController):
         tab = self._tabs['glyph']
 
         _columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.glyphMeasurementParameters[1:-1])]
-        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-1], 'width': self._colValue, 'editable': False}]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-2])]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-2:])]
 
         x = y = p = self.padding
         tab.measurements = List(
@@ -321,15 +321,6 @@ class FontMeasurements(BaseWindowController):
                 'glyph 2'   : measurements[name].get('glyph 2'),
                 'point 2'   : measurements[name].get('point 2'),
             }
-            # if all([item.get('glyph 1'), item.get('glyph 2'), item.get('point 1'), item.get('point 2')]):
-            #     g1 = f[measurements[name].get('glyph 1')]
-            #     g2 = f[measurements[name].get('glyph 2')]
-            #     index1 = int(item.get('point 1'))
-            #     index2 = int(item.get('point 2'))
-            #     p1 = getPointAtIndex(g1, index1)
-            #     p2 = getPointAtIndex(g2, index2)
-            #     distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
-            #     item['distance'] = distance
             listItems.append(item)
 
         tab.measurements.set(listItems)
@@ -410,9 +401,11 @@ class FontMeasurements(BaseWindowController):
         for key in measurements.keys():
             index1, index2 = key.split()
             index1, index2 = int(index1), int(index2)
+            name = measurements[key].get('name')
+            direction = measurements[key].get('direction')
             listItem = {
-                'name'      : measurements[key].get('name'),
-                'direction' : measurements[key].get('direction'), 
+                'name'      : name,
+                'direction' : direction, 
                 'point 1'   : index1,
                 'point 2'   : index2, 
             }   
@@ -420,6 +413,20 @@ class FontMeasurements(BaseWindowController):
             p2 = getPointAtIndex(g, index2)
             distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
             listItem['distance'] = distance
+            # get font measurement
+            fontMeasurements = self._tabs['font'].measurements.get()
+            if name is not None:
+                for m in fontMeasurements:
+                    if name != m['name']:
+                        continue
+                    listItem['font'] = m['distance']
+                    try:
+                        listItem['factor'] = fontDistance / float(m.get('distance'))
+                    except:
+                        if self.verbose:
+                            print(f'no font distance for {name}')
+                        pass
+
             listItems.append(listItem)
 
         tab.measurements.set(listItems)
