@@ -14,25 +14,94 @@ from mojo.roboFont import *
 from mojo.events import addObserver, removeObserver
 from variableValues.measurements import *
 from variableValues.linkPoints import *
+from hTools3.modules.color import rgb2nscolor, nscolor2rgb
+# from hTools3.modules.color import rgb2nscolor, nscolor2rgb
+
+from AppKit import NSColor
+
+def rgb2nscolor(rgbColor):
+    '''
+    Convert RGB color tuple to NSColor object.
+
+    Args:
+        rgbColor (tuple): RGB color as a tuple of 1, 2, 3 or 4 values (floats between 0 and 1).
+
+    Returns:
+        A NSColor object.
+
+    >>> rgbColor = 1, 0, 0
+    >>> rgb2nscolor(rgbColor)
+    NSCalibratedRGBColorSpace 1 0 0 1
+
+    '''
+    if rgbColor is None:
+        return
+    elif len(rgbColor) == 1:
+        r = g = b = rgbColor[0]
+        a = 1.0
+    elif len(rgbColor) == 2:
+        grey, a = rgbColor
+        r = g = b = grey
+    elif len(rgbColor) == 3:
+        r, g, b = rgbColor
+        a = 1.0
+    elif len(rgbColor) == 4:
+        r, g, b, a = rgbColor
+    else:
+        return
+    nsColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(r, g, b, a)
+    return nsColor
+
+def nscolor2rgb(nsColor):
+    '''
+    Convert from NSColor object to RGBA color tuple.
+
+    Args:
+        nsColor (NSColor): A color object.
+
+    Returns:
+        A tuple of RGBA values.
+
+    >>> nsColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(0, .5, 1, .8)
+    >>> nsColorToRGB(nsColor)
+    (0.0, 0.5, 1.0, 0.8)
+
+    '''
+    r = nsColor.redComponent()
+    g = nsColor.greenComponent()
+    b = nsColor.blueComponent()
+    a = nsColor.alphaComponent()
+    return r, g, b, a
 
 
 '''
-A tool to measure the distance between specific pairs of points and save them into the lib.
+M E A S U R E M E N T S
 
-f'{ptIndex1} {ptIndex2}' : {
-    'name'      : 'XTRA',
+A tool to measure distances between glyph points and store them into the font.
+
+Font Measurements
+-----------------
+
+f'{name}' : {
+    'glyph 1'   : 'XTRA',
+    'point 1'   : 'XTRA',
+    'glyph 2'   : 'XTRA',
+    'point 2'   : 'XTRA',
     'direction' : 'x',
 }
 
+
+Glyph Measurements
+------------------
+
 f'{ptIndex1} {ptIndex2}' : {
-    'name'      : 'YTRA',
-    'direction' : 'y',
+    'name'      : 'XTRA',
+    'direction' : 'x', # y
 }
 
-f'{ptIndex1}' : {
-    'name'      : 'XXXX',
-    'direction' : 'a',
-    'side'      : 0,
+f'{ptIndex}' : {
+    'name'      : 'YTAS',
+    'direction' : 0, # 1
 }
 
 '''
@@ -47,9 +116,11 @@ class FontMeasurements(BaseWindowController):
     padding      = 10
     lineHeight   = 22
     verbose      = True
-    buttonWidth  = 100
+    buttonWidth  = 80
+    buttonHeight = 25
+    sizeStyle    = 'normal'
 
-    _tabsTitles  = ['font', 'glyph', 'options']
+    _tabsTitles  = ['font', 'glyph']
 
     _colName     = 95
     _colValue    = 65   
@@ -58,6 +129,12 @@ class FontMeasurements(BaseWindowController):
     glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'distance', 'font'] # 'factor'
 
     _fonts = {}
+
+    settings = {
+        'measurementsColor' : (1, 0, 0, 1),
+        'strokeWidth1'      : 1,
+        'strokeWidth2'      : 20,
+    }
 
     def __init__(self):
 
@@ -70,7 +147,7 @@ class FontMeasurements(BaseWindowController):
 
         self.initializeFontTab()
         self.initializeGlyphTab()
-        self.initializeOptionsTab()
+        # self.initializeOptionsTab()
 
         self.setUpBaseWindowBehavior()
         addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
@@ -153,6 +230,13 @@ class FontMeasurements(BaseWindowController):
                 callback=self.newGlyphMeasurementCallback,
             )
 
+        x += self.buttonWidth + p
+        tab.measurementsColor = ColorWell(
+                (x, y, self.buttonWidth, self.lineHeight),
+                callback=self.measurementsColorCallback,
+                color=rgb2nscolor(self.settings['measurementsColor'])
+            )
+
         x = -self.buttonWidth*2 -p*2
         tab.importMeasurements = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
@@ -165,9 +249,6 @@ class FontMeasurements(BaseWindowController):
                 'export',
                 callback=self.exportGlyphMeasurementsCallback,
             )
-
-    def initializeOptionsTab(self):
-        pass
 
     # -------------
     # dynamic attrs
@@ -203,6 +284,17 @@ class FontMeasurements(BaseWindowController):
         if not self.selectedGlyphMeasurements:
             return
         return [f"{m['point 1']} {m['point 2']}" for m in self.selectedGlyphMeasurements]
+
+    # options
+
+    @property
+    def measurementsColor(self):
+        return self.settings.get('measurementsColor')
+
+    @property
+    def measurementsColorDim(self):
+        r, g, b, a = self.measurementsColor
+        return r, g, b, 0.35
 
     # ---------
     # callbacks
@@ -336,7 +428,10 @@ class FontMeasurements(BaseWindowController):
 
     def newGlyphMeasurementCallback(self, sender):
         '''
-        Create a link between two selected points, save it in the glyph lib, update the measurements list.
+        Create a link between two selected points.
+
+        - save new measurement in the glyph lib
+        - reload all measurements from the glyph lib into the list
 
         '''
         g = self.glyph
@@ -349,7 +444,11 @@ class FontMeasurements(BaseWindowController):
 
     def editGlyphMeasurementCallback(self, sender):
         '''
-        When an item is edited, clear the glyph lib, and save all items in it.
+        When a measurement list item is edited: 
+
+        - clear the glyph lib
+        - save all measurement items in it
+
         If we don't clear the lib, we may end up with duplicate measurements.
         
         '''
@@ -385,7 +484,7 @@ class FontMeasurements(BaseWindowController):
 
     def loadGlyphMeasurements(self, sender):
         '''
-        Load current measurements from the glyph lib into the list.
+        Load all measurements from the glyph lib into the measurements list.
 
         '''
         tab = self._tabs['glyph']
@@ -413,6 +512,7 @@ class FontMeasurements(BaseWindowController):
             p2 = getPointAtIndex(g, index2)
             distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
             listItem['distance'] = distance
+
             # get font measurement
             fontMeasurements = self._tabs['font'].measurements.get()
             if name is not None:
@@ -440,19 +540,43 @@ class FontMeasurements(BaseWindowController):
     def exportGlyphMeasurementsCallback(self, sender):
         pass
 
+    def measurementsColorCallback(self, sender):
+        '''
+        Change the measurements color and update the glyph view.
+
+        TO-DO: save the chosen color into custom RF preference
+
+        '''
+        tab = self._tabs['glyph']
+        color = tab.measurementsColor.get()
+        self.settings['measurementsColor'] = nscolor2rgb(color)
+        self.updatePreviewCallback(None)
+
     # ---------
     # observers
     # ---------
 
     def backgroundPreview(self, notification):
+        '''
+        Draw a visualization of the glyph measurements in the Glyph View.
+
+        '''
         s = notification['scale']
+
         if self.glyph is None:
             return
+
         self.drawPreview(self.glyph, s)
 
     # font
 
     def fontBecameCurrent(self, notification):
+        '''
+        When the current font changes:
+
+        - update the font measurements list
+
+        '''
         self.font = notification['font']
         self.loadFontMeasurements(None)
 
@@ -460,7 +584,11 @@ class FontMeasurements(BaseWindowController):
 
     def currentGlyphChanged(self, notification):
         '''
-        When the current glyph changes, remove/add observer, update the measurements list, update the glyph view.
+        When the current glyph changes:
+
+        - remove/add glyph observers
+        - update the glyph measurements list
+        - update the glyph view
 
         '''
         if self.glyph is not None:
@@ -469,12 +597,18 @@ class FontMeasurements(BaseWindowController):
         self.glyph = notification['glyph']
 
         if self.glyph is not None:
-            self.glyph.addObserver(self, "glyphChangedCallback", "Glyph.Changed")
+            self.glyph.addObserver(self, "glyphChangedObserver", "Glyph.Changed")
 
         self.loadGlyphMeasurements(None)
         self.updatePreviewCallback(None)
 
-    def glyphChangedCallback(self, notification):
+    def glyphChangedObserver(self, notification):
+        '''
+        When the current glyph is changed:
+
+        - recalculate distances between points
+
+        '''
         glyph = RGlyph(notification.object)
         for item in self._tabs['glyph'].measurements.get():
             p1 = getPointAtIndex(glyph, int(item['point 1']))
@@ -533,8 +667,8 @@ class FontMeasurements(BaseWindowController):
             ctx.save()
 
             # draw link
-            ctx.stroke(0, 0, 1)
-            ctx.strokeWidth(2*previewScale)
+            ctx.stroke(*self.measurementsColor)
+            ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
             ctx.lineDash(3*previewScale, 3*previewScale)
             ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
 
@@ -543,12 +677,12 @@ class FontMeasurements(BaseWindowController):
                     # draw measurement
                     ctx.fill(None)
                     ctx.lineDash(None)
-                    ctx.stroke(0, 0, 1, 0.35)
-                    ctx.strokeWidth(7*previewScale)
+                    ctx.stroke(*self.measurementsColorDim)
+                    ctx.strokeWidth(self.settings['strokeWidth2']*previewScale)
                     ctx.line(P1, P2)
                     # draw caption
                     ctx.stroke(None)
-                    ctx.fill(0, 0, 1)
+                    ctx.fill(*self.measurementsColor)
                     ctx.fontSize(9*previewScale)
                     _drawLinkMeasurement(P1, P2, L['name'], L['direction'])
 
