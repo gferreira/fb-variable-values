@@ -1,6 +1,8 @@
 from importlib import reload
 import variableValues.measurements
 reload(variableValues.measurements)
+import variableValues.dialogs.base
+reload(variableValues.dialogs.base)
 
 import AppKit
 import os
@@ -15,7 +17,7 @@ class VarFontAssistant(DesignSpaceSelector):
     title             = 'VarFont Assistant'
     key               = 'com.fontBureau.varFontAssistant'
 
-    _tabsTitles       = ['designspace', 'font values', 'measurements', 'glyph values', 'kerning']
+    _tabsTitles       = ['designspace', 'font values', 'glyph values', 'kerning', 'measurements']
 
     _measurementFiles = {}
     _measurements     = {}
@@ -60,9 +62,9 @@ class VarFontAssistant(DesignSpaceSelector):
 
         self.initializeDesignspacesTab()
         self.initializeFontValuesTab()
-        self.initializeMeasurementsTab()
         self.initializeGlyphValuesTab()
         self.initializeKerningTab()
+        self.initializeMeasurementsTab()
 
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
         self.w.open()
@@ -1027,6 +1029,7 @@ class VarFontAssistant(DesignSpaceSelector):
                 "title"    : 'file name',
                 'width'    : self._colFontName*1.5,
                 'minWidth' : self._colFontName,
+                'maxWidth' : self._colFontName*3,
             },
             {
                 "title"    : 'value',

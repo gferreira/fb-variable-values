@@ -14,7 +14,6 @@ from mojo.roboFont import *
 from mojo.events import addObserver, removeObserver
 from variableValues.measurements import *
 from variableValues.linkPoints import *
-from hTools3.modules.color import rgb2nscolor, nscolor2rgb
 # from hTools3.modules.color import rgb2nscolor, nscolor2rgb
 
 from AppKit import NSColor
@@ -134,6 +133,7 @@ class FontMeasurements(BaseWindowController):
         'measurementsColor' : (1, 0, 0, 1),
         'strokeWidth1'      : 1,
         'strokeWidth2'      : 20,
+        'radius1'           : 10,
     }
 
     def __init__(self):
@@ -283,7 +283,14 @@ class FontMeasurements(BaseWindowController):
     def selectedGlyphMeasurementIDs(self):
         if not self.selectedGlyphMeasurements:
             return
-        return [f"{m['point 1']} {m['point 2']}" for m in self.selectedGlyphMeasurements]
+        IDs = []
+        for m in self.selectedGlyphMeasurements:
+            if m['point 2'] is not None:
+                ID = f"{m['point 1']} {m['point 2']}"
+            else:
+                ID = f"{m['point 1']}"
+            IDs.append(ID)
+        return IDs
 
     # options
 
@@ -438,7 +445,10 @@ class FontMeasurements(BaseWindowController):
         if not g:
             return
 
-        linkPoints(g)
+        if len(g.selectedPoints) == 1:
+            newMeasurePoint(g)
+        else:
+            linkPoints(g)
 
         self.loadGlyphMeasurements(None)
 
@@ -467,20 +477,28 @@ class FontMeasurements(BaseWindowController):
             name      = item.get('name')
             direction = item.get('direction')
             ptIndex1  = int(item['point 1'])
-            ptIndex2  = int(item['point 2'])
+            ptIndex2  = item['point 2']
 
-            L = ptIndex1, ptIndex2
+            if not len(name.strip()):
+                name = None
+            if not len(direction.strip()):
+                direction = None
+            if not len(ptIndex2.strip()):
+                ptIndex2 = None
 
-            # guess direction from name
-            if str(name) != '<null>' and str(direction) == '<null>':
-                if name[0] == 'X':
-                    direction = 'x'
-                    item['direction'] = 'x'
-                if name[0] == 'Y':
-                    direction = 'y'
-                    item['direction'] = 'y'
-
-            saveLinkToLib(g, L, name=name, direction=direction, verbose=False)
+            if ptIndex2 is None:
+                saveMeasurePointToLib(g, ptIndex1, name=name, direction=direction)
+            else:
+                ptIndex2  = int(ptIndex2)
+                # guess direction from name
+                if str(name) != '<null>' and str(direction) == '<null>':
+                    if name[0] == 'X':
+                        direction = 'x'
+                        item['direction'] = 'x'
+                    if name[0] == 'Y':
+                        direction = 'y'
+                        item['direction'] = 'y'
+                saveLinkToLib(g, (ptIndex1, ptIndex2), name=name, direction=direction, verbose=False)
 
     def loadGlyphMeasurements(self, sender):
         '''
@@ -498,8 +516,16 @@ class FontMeasurements(BaseWindowController):
 
         listItems = []
         for key in measurements.keys():
-            index1, index2 = key.split()
-            index1, index2 = int(index1), int(index2)
+            # get point or points
+            keyParts = key.split()
+            if len(keyParts) == 2:
+                index1, index2 = keyParts
+                index1, index2 = int(index1), int(index2)
+            elif len(keyParts) == 1:
+                index1 = keyParts[0].strip()
+                index2 = None
+            else:
+                continue
             name = measurements[key].get('name')
             direction = measurements[key].get('direction')
             listItem = {
@@ -508,26 +534,31 @@ class FontMeasurements(BaseWindowController):
                 'point 1'   : index1,
                 'point 2'   : index2, 
             }   
-            p1 = getPointAtIndex(g, index1)
-            p2 = getPointAtIndex(g, index2)
-            distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
-            listItem['distance'] = distance
-
-            # get font measurement
-            fontMeasurements = self._tabs['font'].measurements.get()
-            if name is not None:
-                for m in fontMeasurements:
-                    if name != m['name']:
-                        continue
-                    listItem['font'] = m['distance']
-                    try:
-                        listItem['factor'] = fontDistance / float(m.get('distance'))
-                    except:
-                        if self.verbose:
-                            print(f'no font distance for {name}')
-                        pass
-
-            listItems.append(listItem)
+            if index2 is not None:
+                # get distance between points
+                p1 = getPointAtIndex(g, index1)
+                p2 = getPointAtIndex(g, index2)
+                distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
+                listItem['distance'] = distance
+                # get font measurement
+                fontMeasurements = self._tabs['font'].measurements.get()
+                if name is not None:
+                    for m in fontMeasurements:
+                        if name != m['name']:
+                            continue
+                        listItem['font'] = m['distance']
+                        # try:
+                        #     listItem['factor'] = fontDistance / float(m.get('distance'))
+                        # except:
+                        #     if self.verbose:
+                        #         print(f'no font distance for {name}')
+                        #     pass
+            _listItem = {}
+            for k, v in listItem.items():
+                if v is None:
+                   v = '' 
+                _listItem[k] = v
+            listItems.append(_listItem)
 
         tab.measurements.set(listItems)
 
@@ -612,8 +643,12 @@ class FontMeasurements(BaseWindowController):
         glyph = RGlyph(notification.object)
         for item in self._tabs['glyph'].measurements.get():
             p1 = getPointAtIndex(glyph, int(item['point 1']))
-            p2 = getPointAtIndex(glyph, int(item['point 2']))
-            distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
+            p2 = item['point 2']
+            if p2:
+                p2 = getPointAtIndex(glyph, int(p2))
+                distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
+            else:
+                distance = None
             item['distance'] = distance
 
     # -------
@@ -649,44 +684,67 @@ class FontMeasurements(BaseWindowController):
         ctx.save()
 
         for linkID, L in links.items():
-            index1, index2 = linkID.split()
-            index1, index2 = int(index1), int(index2)
-            pt1 = getPointAtIndex(glyph, index1)
-            pt2 = getPointAtIndex(glyph, index2)
+            partsID = linkID.split()
 
-            if L['direction'] == 'x':
-                P1 = pt1.x, pt1.y
-                P2 = pt2.x, pt1.y
-            elif L['direction'] == 'y':
-                P1 = pt2.x, pt1.y
-                P2 = pt2.x, pt2.y 
-            else: # angled
-                P1 = pt1.x, pt1.y
-                P2 = pt2.x, pt2.y
+            # two-point measurements
+            if len(partsID) == 2:
+                index1, index2 = partsID
+                index1, index2 = int(index1), int(index2)
 
-            ctx.save()
+                pt1 = getPointAtIndex(glyph, index1)
+                pt2 = getPointAtIndex(glyph, index2)
 
-            # draw link
-            ctx.stroke(*self.measurementsColor)
-            ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
-            ctx.lineDash(3*previewScale, 3*previewScale)
-            ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
+                if L['direction'] == 'x':
+                    P1 = pt1.x, pt1.y
+                    P2 = pt2.x, pt1.y
+                elif L['direction'] == 'y':
+                    P1 = pt2.x, pt1.y
+                    P2 = pt2.x, pt2.y 
+                else: # angled
+                    P1 = pt1.x, pt1.y
+                    P2 = pt2.x, pt2.y
 
-            if self.selectedGlyphMeasurementIDs is not None:
-                if linkID in self.selectedGlyphMeasurementIDs:
-                    # draw measurement
+                ctx.save()
+
+                # draw link
+                ctx.stroke(*self.measurementsColor)
+                ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
+                ctx.lineDash(3*previewScale, 3*previewScale)
+                ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
+
+                if self.selectedGlyphMeasurementIDs is not None:
+                    if linkID in self.selectedGlyphMeasurementIDs:
+                        # draw measurement
+                        ctx.fill(None)
+                        ctx.lineDash(None)
+                        ctx.stroke(*self.measurementsColorDim)
+                        ctx.strokeWidth(self.settings['strokeWidth2']*previewScale)
+                        ctx.line(P1, P2)
+                        # draw caption
+                        ctx.stroke(None)
+                        ctx.fill(*self.measurementsColor)
+                        ctx.fontSize(9*previewScale)
+                        _drawLinkMeasurement(P1, P2, L['name'], L['direction'])
+
+                ctx.restore()
+
+            # one-point measurements
+            elif len(partsID) == 1:
+                index1 = partsID[0].strip()
+                pt1 = getPointAtIndex(glyph, int(index1))
+                r = self.settings['radius1'] * previewScale
+                ctx.save()
+                if self.selectedGlyphMeasurementIDs is not None and linkID in self.selectedGlyphMeasurementIDs:
+                    ctx.fill(*self.measurementsColorDim)
+                else:
                     ctx.fill(None)
-                    ctx.lineDash(None)
-                    ctx.stroke(*self.measurementsColorDim)
-                    ctx.strokeWidth(self.settings['strokeWidth2']*previewScale)
-                    ctx.line(P1, P2)
-                    # draw caption
-                    ctx.stroke(None)
-                    ctx.fill(*self.measurementsColor)
-                    ctx.fontSize(9*previewScale)
-                    _drawLinkMeasurement(P1, P2, L['name'], L['direction'])
+                ctx.stroke(*self.measurementsColor)
+                ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
+                ctx.oval(pt1.x-r, pt1.y-r, r*2, r*2)
+                ctx.restore()
 
-            ctx.restore()
+            else:
+                continue
 
         ctx.restore()
 

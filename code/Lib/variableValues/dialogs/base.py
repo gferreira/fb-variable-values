@@ -125,12 +125,17 @@ class DesignSpaceSelector:
         return selectedDesignspaces[0]
 
     @property
-    def selectedDesignspaceDocument(self):
+    def selectedDesignspacePath(self):
         if not self.selectedDesignspace:
             return
-        designspacePath = self._designspaces[self.selectedDesignspace]
+        return self._designspaces[self.selectedDesignspace]
+
+    @property
+    def selectedDesignspaceDocument(self):
+        if not self.selectedDesignspacePath:
+            return
         designspace = DesignSpaceDocument()
-        designspace.read(designspacePath)
+        designspace.read(self.selectedDesignspacePath)
         return designspace
 
     @property
@@ -201,7 +206,7 @@ class DesignSpaceSelector:
 
         # make list items
         sourcesDescriptions  = [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName, 'maxWidth': self._colFontName*3}]
-        sourcesDescriptions += [{'title': axis.name, 'width': self._colValue} for axis in designspace.axes]
+        sourcesDescriptions += [{'title': axis.tag, 'width': self._colValue} for axis in designspace.axes]
         self._sources = {}
         sourcesItems = []
         for source in designspace.sources:
@@ -209,7 +214,7 @@ class DesignSpaceSelector:
             self._sources[sourceFileName] = source.path
             sourceItem = { 'file name' : sourceFileName }
             for axis in designspace.axes:
-                sourceItem[axis.name] = source.location[axis.name]
+                sourceItem[axis.tag] = source.location[axis.name]
             sourcesItems.append(sourceItem)
 
         # create list UI with sources
@@ -218,11 +223,12 @@ class DesignSpaceSelector:
             columnDescriptions=sourcesDescriptions,
             allowsMultipleSelection=True,
             allowsSorting=False,
-            enableDelete=False)
+            enableDelete=False,
+            doubleClickCallback=self.openSourceCallback)
 
     def editAxesCallback(self, sender):
         tab = self._tabs['designspace']
-        self.axesOrder = [ a['name'] for a in tab.axes.get() ]
+        self.axesOrder = [a['tag'] for a in tab.axes.get()]
         
         if not hasattr(tab, 'sources'):
             return
@@ -257,6 +263,19 @@ class DesignSpaceSelector:
                 rowIndex += 1
             sender.set(items)
         return True
+
+    def openSourceCallback(self, sender):
+        selectedSource = self.selectedSources[0]
+        sourcePath = self._sources[selectedSource['file name']]
+        if not os.path.exists(sourcePath):
+            if self.verbose:
+                print(f"this source does not exist: '{sourcePath}'")
+            return
+        if self.verbose:
+            print(f"opening '{sourcePath}'...", end=' ')
+        f = OpenFont(sourcePath, showInterface=True)
+        if self.verbose:
+            print('done!\n')
 
 
 # ----

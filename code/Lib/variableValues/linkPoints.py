@@ -263,6 +263,36 @@ def getSelectedLinks(glyph, key=KEY):
     IDs = getSelectedIDs(glyph)
     return [(ID1, ID2) for ID1, ID2 in links if (ID1 in IDs or ID2 in IDs)]
 
+# single-point measurements
+
+def newMeasurePoint(glyph, name=None, direction=None, key=KEY):
+    if not len(glyph.selectedPoints) == 1:
+        if verbose:
+            print('please select one point')
+        return
+
+    selectedPoint = glyph.selectedPoints[0]
+    ptIndex = getIndexForPoint(glyph, selectedPoint)
+    saveMeasurePointToLib(glyph, ptIndex, name=name, direction=direction, key=KEY)
+
+def saveMeasurePointToLib(glyph, ptIndex, name=None, direction=None, key=KEY, verbose=True):
+    if key not in glyph.lib:
+        glyph.lib[key] = {}
+
+    if type(ptIndex) is not str:
+        ptIndex = str(ptIndex)
+
+    glyph.lib[key][ptIndex] = {}
+
+    if verbose:
+        print(f'saving point measurement "{ptIndex}" to the glyph lib ({glyph.name})...')
+
+    if direction is not None:
+        glyph.lib[key][ptIndex]['direction'] = direction
+
+    if name is not None:
+        glyph.lib[key][ptIndex]['name'] = name
+
 ### FONT-LEVEL MEASUREMENT
 
 def saveLinkToLib_font(font, name, link, key=KEY, verbose=True):
