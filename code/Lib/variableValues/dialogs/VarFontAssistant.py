@@ -6,11 +6,41 @@ reload(variableValues.dialogs.base)
 
 import AppKit
 import os
-from vanilla import Window, TextBox, List, Button, Tabs, LevelIndicatorListCell
-from fontParts.world import OpenFont
+from vanilla import * # Window, TextBox, List, Button, Tabs, LevelIndicatorListCell
+from fontParts.world import OpenFont, RGlyph
+from fontTools.pens.transformPen import TransformPointPen
+from defcon.objects.component import _defaultTransformation
+from drawBot.ui.drawView import DrawView
+import drawBot as DB
 from mojo.roboFont import OpenWindow
 from variableValues.measurements import importMeasurementDescriptionsFromCSV, FontMeasurements
 from variableValues.dialogs.base import DesignSpaceSelector
+
+
+def drawGlyph(g):
+    B = DB.BezierPath()
+    g.draw(B)
+    DB.drawPath(B)
+
+
+class DecomposePointPen:
+
+    def __init__(self, glyphSet, outPointPen):
+        self._glyphSet = glyphSet
+        self._outPointPen = outPointPen
+        self.beginPath = outPointPen.beginPath
+        self.endPath = outPointPen.endPath
+        self.addPoint = outPointPen.addPoint
+
+    def addComponent(self, baseGlyphName, transformation, *args, **kwargs):
+        if baseGlyphName in self._glyphSet:
+            baseGlyph = self._glyphSet[baseGlyphName]
+            if transformation == _defaultTransformation:
+                baseGlyph.drawPoints(self)
+            else:
+                transformPointPen = TransformPointPen(self, transformation)
+                baseGlyph.drawPoints(transformPointPen)
+
 
 class VarFontAssistant(DesignSpaceSelector):
     
@@ -337,7 +367,7 @@ class VarFontAssistant(DesignSpaceSelector):
 
         x = p = self.padding
         y = p/2
-        col = self._colLeft * 1.5
+        col = self._colLeft * 2
         tab.pairsLabel = TextBox(
                 (x, y, -p, self.lineHeight),
                 'pairs')
@@ -357,13 +387,30 @@ class VarFontAssistant(DesignSpaceSelector):
                 selectionCallback=self.updateKerningValuesCallback,
             )
 
-        y = p/2
         x2 = x + col + p
-        tab.kerningValuesLabel = TextBox(
-                (x2, y, -p, self.lineHeight),
+        y = p/2
+
+        # preview group
+
+        kerningPreview = Group((0, 0, -0, -0))
+        _x = _y = 0
+        kerningPreview.label = TextBox(
+                (_x, _y, -p, self.lineHeight),
+                'preview')
+
+        _y = self.lineHeight + p/2
+        kerningPreview.canvas = DrawView((_x, _y, -p, -p))
+
+        # values group
+
+        kerningValues = Group((0, 0, -0, -0))
+        _x = 0
+        _y = p/2
+        kerningValues.label = TextBox(
+                (_x, _y, -p, self.lineHeight),
                 'values')
 
-        y += self.lineHeight + p/2
+        _y += self.lineHeight + p/2
         columnDescriptions = [
             {
                 "title"    : 'file name',
@@ -380,15 +427,27 @@ class VarFontAssistant(DesignSpaceSelector):
                 'cell'     : LevelIndicatorListCell(style="continuous", maxValue=200),
             },
         ]
-        tab.kerningValues = List(
-                (x2, y, -p, -(self.lineHeight + p*2)),
+        kerningValues.list = List(
+                (_x, _y, -p, -p),
                 [],
                 allowsMultipleSelection=False,
                 allowsEmptySelection=False,
                 columnDescriptions=columnDescriptions,
                 allowsSorting=True,
-                editCallback=self.editKerningCallback,
+                #editCallback=self.editKerningCallback,
                 enableDelete=False)
+
+        # make splitview
+
+        tab._splitDescriptors = [
+            dict(view=kerningPreview, identifier="kerningPreview"),
+            dict(view=kerningValues,  identifier="kerningValues"),
+        ]
+        tab.splitview = SplitView(
+                (x2, y, -0, -(self.lineHeight+p)),
+                tab._splitDescriptors,
+                dividerStyle='thin',
+                isVertical=False)
 
         y = -(self.lineHeight + p)
         tab.loadKerningValues = Button(
@@ -481,6 +540,17 @@ class VarFontAssistant(DesignSpaceSelector):
         tab = self._tabs['kerning']
         i = tab.pairs.getSelection()[0]
         return self._kerningPairsAll[i], i
+
+    @property
+    def selectedKerningValue(self):
+        tab = self._tabs['kerning']
+        group = tab._splitDescriptors[1]['view']
+        selection = group.list.getSelection()
+        if not len(selection):
+            return
+        i = selection[0]
+        item = group.list.get()[i]
+        return item
 
     # ---------
     # callbacks
@@ -993,9 +1063,10 @@ class VarFontAssistant(DesignSpaceSelector):
 
         '''
         tab = self._tabs['kerning']
+        group = tab._splitDescriptors[1]['view']
 
         if not self.selectedSources:
-            tab.kerningValues.set([])
+            group.list.set([])
             return
 
         pair, pairIndex = self.selectedKerningPair
@@ -1021,8 +1092,8 @@ class VarFontAssistant(DesignSpaceSelector):
             kerningListItems.append(listItem)
 
         # set kerning values in table
-        kerningValuesPosSize = tab.kerningValues.getPosSize()
-        del tab.kerningValues
+        kerningValuesPosSize = group.list.getPosSize()
+        del group.list
 
         columnDescriptions = [
             {
@@ -1041,7 +1112,7 @@ class VarFontAssistant(DesignSpaceSelector):
                 'cell'     : LevelIndicatorListCell(style="continuous", minValue=0, maxValue=valuesMax),
             },
         ]
-        tab.kerningValues = List(
+        group.list = List(
                 kerningValuesPosSize,
                 kerningListItems,
                 allowsMultipleSelection=False,
@@ -1054,18 +1125,98 @@ class VarFontAssistant(DesignSpaceSelector):
         # update kerning pair counter (current/total)
         tab.pairsCounter.set(f'{pairIndex+1} / {len(self._kerningPairsAll)}')
 
+        self.updateKerningPreviewCallback(None)
+
+    def updateKerningPreviewCallback(self, sender):
+        tab = self._tabs['kerning']
+        groupPreview = tab._splitDescriptors[0]['view']
+        groupValues = tab._splitDescriptors[0]['view']
+        sampleWidth  = 800
+        sampleHeight = 100
+
+        pair, pairIndex = self.selectedKerningPair
+        gName1, gName2 = pair
+
+        # TO-DO: get context for string
+        glyphsPre = glyphsAfter = list('HOH')
+
+        DB.newDrawing()
+        DB.newPage(sampleWidth, len(self._kerning)*sampleHeight)
+        DB.blendMode('multiply')
+
+        x = 10
+        y = DB.height() - sampleHeight*0.8
+
+        for fontName in self._kerning.keys():
+
+            ufoPath = self._sources[fontName]
+
+            f = OpenFont(ufoPath, showInterface=False)
+
+            # get pair glyphs
+            if gName1.startswith('public.kern'):
+                gName1 = f.groups[gName1][0]
+            if gName2.startswith('public.kern'):
+                gName2 = f.groups[gName2][0]
+
+            # collect glyph names for sample
+            glyphNames = glyphsPre + [gName1, gName2] + glyphsAfter
+
+            s = 0.045
+            _x = x
+
+            DB.save()
+            for i, gName in enumerate(glyphNames):
+                g = f[gName]
+
+                # flatten components
+                if len(g.components):
+                    _g = RGlyph()
+                    pointPen = _g.getPointPen()
+                    decomposePen = DecomposePointPen(f, pointPen)
+                    g.drawPoints(decomposePen)
+                    _g.width = g.width
+                    g = _g
+
+                DB.save()
+                DB.translate(_x, y)
+                DB.scale(s)
+
+                DB.strokeWidth(1)
+                DB.stroke(1, 0, 0)
+                DB.line((0, -f.info.unitsPerEm*0.2), (0, f.info.unitsPerEm*0.8))
+
+                DB.stroke(None)
+                DB.fill(0)
+                drawGlyph(g)
+
+                if not i < len(glyphNames)-1:
+                    continue
+
+                gNameNext = glyphNames[i+1]
+                gNext = f[gNameNext]
+                value = f.kerning.find((gName, gNameNext))
+                if value:
+                    DB.fill(1, 0, 0, 0.3)
+                    DB.rect(g.width+value, -f.info.unitsPerEm*0.2, -value, f.info.unitsPerEm)
+                    _x += value*s
+
+                DB.restore()
+                _x += g.width*s
+
+            DB.restore()
+            y -= sampleHeight
+
+        pdfData = DB.pdfImage()
+        groupPreview.canvas.setPDFDocument(pdfData)
+
     def editKerningCallback(self, sender):
         '''
         Save the edited kerning pair back to the dict, so we can load values for another pair.
 
         '''
         tab = self._tabs['kerning']
-        selection = tab.kerningValues.getSelection()
-        if not len(selection):
-            return
-
-        i = selection[0]
-        item = tab.kerningValues.get()[i]
+        item = self.selectedKerningValue
 
         # save change to internal dict
         pair, pairIndex = self.selectedKerningPair
@@ -1089,6 +1240,8 @@ class VarFontAssistant(DesignSpaceSelector):
         #     }
         #     kerningListItems.append(listItem)
         # tab.kerningValues.set(kerningListItems)
+
+        self.updateKerningPreviewCallback(None)
 
     def visualizeKerningCallback(self, sender):
         pass
@@ -1118,7 +1271,7 @@ class VarFontAssistant(DesignSpaceSelector):
                 oldValue = f.kerning.get(pair)
                 if newValue != oldValue:
                     if self.verbose:
-                        print(f'\twriting new value for {pair} in {fontName}: {oldValue} → {newValue}')
+                        print(f"\twriting new value for {pair} in '{fontName}': {oldValue} → {newValue}")
                     f.kerning[pair] = newValue
                     if not fontChanged:
                         fontChanged = True
