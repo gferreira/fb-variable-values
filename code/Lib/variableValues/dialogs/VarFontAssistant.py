@@ -432,7 +432,7 @@ class VarFontAssistant(DesignSpaceSelector):
             (_x, _y, self.buttonWidth, self.lineHeight),
             "show metrics",
             callback=self.updateKerningPreviewCallback,
-            value=False)
+            value=True)
 
         _x += self.buttonWidth + p
         kerningPreview.showKerning = CheckBox(
@@ -1203,18 +1203,16 @@ class VarFontAssistant(DesignSpaceSelector):
 
             f = OpenFont(ufoPath, showInterface=False)
 
-            # make a list of glyph/group names to get values from
+            # glyph/group names (to get values from)
             gName1, gName2 = pair
 
-            # make a list of glyph names to create the preview
-            if gName1.startswith('public.kern'):
-                gName1 = f.groups[gName1][0]
-            if gName2.startswith('public.kern'):
-                gName2 = f.groups[gName2][0]
+            # glyph names (to create the preview)
+            glyphName1 = f.groups[gName1][0] if gName1.startswith('public.kern') else gName1
+            glyphName2 = f.groups[gName2][0] if gName2.startswith('public.kern') else gName2
 
             # get context for string
-            cat1 = f.naked().unicodeData.categoryForGlyphName(gName1)
-            cat2 = f.naked().unicodeData.categoryForGlyphName(gName2)
+            cat1 = f.naked().unicodeData.categoryForGlyphName(glyphName1)
+            cat2 = f.naked().unicodeData.categoryForGlyphName(glyphName2)
 
             glyphsPre   = list(CONTEXTS[cat1] if cat1 in CONTEXTS else 'HOH')
             glyphsAfter = list(CONTEXTS[cat2] if cat2 in CONTEXTS else 'HOH')
@@ -1222,8 +1220,8 @@ class VarFontAssistant(DesignSpaceSelector):
             glyphsPre   = [f.naked().unicodeData.glyphNameForUnicode(ord(char)) for char in glyphsPre]
             glyphsAfter = [f.naked().unicodeData.glyphNameForUnicode(ord(char)) for char in glyphsAfter]
 
-            gNames     = glyphsPre + [gName1, gName2] + glyphsAfter
-            glyphNames = glyphsPre + [gName1, gName2] + glyphsAfter
+            gNames     = glyphsPre + [gName1,     gName2]     + glyphsAfter
+            glyphNames = glyphsPre + [glyphName1, glyphName2] + glyphsAfter
 
             # draw the preview
 
