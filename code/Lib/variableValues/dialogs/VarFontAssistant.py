@@ -42,6 +42,29 @@ class DecomposePointPen:
                 baseGlyph.drawPoints(transformPointPen)
 
 
+# http://www.unicode.org/reports/tr44/#General_Category_Values
+CONTEXTS = {
+    'Ll' : 'non', # lowercase letter
+    'Lu' : 'HOH', # uppercase letter
+    'Lo' : 'non', # other letter
+    'Lm' : 'non', # modifier letter
+    'Nd' : '080', # decimal number
+    'No' : '080', # other number
+    'Zs' : 'non', # space separator
+    'Sm' : '080', # math symbol
+    'Pd' : 'non', # dash punctuation
+    'Pi' : 'non', # initial punctuation
+    'Pf' : 'non', # final punctuation
+    'Ps' : 'HOH', # open punctuation
+    'Pe' : 'HOH', # close punctuation
+    'Po' : 'non', # other punctuation
+    'Sk' : 'non', # modifier symbol
+    'Sc' : '080', # currency symbol
+    'So' : 'non', # other symbol
+    'Mn' : 'non', # non-spacing mark
+}
+
+
 class VarFontAssistant(DesignSpaceSelector):
     
     title             = 'VarFont Assistant'
@@ -81,6 +104,9 @@ class VarFontAssistant(DesignSpaceSelector):
 
     _kerningPairsAll  = []
     _kerning          = {}
+
+
+
 
     def __init__(self):
         self.w = Window(
@@ -399,7 +425,21 @@ class VarFontAssistant(DesignSpaceSelector):
                 'preview')
 
         _y = self.lineHeight + p/2
-        kerningPreview.canvas = DrawView((_x, _y, -p, -p))
+        kerningPreview.canvas = DrawView((_x, _y, -p, -(self.lineHeight + p*2)))
+
+        _y = -(self.lineHeight + p)
+        kerningPreview.showMetrics = CheckBox(
+            (_x, _y, self.buttonWidth, self.lineHeight),
+            "show metrics",
+            callback=self.updateKerningPreviewCallback,
+            value=False)
+
+        _x += self.buttonWidth + p
+        kerningPreview.showKerning = CheckBox(
+            (_x, _y, self.buttonWidth, self.lineHeight),
+            "show kerning",
+            callback=self.updateKerningPreviewCallback,
+            value=True)
 
         # values group
 
@@ -551,6 +591,18 @@ class VarFontAssistant(DesignSpaceSelector):
         i = selection[0]
         item = group.list.get()[i]
         return item
+
+    @property
+    def showMetrics(self):
+        tab = self._tabs['kerning']
+        group = tab._splitDescriptors[0]['view']
+        return group.showMetrics.get()
+
+    @property
+    def showKerning(self):
+        tab = self._tabs['kerning']
+        group = tab._splitDescriptors[0]['view']
+        return group.showKerning.get()
 
     # ---------
     # callbacks
@@ -1131,19 +1183,17 @@ class VarFontAssistant(DesignSpaceSelector):
         tab = self._tabs['kerning']
         groupPreview = tab._splitDescriptors[0]['view']
         groupValues = tab._splitDescriptors[0]['view']
+
         sampleWidth  = 800
         sampleHeight = 100
 
         pair, pairIndex = self.selectedKerningPair
-        gName1, gName2 = pair
-
-        # TO-DO: get context for string
-        glyphsPre = glyphsAfter = list('HOH')
 
         DB.newDrawing()
         DB.newPage(sampleWidth, len(self._kerning)*sampleHeight)
         DB.blendMode('multiply')
 
+        s = 0.045
         x = 10
         y = DB.height() - sampleHeight*0.8
 
@@ -1153,21 +1203,34 @@ class VarFontAssistant(DesignSpaceSelector):
 
             f = OpenFont(ufoPath, showInterface=False)
 
-            # get pair glyphs
+            # make a list of glyph/group names to get values from
+            gName1, gName2 = pair
+
+            # make a list of glyph names to create the preview
             if gName1.startswith('public.kern'):
                 gName1 = f.groups[gName1][0]
             if gName2.startswith('public.kern'):
                 gName2 = f.groups[gName2][0]
 
-            # collect glyph names for sample
+            # get context for string
+            cat1 = f.naked().unicodeData.categoryForGlyphName(gName1)
+            cat2 = f.naked().unicodeData.categoryForGlyphName(gName2)
+
+            glyphsPre   = list(CONTEXTS[cat1] if cat1 in CONTEXTS else 'HOH')
+            glyphsAfter = list(CONTEXTS[cat2] if cat2 in CONTEXTS else 'HOH')
+
+            glyphsPre   = [f.naked().unicodeData.glyphNameForUnicode(ord(char)) for char in glyphsPre]
+            glyphsAfter = [f.naked().unicodeData.glyphNameForUnicode(ord(char)) for char in glyphsAfter]
+
+            gNames     = glyphsPre + [gName1, gName2] + glyphsAfter
             glyphNames = glyphsPre + [gName1, gName2] + glyphsAfter
 
-            s = 0.045
-            _x = x
+            # draw the preview
 
+            _x = x
             DB.save()
-            for i, gName in enumerate(glyphNames):
-                g = f[gName]
+            for i, glyphName in enumerate(glyphNames):
+                g = f[glyphName]
 
                 # flatten components
                 if len(g.components):
@@ -1182,9 +1245,11 @@ class VarFontAssistant(DesignSpaceSelector):
                 DB.translate(_x, y)
                 DB.scale(s)
 
-                DB.strokeWidth(1)
-                DB.stroke(1, 0, 0)
-                DB.line((0, -f.info.unitsPerEm*0.2), (0, f.info.unitsPerEm*0.8))
+                # draw glyph margins
+                if self.showMetrics:
+                    DB.strokeWidth(1)
+                    DB.stroke(1, 0, 0)
+                    DB.line((0, -f.info.unitsPerEm*0.2), (0, f.info.unitsPerEm*0.8))
 
                 DB.stroke(None)
                 DB.fill(0)
@@ -1193,20 +1258,38 @@ class VarFontAssistant(DesignSpaceSelector):
                 if not i < len(glyphNames)-1:
                     continue
 
-                gNameNext = glyphNames[i+1]
-                gNext = f[gNameNext]
-                value = f.kerning.find((gName, gNameNext))
+                # get glyph for preview
+                gNameNext = gNames[i+1]
+                if gNameNext.startswith('public.kern'):
+                    glyphNameNext = f.groups[gNameNext][0]
+                else:
+                    glyphNameNext = gNameNext
+                gNext = f[glyphNameNext]
+
+                # get glyph/group for current glyph name
+                gName = gNames[i]
+
+                # get value for pair
+                value = self._kerning[fontName].get((gName, gNameNext)) # f.kerning.get((gName, gNameNext)) # f.kerning.find((gName, gNameNext))
+
                 if value:
-                    DB.fill(1, 0, 0, 0.3)
-                    DB.rect(g.width+value, -f.info.unitsPerEm*0.2, -value, f.info.unitsPerEm)
+                    # draw kerning value
+                    if self.showKerning:
+                        DB.fill(1, 0, 0, 0.3)
+                        DB.rect(g.width + value, -f.info.unitsPerEm*0.2, -value, f.info.unitsPerEm)
+
+                    # apply kern value with next glyph
                     _x += value*s
 
                 DB.restore()
+
+                # advance to next glyph
                 _x += g.width*s
 
             DB.restore()
             y -= sampleHeight
 
+        # refresh preview
         pdfData = DB.pdfImage()
         groupPreview.canvas.setPDFDocument(pdfData)
 
@@ -1270,9 +1353,14 @@ class VarFontAssistant(DesignSpaceSelector):
                 newValue = int(newValue)
                 oldValue = f.kerning.get(pair)
                 if newValue != oldValue:
-                    if self.verbose:
-                        print(f"\twriting new value for {pair} in '{fontName}': {oldValue} → {newValue}")
-                    f.kerning[pair] = newValue
+                    if newValue == 0:
+                        if self.verbose:
+                            print(f"\tdeleting {pair} in '{fontName}'...")
+                        del f.kerning[pair]
+                    else:
+                        if self.verbose:
+                            print(f"\twriting new value for {pair} in '{fontName}': {oldValue} → {newValue}")
+                        f.kerning[pair] = newValue
                     if not fontChanged:
                         fontChanged = True
             if fontChanged:
