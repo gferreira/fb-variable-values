@@ -105,8 +105,12 @@ class VarFontAssistant(DesignSpaceSelector):
     _kerningPairsAll  = []
     _kerning          = {}
 
-
-
+    settings = {
+        'kerningSampleWidth'    : 900,
+        'kerningSampleHeight'   : 100,
+        'kerningSampleScale'    : 0.045,
+        'kerningSampleFontSize' : 96,
+    }
 
     def __init__(self):
         self.w = Window(
@@ -432,7 +436,7 @@ class VarFontAssistant(DesignSpaceSelector):
             (_x, _y, self.buttonWidth, self.lineHeight),
             "show metrics",
             callback=self.updateKerningPreviewCallback,
-            value=True)
+            value=False)
 
         _x += self.buttonWidth + p
         kerningPreview.showKerning = CheckBox(
@@ -654,15 +658,17 @@ class VarFontAssistant(DesignSpaceSelector):
         fontInfoItems = []
         for fontName in self._fontValues.keys():
             value = self._fontValues[fontName][fontAttr]
-            if value is None:
-                value = '—'
+            # if value is None:
+            #     value = '—'
             listItem = {
                 "file name" : fontName,
                 "value"     : value,
-                "level"     : abs(value),
             }
+            if value is not None:
+                listItem["level"] = abs(value)
+                values.append(value)
+            
             fontInfoItems.append(listItem)
-            values.append(value)
 
         # set glyph values in table
         fontInfoValuesPosSize = tab.fontValues.getPosSize()
@@ -1098,6 +1104,11 @@ class VarFontAssistant(DesignSpaceSelector):
             allPairs += f.kerning.keys()
             self._kerning[sourceFileName] = {}
             for pair, value in f.kerning.items():
+                g1, g2 = pair
+                if g1 not in f and g1 not in f.groups:
+                    continue
+                if g2 not in f and g2 not in f.groups:
+                    continue
                 self._kerning[sourceFileName][pair] = value
         self._kerningPairsAll = list(set(allPairs))
         self._kerningPairsAll.sort()
@@ -1149,17 +1160,18 @@ class VarFontAssistant(DesignSpaceSelector):
 
         columnDescriptions = [
             {
-                "title"    : 'file name',
+                'title'    : 'file name',
                 'width'    : self._colFontName*1.5,
                 'minWidth' : self._colFontName,
                 'maxWidth' : self._colFontName*3,
+                'editable' : False,
             },
             {
-                "title"    : 'value',
+                'title'    : 'value',
                 'width'    : self._colValue,
             },
             {
-                "title"    : 'level',
+                'title'    : 'level',
                 'width'    : self._colValue*1.5,
                 'cell'     : LevelIndicatorListCell(style="continuous", minValue=0, maxValue=valuesMax),
             },
@@ -1181,11 +1193,12 @@ class VarFontAssistant(DesignSpaceSelector):
 
     def updateKerningPreviewCallback(self, sender):
         tab = self._tabs['kerning']
+
         groupPreview = tab._splitDescriptors[0]['view']
         groupValues = tab._splitDescriptors[0]['view']
 
-        sampleWidth  = 800
-        sampleHeight = 100
+        sampleWidth  = self.settings['kerningSampleWidth']
+        sampleHeight = self.settings['kerningSampleHeight']
 
         pair, pairIndex = self.selectedKerningPair
 
@@ -1193,8 +1206,9 @@ class VarFontAssistant(DesignSpaceSelector):
         DB.newPage(sampleWidth, len(self._kerning)*sampleHeight)
         DB.blendMode('multiply')
 
-        s = 0.045
+        s = self.settings['kerningSampleScale']
         x = 10
+        fs = self.settings['kerningSampleFontSize']
         y = DB.height() - sampleHeight*0.8
 
         for fontName in self._kerning.keys():
@@ -1228,6 +1242,14 @@ class VarFontAssistant(DesignSpaceSelector):
             _x = x
             DB.save()
             for i, glyphName in enumerate(glyphNames):
+                if glyphName is None:
+                    continue
+
+                if glyphName not in f:
+                    if self.verbose:
+                        print(f'ERROR: glyph {glyphName} not in {fontName}...')
+                    continue
+
                 g = f[glyphName]
 
                 # flatten components
@@ -1242,6 +1264,12 @@ class VarFontAssistant(DesignSpaceSelector):
                 DB.save()
                 DB.translate(_x, y)
                 DB.scale(s)
+
+                # draw font name caption
+                # if i == 0:
+                #     DB.fill(1, 0, 0)
+                #     DB.fontSize(fs)
+                #     DB.text(fontName, (_x, -f.info.unitsPerEm*0.15), align='left')
 
                 # draw glyph margins
                 if self.showMetrics:
@@ -1275,6 +1303,10 @@ class VarFontAssistant(DesignSpaceSelector):
                     if self.showKerning:
                         DB.fill(1, 0, 0, 0.3)
                         DB.rect(g.width + value, -f.info.unitsPerEm*0.2, -value, f.info.unitsPerEm)
+                        # draw caption value
+                        DB.fill(1, 0, 0)
+                        DB.fontSize(fs)
+                        DB.text(str(value), (g.width -10, -f.info.unitsPerEm*0.15), align='right')
 
                     # apply kern value with next glyph
                     _x += value*s
@@ -1351,7 +1383,7 @@ class VarFontAssistant(DesignSpaceSelector):
                 newValue = int(newValue)
                 oldValue = f.kerning.get(pair)
                 if newValue != oldValue:
-                    if newValue == 0:
+                    if newValue == 0 and pair in f.kerning:
                         if self.verbose:
                             print(f"\tdeleting {pair} in '{fontName}'...")
                         del f.kerning[pair]
