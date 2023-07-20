@@ -6,10 +6,10 @@ import AppKit
 import os
 from operator import itemgetter, attrgetter
 from vanilla import Window, TextBox, List, Button, Tabs, LevelIndicatorListCell
-from fontParts.world import OpenFont
 from fontTools.designspaceLib import DesignSpaceDocument
-from mojo.roboFont import OpenWindow
+from mojo.roboFont import OpenFont, OpenWindow
 from variableValues.measurements import importMeasurementDescriptionsFromCSV, FontMeasurements
+
 
 class DesignSpaceSelector:
     
@@ -20,6 +20,7 @@ class DesignSpaceSelector:
     lineHeight        = 22
     verbose           = True
     buttonWidth       = 100
+
     _colLeft          = 160
     _colFontName      = 160
     _colValue         = 60

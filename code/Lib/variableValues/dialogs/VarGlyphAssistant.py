@@ -2,7 +2,7 @@ import AppKit
 import os, sys
 from vanilla import  Window, EditText, TextBox, Box, List, Button, Tabs, LevelIndicatorListCell
 from defconAppKit.controls.glyphCollectionView import GlyphCollectionView
-from mojo.roboFont import OpenWindow
+from mojo.roboFont import OpenWindow, OpenFont
 from variableValues.dialogs.base import DesignSpaceSelector
 
 '''

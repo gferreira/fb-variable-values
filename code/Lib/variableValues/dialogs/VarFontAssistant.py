@@ -10,59 +10,12 @@ from vanilla import * # Window, TextBox, List, Button, Tabs, LevelIndicatorListC
 from fontParts.world import OpenFont, RGlyph
 from fontTools.pens.transformPen import TransformPointPen
 from defcon.objects.component import _defaultTransformation
-from drawBot.ui.drawView import DrawView
 import drawBot as DB
+from drawBot.ui.drawView import DrawView
 from mojo.roboFont import OpenWindow
-from variableValues.measurements import importMeasurementDescriptionsFromCSV, FontMeasurements
 from variableValues.dialogs.base import DesignSpaceSelector
-
-
-def drawGlyph(g):
-    B = DB.BezierPath()
-    g.draw(B)
-    DB.drawPath(B)
-
-
-class DecomposePointPen:
-
-    def __init__(self, glyphSet, outPointPen):
-        self._glyphSet = glyphSet
-        self._outPointPen = outPointPen
-        self.beginPath = outPointPen.beginPath
-        self.endPath = outPointPen.endPath
-        self.addPoint = outPointPen.addPoint
-
-    def addComponent(self, baseGlyphName, transformation, *args, **kwargs):
-        if baseGlyphName in self._glyphSet:
-            baseGlyph = self._glyphSet[baseGlyphName]
-            if transformation == _defaultTransformation:
-                baseGlyph.drawPoints(self)
-            else:
-                transformPointPen = TransformPointPen(self, transformation)
-                baseGlyph.drawPoints(transformPointPen)
-
-
-# http://www.unicode.org/reports/tr44/#General_Category_Values
-CONTEXTS = {
-    'Ll' : 'non', # lowercase letter
-    'Lu' : 'HOH', # uppercase letter
-    'Lo' : 'non', # other letter
-    'Lm' : 'non', # modifier letter
-    'Nd' : '080', # decimal number
-    'No' : '080', # other number
-    'Zs' : 'non', # space separator
-    'Sm' : '080', # math symbol
-    'Pd' : 'non', # dash punctuation
-    'Pi' : 'non', # initial punctuation
-    'Pf' : 'non', # final punctuation
-    'Ps' : 'HOH', # open punctuation
-    'Pe' : 'HOH', # close punctuation
-    'Po' : 'non', # other punctuation
-    'Sk' : 'non', # modifier symbol
-    'Sc' : '080', # currency symbol
-    'So' : 'non', # other symbol
-    'Mn' : 'non', # non-spacing mark
-}
+from variableValues.measurements import importMeasurementDescriptionsFromCSV, FontMeasurements
+from variableValues.kerningPreview import VariableKerningPreview
 
 
 class VarFontAssistant(DesignSpaceSelector):
@@ -1194,8 +1147,7 @@ class VarFontAssistant(DesignSpaceSelector):
     def updateKerningPreviewCallback(self, sender):
         tab = self._tabs['kerning']
 
-        groupPreview = tab._splitDescriptors[0]['view']
-        groupValues = tab._splitDescriptors[0]['view']
+        # groupValues  = tab._splitDescriptors[0]['view']
 
         sampleWidth  = self.settings['kerningSampleWidth']
         sampleHeight = self.settings['kerningSampleHeight']
@@ -1203,123 +1155,21 @@ class VarFontAssistant(DesignSpaceSelector):
         pair, pairIndex = self.selectedKerningPair
 
         DB.newDrawing()
-        DB.newPage(sampleWidth, len(self._kerning)*sampleHeight)
-        DB.blendMode('multiply')
 
-        s = self.settings['kerningSampleScale']
-        x = 10
-        fs = self.settings['kerningSampleFontSize']
-        y = DB.height() - sampleHeight*0.8
+        # draw kerning preview
 
-        for fontName in self._kerning.keys():
+        # print(fontName)
+        print(self._sources.keys())
+        print(self._kerning.keys())
 
-            ufoPath = self._sources[fontName]
+        V = VariableKerningPreview(self.selectedDesignspacePath)
+        V.selectedSources = [self._sources[fontName] for fontName in self._kerning.keys()] # proofs[proofLevel][proofGroup]
+        V._kerning = self._kerning
+        V._allPairs = [pair] # self._kerningPairsAll
+        V.draw()
 
-            f = OpenFont(ufoPath, showInterface=False)
-
-            # glyph/group names (to get values from)
-            gName1, gName2 = pair
-
-            # glyph names (to create the preview)
-            glyphName1 = f.groups[gName1][0] if gName1.startswith('public.kern') else gName1
-            glyphName2 = f.groups[gName2][0] if gName2.startswith('public.kern') else gName2
-
-            # get context for string
-            cat1 = f.naked().unicodeData.categoryForGlyphName(glyphName1)
-            cat2 = f.naked().unicodeData.categoryForGlyphName(glyphName2)
-
-            glyphsPre   = list(CONTEXTS[cat1] if cat1 in CONTEXTS else 'HOH')
-            glyphsAfter = list(CONTEXTS[cat2] if cat2 in CONTEXTS else 'HOH')
-
-            glyphsPre   = [f.naked().unicodeData.glyphNameForUnicode(ord(char)) for char in glyphsPre]
-            glyphsAfter = [f.naked().unicodeData.glyphNameForUnicode(ord(char)) for char in glyphsAfter]
-
-            gNames     = glyphsPre + [gName1,     gName2]     + glyphsAfter
-            glyphNames = glyphsPre + [glyphName1, glyphName2] + glyphsAfter
-
-            # draw the preview
-
-            _x = x
-            DB.save()
-            for i, glyphName in enumerate(glyphNames):
-                if glyphName is None:
-                    continue
-
-                if glyphName not in f:
-                    if self.verbose:
-                        print(f'ERROR: glyph {glyphName} not in {fontName}...')
-                    continue
-
-                g = f[glyphName]
-
-                # flatten components
-                if len(g.components):
-                    _g = RGlyph()
-                    pointPen = _g.getPointPen()
-                    decomposePen = DecomposePointPen(f, pointPen)
-                    g.drawPoints(decomposePen)
-                    _g.width = g.width
-                    g = _g
-
-                DB.save()
-                DB.translate(_x, y)
-                DB.scale(s)
-
-                # draw font name caption
-                # if i == 0:
-                #     DB.fill(1, 0, 0)
-                #     DB.fontSize(fs)
-                #     DB.text(fontName, (_x, -f.info.unitsPerEm*0.15), align='left')
-
-                # draw glyph margins
-                if self.showMetrics:
-                    DB.strokeWidth(1)
-                    DB.stroke(1, 0, 0)
-                    DB.line((0, -f.info.unitsPerEm*0.2), (0, f.info.unitsPerEm*0.8))
-
-                DB.stroke(None)
-                DB.fill(0)
-                drawGlyph(g)
-
-                if not i < len(glyphNames)-1:
-                    continue
-
-                # get glyph for preview
-                gNameNext = gNames[i+1]
-                if gNameNext.startswith('public.kern'):
-                    glyphNameNext = f.groups[gNameNext][0]
-                else:
-                    glyphNameNext = gNameNext
-                gNext = f[glyphNameNext]
-
-                # get glyph/group for current glyph name
-                gName = gNames[i]
-
-                # get value for pair
-                value = self._kerning[fontName].get((gName, gNameNext)) # f.kerning.get((gName, gNameNext)) # f.kerning.find((gName, gNameNext))
-
-                if value:
-                    # draw kerning value
-                    if self.showKerning:
-                        DB.fill(1, 0, 0, 0.3)
-                        DB.rect(g.width + value, -f.info.unitsPerEm*0.2, -value, f.info.unitsPerEm)
-                        # draw caption value
-                        DB.fill(1, 0, 0)
-                        DB.fontSize(fs)
-                        DB.text(str(value), (g.width -10, -f.info.unitsPerEm*0.15), align='right')
-
-                    # apply kern value with next glyph
-                    _x += value*s
-
-                DB.restore()
-
-                # advance to next glyph
-                _x += g.width*s
-
-            DB.restore()
-            y -= sampleHeight
-
-        # refresh preview
+        # refresh PDF preview
+        groupPreview = tab._splitDescriptors[0]['view']
         pdfData = DB.pdfImage()
         groupPreview.canvas.setPDFDocument(pdfData)
 

@@ -11,7 +11,7 @@ A tool to check individual sources for internal consistency.
 
 class GlyphValidator:
     
-    title        = 'Glyph Validator'
+    title        = 'GlyphValidator'
     key          = 'com.hipertipo.glyphValidator'
     width        = 123*5
     height       = 640
@@ -28,7 +28,7 @@ class GlyphValidator:
     _memesTitles = ['glyph name', 'width', 'left', 'right', 'body', 'counter'] 
 
     _memesFolder = '/Users/sergiogonzalez/Desktop/hipertipo/tools/VariableValues/data/recipes' # '/hipertipo/tools/VarTools/_data/glyphMemes/'
-    assert os.path.exists(_memesFolder)
+    # assert os.path.exists(_memesFolder)
 
     _fonts = {}
 
