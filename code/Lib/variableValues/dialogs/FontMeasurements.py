@@ -1,9 +1,3 @@
-from importlib import reload
-import variableValues.measurements
-reload(variableValues.measurements)
-import variableValues.linkPoints
-reload(variableValues.linkPoints)
-
 import os
 from math import sqrt
 from defconAppKit.windows.baseWindow import BaseWindowController
@@ -14,8 +8,39 @@ from mojo.roboFont import *
 from mojo.events import addObserver, removeObserver
 from variableValues.measurements import *
 from variableValues.linkPoints import *
-# from hTools3.modules.color import rgb2nscolor, nscolor2rgb
 
+'''
+M E A S U R E M E N T S
+
+A tool to measure distances between glyph points and store them in the font.
+
+Font Measurements
+-----------------
+
+f'{name}' : {
+    'glyph 1'   : 'XTRA',
+    'point 1'   : 'XTRA',
+    'glyph 2'   : 'XTRA',
+    'point 2'   : 'XTRA',
+    'direction' : 'x',
+}
+
+Glyph Measurements
+------------------
+
+f'{ptIndex1} {ptIndex2}' : {
+    'name'      : 'XTRA',
+    'direction' : 'x', # y
+}
+
+f'{ptIndex}' : {
+    'name'      : 'YTAS',
+    'direction' : 0, # 1
+}
+
+'''
+
+# from hTools3.modules.color import rgb2nscolor, nscolor2rgb
 from AppKit import NSColor
 
 def rgb2nscolor(rgbColor):
@@ -73,37 +98,6 @@ def nscolor2rgb(nsColor):
     return r, g, b, a
 
 
-'''
-M E A S U R E M E N T S
-
-A tool to measure distances between glyph points and store them into the font.
-
-Font Measurements
------------------
-
-f'{name}' : {
-    'glyph 1'   : 'XTRA',
-    'point 1'   : 'XTRA',
-    'glyph 2'   : 'XTRA',
-    'point 2'   : 'XTRA',
-    'direction' : 'x',
-}
-
-
-Glyph Measurements
-------------------
-
-f'{ptIndex1} {ptIndex2}' : {
-    'name'      : 'XTRA',
-    'direction' : 'x', # y
-}
-
-f'{ptIndex}' : {
-    'name'      : 'YTAS',
-    'direction' : 0, # 1
-}
-
-'''
 
 class FontMeasurements(BaseWindowController):
     

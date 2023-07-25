@@ -3,7 +3,7 @@ from fontParts.world import OpenFont
 from fontTools.designspaceLib import DesignSpaceDocument
 
 '''
-An object to read a designspace and return lists of sources based on their 'distance' from the neutral.
+Read a designspace and return lists of sources based on their 'distance' from the neutral.
 
 Uses David Berlow's terminology: monovar (neutral), duovar, trivar, quadravar.
 
@@ -11,6 +11,10 @@ Uses David Berlow's terminology: monovar (neutral), duovar, trivar, quadravar.
 
 
 def getVarDistance(src, default):
+    '''
+    On how many axes is the location of a given source different from the default?
+
+    '''
     n = 0
     for k in src.location.keys():
         if src.location[k] != default.location[k]:

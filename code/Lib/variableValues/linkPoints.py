@@ -10,9 +10,19 @@ Tools to make various kinds of measurements in a font.
 
 KEY = 'com.fontBureau.glyphMeasurements'
 
-def getPointAtIndex(glyph, i):
-    # make a linear index of all points
-    # supports "ghost points" for left/right edges
+def getPointAtIndex(glyph, ptIndex):
+    '''Get the point at the given linear point index.
+
+    Supports "ghost points" for left/right edges.
+
+    Args:
+        glyph (RGlyph): A glyph object.
+        ptIndex (int): A point index.
+
+    Returns:
+        An `RPoint` object.
+
+    '''
     n = 0
     points = {}
     for ci, c in enumerate(glyph.contours):
@@ -36,6 +46,16 @@ def getPointAtIndex(glyph, i):
     return glyph.contours[ci].points[pi]
 
 def getIndexForPoint(glyph, pt):
+    '''Get the linear point index for a given point.
+
+    Args:
+        glyph (RGlyph): A glyph object.
+        pt (RPoint): A point.
+
+    Returns:
+        An integer.
+
+    '''
     n = 0
     for ci, c in enumerate(glyph.contours):
         for pi, p in enumerate(c.points):
@@ -75,6 +95,17 @@ def getSelectedIDs(glyph):
     return [pt.identifier if pt.identifier else pt.getIdentifier() for pt in glyph.selectedPoints]
 
 def getDistance(p1, p2, direction=None):
+    '''
+    Get the distance between two points.
+
+    Args:
+        p1 and p2 (tuple): The position of a point as a pair of `x, y` values.
+        direction (str): A x/y constrain direction for the measurement (optional).
+
+    Returns:
+        The distance as number of font units.
+
+    '''
     if direction == 'x':
         value = p2[0] - p1[0]
     elif direction == 'y':

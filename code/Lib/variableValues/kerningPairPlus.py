@@ -23,7 +23,15 @@ CONTEXTS = {
 
 class KerningPairPlus:
 
-    '''A simple kerning pair which provides additional data about itself.'''
+    '''
+    A simple kerning pair which provides additional data about itself:
+
+    - if a kerning pair item is a group, get a glyph of that group (for preview string)
+    - get unicode glyph category for left/right pair items
+    - get pre/after test strings based on glyph categories
+    - get test string for kerning pair as a list of glyph names
+
+    '''
 
     def __init__(self, font, pair):
         # TO-DO: try to use unicodeData directly without a font

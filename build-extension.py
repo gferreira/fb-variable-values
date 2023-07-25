@@ -8,7 +8,7 @@ from hTools3.modules.sys import pycClear, pyCacheClear, removeGitFiles
 # settings
 # --------
 
-version          = '0.1.2'
+version          = '0.1.3'
 baseFolder       = os.path.dirname(__file__)
 libFolder        = os.path.join(baseFolder, 'code', 'Lib')
 licensePath      = os.path.join(baseFolder, 'LICENSE')
@@ -47,13 +47,18 @@ def buildExtension():
             'shortKey'      : '',
         },
         {
-            'path'          : 'variableValues/dialogs/VarGlyphAssistant.py',
-            'preferredName' : 'VarGlyph Assistant',
+            'path'          : 'variableValues/dialogs/FontMeasurements.py',
+            'preferredName' : 'Measurements',
             'shortKey'      : '',
         },
         {
-            'path'          : 'variableValues/dialogs/GlyphMeasurements.py',
-            'preferredName' : 'Measurements',
+            'path'          : 'variableValues/dialogs/GlyphValidator.py',
+            'preferredName' : 'GlyphValidator',
+            'shortKey'      : '',
+        },
+        {
+            'path'          : 'variableValues/dialogs/BatchValidator.py',
+            'preferredName' : 'BatchValidator',
             'shortKey'      : '',
         },
     ]

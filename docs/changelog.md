@@ -38,6 +38,9 @@ types of changes:
 
 - <span class='badge'>Added</span> Adding support for “ghost points” to measure glyph margins.
 - <span class='badge'>Added</span> Adding kerning preview to VarFont Assistant.
+- <span class='badge'>Added</span> Adding `kerningPairPlus` and `kerningPreview` as separate modules for command-line use.
+- <span class='badge'>Added</span> Adding `variableValues.validation` with functions to compare glyph and font data.
+- <span class='badge'>Added</span> Adding [GlyphValidator](#) and [BatchValidator](#) dialogs.
 
 
 0.1.2

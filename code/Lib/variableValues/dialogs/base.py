@@ -1,14 +1,9 @@
-from importlib import reload
-import variableValues.measurements
-reload(variableValues.measurements)
-
 import AppKit
 import os
-from operator import itemgetter, attrgetter
-from vanilla import Window, TextBox, List, Button, Tabs, LevelIndicatorListCell
+from operator import itemgetter
+from vanilla import Window, TextBox, List, Tabs
 from fontTools.designspaceLib import DesignSpaceDocument
 from mojo.roboFont import OpenFont, OpenWindow
-from variableValues.measurements import importMeasurementDescriptionsFromCSV, FontMeasurements
 
 
 class DesignSpaceSelector:
@@ -37,7 +32,6 @@ class DesignSpaceSelector:
         self.w = Window(
                 (self.width, self.height), title=self.title,
                 minSize=(self.width, 360))
-
         x = y = p = self.padding
         self.w.tabs = Tabs((x, y, -p, -p), self._tabsTitles)
         self.initializeDesignspacesTab()
@@ -113,8 +107,6 @@ class DesignSpaceSelector:
             tabsDict[tabTitle] = self.w.tabs[tabIndex]
         return tabsDict
 
-    # designspace
-
     @property
     def selectedDesignspace(self):
         tab = self._tabs['designspace']
@@ -157,8 +149,6 @@ class DesignSpaceSelector:
     # ---------
     # callbacks
     # ---------
-
-    # designspace
 
     def dropDesignspaceCallback(self, sender, dropInfo):
         isProposal = dropInfo["isProposal"]
@@ -277,7 +267,6 @@ class DesignSpaceSelector:
         f = OpenFont(sourcePath, showInterface=True)
         if self.verbose:
             print('done!\n')
-
 
 # ----
 # test
