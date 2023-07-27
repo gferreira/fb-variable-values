@@ -24,7 +24,7 @@ def getVarDistance(src, default):
 
 class DesignSpacePlus:
     
-    matchGlyphCount = True # use this to ignore sparse masters
+    matchGlyphCount = False # use this to ignore sparse masters
     
     def __init__(self, designSpacePath):
         self.document = DesignSpaceDocument()
@@ -51,8 +51,12 @@ class DesignSpacePlus:
         return self._getSourceSet(2)
 
     @property
-    def quadrivars(self):
+    def quadvars(self):
         return self._getSourceSet(3)
+
+    @property
+    def othervars(self):
+        return list(set(self.document.sources).difference(set([self.default]+self.duovars+self.trivars+self.quadvars)))
 
     def _getSourceSet(self, n):
         varSet = []
@@ -63,14 +67,14 @@ class DesignSpacePlus:
             if d == n:
                 varSet.append(src)
 
-        # get default glyph count
-        srcPath = os.path.join(self.folder, self.default.filename)
-        f = OpenFont(srcPath, showInterface=False)
-        glyphCount = len(f)
-        f.close()
-
         # check glyph counts against default
         if self.matchGlyphCount:
+
+            srcPath = os.path.join(self.folder, self.default.filename)
+            f = OpenFont(srcPath, showInterface=False)
+            glyphCount = len(f)
+            f.close()
+
             _varSet = []
             for src in varSet:
                 srcPath = os.path.join(self.folder, src.filename)

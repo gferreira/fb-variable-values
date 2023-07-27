@@ -1,34 +1,52 @@
+from importlib import reload
+import variableValues.designspacePlus
+reload(variableValues.designspacePlus)
+
 import AppKit
 import os
 from operator import itemgetter
-from vanilla import Window, TextBox, List, Tabs
+from vanilla import Window, TextBox, CheckBox, List, Tabs
 from fontTools.designspaceLib import DesignSpaceDocument
 from mojo.roboFont import OpenFont, OpenWindow
-
+from variableValues.designspacePlus import DesignSpacePlus
 
 class DesignSpaceSelector:
     
-    title             = 'DesignSpaceSelector'
-    width             = 123*5
-    height            = 640
-    padding           = 10
-    lineHeight        = 22
-    verbose           = True
-    buttonWidth       = 100
+    title         = 'DesignSpaceSelector'
+    width         = 123*5
+    height        = 640
+    padding       = 10
+    lineHeight    = 22
+    buttonWidth   = 100
+    verbose       = True
 
-    _colLeft          = 160
-    _colFontName      = 160
-    _colValue         = 60
-    _tabsTitles       = ['designspace']
+    _colLeft      = 160
+    _colFontName  = 160
+    _colValue     = 60
 
-    _designspaces     = {}
-    _axes             = {}
-    _axesOrder        = []
-    _axesTitles       = ['name', 'tag', 'minimum', 'maximum', 'default']
-    _sources          = {}
+    _tabsTitles   = ['designspace'] # expand in subclass
+
+    #: A dictionary of designspace names (keys) and their .designspace paths (values).
+    _designspaces = {}
+
+    # _axesOrder    = []
+
+    _axisColumns  = ['name', 'tag', 'default', 'minimum', 'maximum']
+    
+    #: A dictionary of source font names (keys) and their UFO paths (values).
+    _sources      = {}
+
+    #: Source groups by distance from location to default (+ label width for UI)
+    _sourceTypes  = [
+        ('default',   65),
+        ('duovars',   70),
+        ('trivars',   62),
+        ('quadvars',  77),
+        ('othervars', 70),
+    ]
 
     def __init__(self):
-        ### OVERWRITE IN SUBCLASS
+        # overwrite in subclass
         self.w = Window(
                 (self.width, self.height), title=self.title,
                 minSize=(self.width, 360))
@@ -71,7 +89,7 @@ class DesignSpaceSelector:
                 'axes')
 
         y += self.lineHeight + p/2
-        axesDescriptions = [{"title": D} for D in self._axesTitles]
+        axesDescriptions = [{"title": D} for D in self._axisColumns]
         tab.axes = List(
                 (x, y, -p, self.lineHeight*7),
                 [],
@@ -95,6 +113,17 @@ class DesignSpaceSelector:
                 (x, y, -p, -(self.lineHeight + p*2)),
                 [])
 
+        y = -(self.lineHeight + p)
+        for sourceType, labelWidth in self._sourceTypes:
+            checkBox = CheckBox(
+                (x, y, self.buttonWidth-p, self.lineHeight),
+                sourceType,
+                value=True,
+                callback=self.updateSourcesListCallback,
+                sizeStyle='small')
+            setattr(tab, sourceType, checkBox)
+            x += labelWidth
+
     # -------------
     # dynamic attrs
     # -------------
@@ -109,6 +138,7 @@ class DesignSpaceSelector:
 
     @property
     def selectedDesignspace(self):
+        '''Returns the name of the currently selected designspace.'''
         tab = self._tabs['designspace']
         selection = tab.designspaces.getSelection()
         designspaces = tab.designspaces.get()
@@ -119,25 +149,54 @@ class DesignSpaceSelector:
 
     @property
     def selectedDesignspacePath(self):
+        '''Returns the .designspace path of the currently selected designspace.'''
         if not self.selectedDesignspace:
             return
         return self._designspaces[self.selectedDesignspace]
 
     @property
-    def selectedDesignspaceDocument(self):
+    def selectedDesignspacePlus(self):
+        '''Returns a DesignSpacePlus object for the currently selected designspace.'''
         if not self.selectedDesignspacePath:
             return
-        designspace = DesignSpaceDocument()
-        designspace.read(self.selectedDesignspacePath)
-        return designspace
+        return DesignSpacePlus(self.selectedDesignspacePath)
+
+    @property
+    def sourceFilters(self):
+        '''Returns a dictionary with source filter names (keys) and their checkbox statuses (value).'''
+        tab = self._tabs['designspace']
+        filters = {}
+        for sourceType, w in self._sourceTypes:
+            checkBox = getattr(tab, sourceType)
+            filters[sourceType] = checkBox.get()
+        return filters
 
     @property
     def sources(self):
+        '''Returns a list of filtered SourceDescriptor objects.'''
         tab = self._tabs['designspace']
-        return tab.sources.get()
+        filters = self.sourceFilters
+        designspacePlus = self.selectedDesignspacePlus
+        # all filters == no filters
+        if all(filters.values()):
+            return designspacePlus.document.sources
+        # filter sources
+        filteredSources = []
+        if self.sourceFilters['default']:
+            filteredSources += [designspacePlus.default]
+        if self.sourceFilters['duovars']:
+            filteredSources += designspacePlus.duovars
+        if self.sourceFilters['trivars']:
+            filteredSources += designspacePlus.trivars
+        if self.sourceFilters['quadvars']:
+            filteredSources += designspacePlus.quadvars
+        if self.sourceFilters['othervars']:
+            filteredSources += designspacePlus.othervars
+        return filteredSources
 
     @property
     def selectedSources(self):
+        '''Returns currently selected source list items.'''
         tab = self._tabs['designspace']
         selection = tab.sources.getSelection()
         sources = tab.sources.get()
@@ -145,6 +204,40 @@ class DesignSpaceSelector:
         if not len(selectedSources):
             return
         return selectedSources
+
+    # -------
+    # methods
+    # -------
+
+    def collectAllSources(self):
+        '''Collect all designspace sources into a dict of file names (keys) and UFO source paths (values).'''
+        self._sources = {}
+        for source in self.selectedDesignspacePlus.document.sources:
+            sourceFileName = os.path.splitext(os.path.split(source.path)[-1])[0]
+            self._sources[sourceFileName] = source.path
+
+    def updateSourcesListCallback(self, sender):
+        # make list items
+        sourcesDescriptions  = [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName, 'maxWidth': self._colFontName*3}]
+        sourcesDescriptions += [{'title': axis.tag, 'width': self._colValue} for axis in self.selectedDesignspacePlus.document.axes]
+        sourcesItems = []
+        for source in self.sources:
+            sourceFileName = os.path.splitext(os.path.split(source.path)[-1])[0]
+            sourceItem = { 'file name' : sourceFileName }
+            for axis in self.selectedDesignspacePlus.document.axes:
+                sourceItem[axis.tag] = source.location[axis.name]
+            sourcesItems.append(sourceItem)
+        # update source list
+        tab = self._tabs['designspace']
+        sourcesListPosSize = tab.sources.getPosSize()
+        del tab.sources
+        tab.sources = List(
+            sourcesListPosSize, sourcesItems,
+            columnDescriptions=sourcesDescriptions,
+            allowsMultipleSelection=True,
+            allowsSorting=False, # sort columns would be useful, but it breaks axes sorting :/
+            enableDelete=False,
+            doubleClickCallback=self.openSourceCallback)
 
     # ---------
     # callbacks
@@ -175,47 +268,23 @@ class DesignSpaceSelector:
 
         tab = self._tabs['designspace']
 
-        sourcesPosSize = tab.sources.getPosSize()
-        del tab.sources
+        # self._sourcesListPosSize = tab.sources.getPosSize()
+        # del tab.sources
 
         if not self.selectedDesignspace:
             tab.axes.set([])
-            tab.sources = List(sourcesPosSize, [])
+            tab.sources.set([]) #  = List(self._sourcesListPosSize, [])
             return
 
-        designspace = self.selectedDesignspaceDocument 
-
-        # make list items
-        self._axes = {}
+        # update axes list
         axesItems = []
-        for axis in designspace.axes:
-            axisItem = { attr : getattr(axis, attr) for attr in self._axesTitles }
+        for axis in self.selectedDesignspacePlus.document.axes:
+            axisItem = { attr : getattr(axis, attr) for attr in self._axisColumns }
             axesItems.append(axisItem)
-
-        # create list UI with sources
         tab.axes.set(axesItems)
 
-        # make list items
-        sourcesDescriptions  = [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName, 'maxWidth': self._colFontName*3}]
-        sourcesDescriptions += [{'title': axis.tag, 'width': self._colValue} for axis in designspace.axes]
-        self._sources = {}
-        sourcesItems = []
-        for source in designspace.sources:
-            sourceFileName = os.path.splitext(os.path.split(source.path)[-1])[0]
-            self._sources[sourceFileName] = source.path
-            sourceItem = { 'file name' : sourceFileName }
-            for axis in designspace.axes:
-                sourceItem[axis.tag] = source.location[axis.name]
-            sourcesItems.append(sourceItem)
-
-        # create list UI with sources
-        tab.sources = List(
-            sourcesPosSize, sourcesItems,
-            columnDescriptions=sourcesDescriptions,
-            allowsMultipleSelection=True,
-            allowsSorting=False,
-            enableDelete=False,
-            doubleClickCallback=self.openSourceCallback)
+        self.collectAllSources()
+        self.updateSourcesListCallback(None)
 
     def editAxesCallback(self, sender):
         tab = self._tabs['designspace']
@@ -232,7 +301,9 @@ class DesignSpaceSelector:
                 D[k] = v
             sourceItems.append(D)
 
-        sourceItems = sorted(sourceItems, key=itemgetter(*self.axesOrder))
+        if len(self.axesOrder):
+            sourceItems = sorted(sourceItems, key=itemgetter(*self.axesOrder))
+
         tab.sources.set(sourceItems)
 
     def genericDragCallback(self, sender, indexes):
