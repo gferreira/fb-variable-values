@@ -10,14 +10,14 @@ Uses David Berlow's terminology: monovar (neutral), duovar, trivar, quadravar.
 '''
 
 
-def getVarDistance(src, default):
+def getVarDistance(source, defaultSource):
     '''
     On how many axes is the location of a given source different from the default?
 
     '''
-    n = 0
-    for k in src.location.keys():
-        if src.location[k] != default.location[k]:
+    n = 1
+    for k in source.location.keys():
+        if source.location[k] != defaultSource.location[k]:
             n += 1
     return n
 
@@ -44,15 +44,15 @@ class DesignSpacePlus:
 
     @property
     def duovars(self):
-        return self._getSourceSet(1)
-
-    @property
-    def trivars(self):
         return self._getSourceSet(2)
 
     @property
-    def quadvars(self):
+    def trivars(self):
         return self._getSourceSet(3)
+
+    @property
+    def quadvars(self):
+        return self._getSourceSet(4)
 
     @property
     def othervars(self):

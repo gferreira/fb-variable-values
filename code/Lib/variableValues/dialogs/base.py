@@ -8,7 +8,7 @@ from operator import itemgetter
 from vanilla import Window, TextBox, CheckBox, List, Tabs
 from fontTools.designspaceLib import DesignSpaceDocument
 from mojo.roboFont import OpenFont, OpenWindow
-from variableValues.designspacePlus import DesignSpacePlus
+from variableValues.designspacePlus import DesignSpacePlus, getVarDistance
 
 class DesignSpaceSelector:
     
@@ -89,7 +89,17 @@ class DesignSpaceSelector:
                 'axes')
 
         y += self.lineHeight + p/2
-        axesDescriptions = [{"title": D} for D in self._axisColumns]
+        axesDescriptions = []
+        for i, columnTitle in enumerate(self._axisColumns):
+            D = {}
+            D["title"] = columnTitle
+            if i:
+                D["width"] = 80
+            else:
+                D["minWidth"] = 80
+                D["width"]    = 120
+                D["maxWidth"] = 200
+            axesDescriptions.append(D)
         tab.axes = List(
                 (x, y, -p, self.lineHeight*7),
                 [],
@@ -217,16 +227,23 @@ class DesignSpaceSelector:
             self._sources[sourceFileName] = source.path
 
     def updateSourcesListCallback(self, sender):
+
         # make list items
-        sourcesDescriptions  = [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName, 'maxWidth': self._colFontName*3}]
+        sourcesDescriptions  = [{'title': 'n', 'width': 20}]
+        sourcesDescriptions += [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName, 'maxWidth': self._colFontName*3}]
         sourcesDescriptions += [{'title': axis.tag, 'width': self._colValue} for axis in self.selectedDesignspacePlus.document.axes]
         sourcesItems = []
         for source in self.sources:
             sourceFileName = os.path.splitext(os.path.split(source.path)[-1])[0]
-            sourceItem = { 'file name' : sourceFileName }
+            n = getVarDistance(source, self.selectedDesignspacePlus.default)
+            sourceItem = {
+                'n'         : n,
+                'file name' : sourceFileName,
+            }
             for axis in self.selectedDesignspacePlus.document.axes:
                 sourceItem[axis.tag] = source.location[axis.name]
             sourcesItems.append(sourceItem)
+
         # update source list
         tab = self._tabs['designspace']
         sourcesListPosSize = tab.sources.getPosSize()
@@ -235,7 +252,7 @@ class DesignSpaceSelector:
             sourcesListPosSize, sourcesItems,
             columnDescriptions=sourcesDescriptions,
             allowsMultipleSelection=True,
-            allowsSorting=False, # sort columns would be useful, but it breaks axes sorting :/
+            allowsSorting=True, # sorting by columns vs. by axes sorting can get in conflict :/
             enableDelete=False,
             doubleClickCallback=self.openSourceCallback)
 
@@ -268,12 +285,9 @@ class DesignSpaceSelector:
 
         tab = self._tabs['designspace']
 
-        # self._sourcesListPosSize = tab.sources.getPosSize()
-        # del tab.sources
-
         if not self.selectedDesignspace:
             tab.axes.set([])
-            tab.sources.set([]) #  = List(self._sourcesListPosSize, [])
+            tab.sources.set([])
             return
 
         # update axes list
