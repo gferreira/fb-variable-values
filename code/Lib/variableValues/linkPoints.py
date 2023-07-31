@@ -30,19 +30,19 @@ def getPointAtIndex(glyph, ptIndex):
             points[n] = ci, pi
             n += 1
     # n+1 : right margin
-    if i > len(points)-1:
+    if ptIndex > len(points)-1:
         P = RPoint()
         P.x = glyph.width
         P.y = 0
         return P
     # -1 : left margin
-    if i < 0:
+    if ptIndex < 0:
         P = RPoint()
         P.x = 0
         P.y = 0
         return P
     # get point at index
-    ci, pi = points[i]
+    ci, pi = points[ptIndex]
     return glyph.contours[ci].points[pi]
 
 def getIndexForPoint(glyph, pt):

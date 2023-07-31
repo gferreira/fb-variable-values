@@ -75,6 +75,13 @@
           <key>name</key>
           <string>YOUC</string>
         </dict>
+        <key>18 39</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTUC</string>
+        </dict>
         <key>22 23</key>
         <dict>
           <key>direction</key>

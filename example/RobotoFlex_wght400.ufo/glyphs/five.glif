@@ -64,6 +64,13 @@
           <key>name</key>
           <string>YOFI</string>
         </dict>
+        <key>17 30</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTFI</string>
+        </dict>
         <key>18 19</key>
         <dict>
           <key>direction</key>

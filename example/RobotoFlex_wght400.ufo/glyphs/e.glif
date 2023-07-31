@@ -66,13 +66,6 @@
           <key>name</key>
           <string>XTLC</string>
         </dict>
-        <key>15 22</key>
-        <dict>
-          <key>direction</key>
-          <string>y</string>
-          <key>name</key>
-          <string>YTLC</string>
-        </dict>
         <key>22 29</key>
         <dict>
           <key>direction</key>
@@ -86,6 +79,13 @@
           <string>y</string>
           <key>name</key>
           <string>YOLC</string>
+        </dict>
+        <key>4 29</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTLC</string>
         </dict>
         <key>7 12</key>
         <dict>

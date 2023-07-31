@@ -1,3 +1,7 @@
+from importlib import reload
+import variableValues.linkPoints
+reload(variableValues.linkPoints)
+
 import os
 from math import sqrt
 from defconAppKit.windows.baseWindow import BaseWindowController
@@ -12,16 +16,16 @@ from variableValues.linkPoints import *
 '''
 M E A S U R E M E N T S
 
-A tool to measure distances between glyph points and store them in the font.
+A tool to measure distances in glyphs and store them in the font.
 
 Font Measurements
 -----------------
 
-f'{name}' : {
-    'glyph 1'   : 'XTRA',
-    'point 1'   : 'XTRA',
-    'glyph 2'   : 'XTRA',
-    'point 2'   : 'XTRA',
+'XTRA' : {
+    'glyph 1'   : 'H',
+    'point 1'   : 11,
+    'glyph 2'   : 'H',
+    'point 2'   : 8,
     'direction' : 'x',
 }
 
@@ -101,6 +105,9 @@ def nscolor2rgb(nsColor):
 
 class FontMeasurements(BaseWindowController):
     
+    # TO-DO: rewrite handling of font- and glyph-level measurements
+    # - add intermediate level between font data and UI (see VarFontAssistant)
+
     title        = 'Measurements'
     key          = 'com.fontBureau.measurements'
 
@@ -118,8 +125,8 @@ class FontMeasurements(BaseWindowController):
     _colName     = 95
     _colValue    = 65   
 
-    fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'distance']
-    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'distance', 'font'] # 'factor'
+    fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'value']
+    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'value', 'parent', 'scale']
 
     _fonts = {}
 
@@ -147,6 +154,7 @@ class FontMeasurements(BaseWindowController):
         addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
         addObserver(self, "fontBecameCurrent",   "fontBecameCurrent")
         addObserver(self, "backgroundPreview",   "drawBackground")
+        addObserver(self, "drawLabelCell",       "glyphCellDrawBackground")
 
         self.font  = CurrentFont()
         self.glyph = CurrentGlyph()
@@ -202,8 +210,9 @@ class FontMeasurements(BaseWindowController):
         tab = self._tabs['glyph']
 
         _columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-2])]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-2:])]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-3])]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-3:-1])]
+        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-1]}]
 
         x = y = p = self.padding
         tab.measurements = List(
@@ -309,6 +318,7 @@ class FontMeasurements(BaseWindowController):
         super().windowCloseCallback(sender)
         removeObserver(self, "currentGlyphChanged")
         removeObserver(self, "drawBackground")
+        removeObserver(self, "glyphCellDrawBackground")
 
     # font
 
@@ -383,7 +393,7 @@ class FontMeasurements(BaseWindowController):
                 p1 = getPointAtIndex(g1, index1)
                 p2 = getPointAtIndex(g2, index2)
                 distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
-                item['distance'] = distance
+                item['value'] = distance
             except:
                 pass
 
@@ -439,10 +449,11 @@ class FontMeasurements(BaseWindowController):
         if not g:
             return
 
-        if len(g.selectedPoints) == 1:
-            newMeasurePoint(g)
-        else:
-            linkPoints(g)
+        # if len(g.selectedPoints) == 1:
+        #     newMeasurePoint(g)
+        # else:
+
+        linkPoints(g)
 
         self.loadGlyphMeasurements(None)
 
@@ -464,7 +475,7 @@ class FontMeasurements(BaseWindowController):
 
         deleteAllLinks(g)
 
-        for item in items:       
+        for item in items:
             if item['point 1'] is None:
                 continue
 
@@ -477,22 +488,25 @@ class FontMeasurements(BaseWindowController):
                 name = None
             if not len(direction.strip()):
                 direction = None
-            if not len(ptIndex2.strip()):
-                ptIndex2 = None
+            if type(ptIndex2) is not int:
+                if not len(ptIndex2.strip()):
+                    ptIndex2 = None
 
-            if ptIndex2 is None:
-                saveMeasurePointToLib(g, ptIndex1, name=name, direction=direction)
-            else:
-                ptIndex2  = int(ptIndex2)
-                # guess direction from name
-                if str(name) != '<null>' and str(direction) == '<null>':
-                    if name[0] == 'X':
-                        direction = 'x'
-                        item['direction'] = 'x'
-                    if name[0] == 'Y':
-                        direction = 'y'
-                        item['direction'] = 'y'
-                saveLinkToLib(g, (ptIndex1, ptIndex2), name=name, direction=direction, verbose=False)
+            # if ptIndex2 is None:
+            #     saveMeasurePointToLib(g, ptIndex1, name=name, direction=direction)
+            # else:
+            ptIndex2 = int(ptIndex2)
+
+            # guess direction from name
+            if name is not None and direction is None:
+                if name[0] == 'X':
+                    direction = 'x'
+                    item['direction'] = 'x'
+                if name[0] == 'Y':
+                    direction = 'y'
+                    item['direction'] = 'y'
+
+            saveLinkToLib(g, (ptIndex1, ptIndex2), name=name, direction=direction, verbose=False)
 
     def loadGlyphMeasurements(self, sender):
         '''
@@ -533,20 +547,19 @@ class FontMeasurements(BaseWindowController):
                 p1 = getPointAtIndex(g, index1)
                 p2 = getPointAtIndex(g, index2)
                 distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
-                listItem['distance'] = distance
+                listItem['value'] = distance
                 # get font measurement
                 fontMeasurements = self._tabs['font'].measurements.get()
                 if name is not None:
                     for m in fontMeasurements:
                         if name != m['name']:
                             continue
-                        listItem['font'] = m['distance']
-                        # try:
-                        #     listItem['factor'] = fontDistance / float(m.get('distance'))
-                        # except:
-                        #     if self.verbose:
-                        #         print(f'no font distance for {name}')
-                        #     pass
+                        fontDistance = m['value']
+                        listItem['parent'] = fontDistance
+                        # get measurement scale
+                        if distance and fontDistance:
+                            scaleValue = distance / float(fontDistance)
+                            listItem['scale'] = f'{scaleValue:.3f}'
             _listItem = {}
             for k, v in listItem.items():
                 if v is None:
@@ -593,6 +606,22 @@ class FontMeasurements(BaseWindowController):
 
         self.drawPreview(self.glyph, s)
 
+    def drawLabelCell(self, notification):
+
+        glyph = notification['glyph']
+
+        measurements = getLinks(glyph)
+        if not len(measurements):
+            return
+
+        ctx.save()
+        ctx.font('Menlo-Bold')
+        ctx.fontSize(10)
+        ctx.translate(3, 3)
+        ctx.fill(0, 0, 1)
+        ctx.text('M', (0, -3))
+        ctx.restore()
+
     # font
 
     def fontBecameCurrent(self, notification):
@@ -632,18 +661,51 @@ class FontMeasurements(BaseWindowController):
         When the current glyph is changed:
 
         - recalculate distances between points
+        - recalculate scale in relation to parent value
 
         '''
         glyph = RGlyph(notification.object)
-        for item in self._tabs['glyph'].measurements.get():
+
+        glyphMeasurements = self._tabs['glyph'].measurements.get()
+        fontMeasurements  = self._tabs['font'].measurements.get()
+
+        for item in glyphMeasurements:
             p1 = getPointAtIndex(glyph, int(item['point 1']))
             p2 = item['point 2']
-            if p2:
+            if p2 is not None:
                 p2 = getPointAtIndex(glyph, int(p2))
                 distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
             else:
                 distance = None
-            item['distance'] = distance
+
+            if not item.get('value'):
+                return
+
+            item['value'] = distance
+
+            # get font measurement
+            name = item.get('name')
+            if name is None or not len(name.strip()):
+                return
+
+            for m in fontMeasurements:
+                if name != m['name']:
+                    continue
+                item['parent'] = m['value']
+                # item['scale']  = ''
+
+                # fontDistance = m['value']
+                # if distance == 0 and fontDistance == 0:
+                #     item['scale'] = f'{1:.3f}'
+                #     return
+
+                # if not (distance and fontDistance):
+                #     item['scale'] = ''
+                #     return
+
+                # # update measurement scale
+                # scaleValue = distance / float(fontDistance)
+                # item['scale'] = f'{scaleValue:.3f}'
 
     # -------
     # methods
@@ -688,10 +750,10 @@ class FontMeasurements(BaseWindowController):
                 pt1 = getPointAtIndex(glyph, index1)
                 pt2 = getPointAtIndex(glyph, index2)
 
-                if L['direction'] == 'x':
+                if L.get('direction') == 'x':
                     P1 = pt1.x, pt1.y
                     P2 = pt2.x, pt1.y
-                elif L['direction'] == 'y':
+                elif L.get('direction') == 'y':
                     P1 = pt2.x, pt1.y
                     P2 = pt2.x, pt2.y 
                 else: # angled
@@ -718,7 +780,7 @@ class FontMeasurements(BaseWindowController):
                         ctx.stroke(None)
                         ctx.fill(*self.measurementsColor)
                         ctx.fontSize(9*previewScale)
-                        _drawLinkMeasurement(P1, P2, L['name'], L['direction'])
+                        _drawLinkMeasurement(P1, P2, L.get('name'), L.get('direction'))
 
                 ctx.restore()
 

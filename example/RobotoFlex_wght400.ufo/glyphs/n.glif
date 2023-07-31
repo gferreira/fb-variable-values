@@ -47,6 +47,13 @@
           <key>name</key>
           <string>XOLC</string>
         </dict>
+        <key>0 7</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTLC</string>
+        </dict>
         <key>11 12</key>
         <dict>
           <key>direction</key>

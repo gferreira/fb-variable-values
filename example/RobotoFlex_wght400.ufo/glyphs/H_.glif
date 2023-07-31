@@ -32,6 +32,13 @@
           <key>name</key>
           <string>XUCS</string>
         </dict>
+        <key>0 1</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTUC</string>
+        </dict>
         <key>0 11</key>
         <dict>
           <key>direction</key>

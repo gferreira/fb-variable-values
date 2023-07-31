@@ -1224,6 +1224,32 @@
         <key>point 2</key>
         <string>0</string>
       </dict>
+      <key>YTFI</key>
+      <dict>
+        <key>direction</key>
+        <string>y</string>
+        <key>glyph 1</key>
+        <string>zero</string>
+        <key>glyph 2</key>
+        <string>zero</string>
+        <key>point 1</key>
+        <string>11</string>
+        <key>point 2</key>
+        <string>4</string>
+      </dict>
+      <key>YTLC</key>
+      <dict>
+        <key>direction</key>
+        <string>y</string>
+        <key>glyph 1</key>
+        <string>h</string>
+        <key>glyph 2</key>
+        <string>h</string>
+        <key>point 1</key>
+        <string>0</string>
+        <key>point 2</key>
+        <string>6</string>
+      </dict>
       <key>YTUC</key>
       <dict>
         <key>direction</key>

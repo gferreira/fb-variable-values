@@ -1,5 +1,6 @@
 import os, csv
 from fontTools.agl import UV2AGL
+from variableValues.linkPoints import getPointAtIndex
 
 # ---------
 # functions

@@ -46,6 +46,13 @@
           <key>name</key>
           <string>XOUC</string>
         </dict>
+        <key>10 15</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTUC</string>
+        </dict>
         <key>3 9</key>
         <dict>
           <key>direction</key>

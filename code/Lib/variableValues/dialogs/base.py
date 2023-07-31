@@ -10,6 +10,9 @@ from fontTools.designspaceLib import DesignSpaceDocument
 from mojo.roboFont import OpenFont, OpenWindow
 from variableValues.designspacePlus import DesignSpacePlus, getVarDistance
 
+# TO-DO
+# - turn off axis == hide sources which are not in the default location for that axis
+
 class DesignSpaceSelector:
     
     title         = 'DesignSpaceSelector'

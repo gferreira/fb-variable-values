@@ -78,6 +78,13 @@
           <key>name</key>
           <string>XOFI</string>
         </dict>
+        <key>10 23</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTFI</string>
+        </dict>
         <key>10 47</key>
         <dict>
           <key>direction</key>

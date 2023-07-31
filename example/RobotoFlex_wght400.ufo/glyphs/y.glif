@@ -46,6 +46,13 @@
           <key>name</key>
           <string>YTDE</string>
         </dict>
+        <key>-1 9</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTLC</string>
+        </dict>
         <key>4 24</key>
         <dict>
           <key>direction</key>

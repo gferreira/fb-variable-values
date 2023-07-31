@@ -63,6 +63,13 @@
           <key>name</key>
           <string>XOLC</string>
         </dict>
+        <key>0 7</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTLC</string>
+        </dict>
         <key>14 23</key>
         <dict>
           <key>direction</key>

@@ -16,9 +16,9 @@
       <point x="747" y="210"/>
       <point x="747" y="280" type="qcurve" smooth="yes" identifier="iXR0fpCBrg"/>
       <point x="747" y="350"/>
-      <point x="645" y="425"/>
-      <point x="475" y="465" type="qcurve" smooth="yes"/>
-      <point x="305" y="505"/>
+      <point x="645" y="424"/>
+      <point x="475" y="464" type="qcurve" smooth="yes"/>
+      <point x="305" y="504"/>
       <point x="105" y="650"/>
       <point x="105" y="780" type="qcurve" smooth="yes" identifier="OC30MKB7wm"/>
       <point x="105" y="910"/>
@@ -37,9 +37,9 @@
       <point x="289" y="850"/>
       <point x="289" y="790" type="qcurve" smooth="yes" identifier="rtHOMhz8fT"/>
       <point x="289" y="730"/>
-      <point x="405" y="660"/>
-      <point x="575" y="620" type="qcurve" smooth="yes"/>
-      <point x="745" y="580"/>
+      <point x="405" y="659"/>
+      <point x="575" y="619" type="qcurve" smooth="yes"/>
+      <point x="745" y="579"/>
       <point x="930" y="430"/>
       <point x="930" y="290" type="qcurve" smooth="yes" identifier="4RbGi3g502"/>
       <point x="930" y="150"/>
@@ -61,6 +61,13 @@
           <key>name</key>
           <string>XOLC</string>
         </dict>
+        <key>11 32</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YOLC</string>
+        </dict>
         <key>14 29</key>
         <dict>
           <key>direction</key>
@@ -74,6 +81,13 @@
           <string>y</string>
           <key>name</key>
           <string>YOLC</string>
+        </dict>
+        <key>17 38</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTLC</string>
         </dict>
         <key>21 22</key>
         <dict>
