@@ -44,7 +44,9 @@ f'{ptIndex}' : {
 
 '''
 
-# from hTools3.modules.color import rgb2nscolor, nscolor2rgb
+
+# copied from hTools3.modules.color
+
 from AppKit import NSColor
 
 def rgb2nscolor(rgbColor):
@@ -105,7 +107,8 @@ def nscolor2rgb(nsColor):
 
 class FontMeasurements(BaseWindowController):
     
-    # TO-DO: rewrite handling of font- and glyph-level measurements
+    # TO-DO: 
+    # - rewrite handling of font- and glyph-level measurements
     # - add intermediate level between font data and UI (see VarFontAssistant)
 
     title        = 'Measurements'
@@ -125,7 +128,7 @@ class FontMeasurements(BaseWindowController):
     _colName     = 95
     _colValue    = 65   
 
-    fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'value']
+    fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'value', 'parent', 'scale']
     glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'value', 'parent', 'scale']
 
     _fonts = {}
@@ -138,7 +141,7 @@ class FontMeasurements(BaseWindowController):
     }
 
     def __init__(self):
-
+        print('YO!')
         self.w = FloatingWindow(
                 (self.width, self.height), title=self.title,
                 minSize=(self.width*0.9, 360))
@@ -170,9 +173,11 @@ class FontMeasurements(BaseWindowController):
 
         tab = self._tabs['font']
 
-        _columnDescriptions  = [{"title": self.fontMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.fontMeasurementParameters[1:-1])]
-        _columnDescriptions += [{"title": self.fontMeasurementParameters[-1], 'width': self._colValue, 'editable': False}]
+        _columnDescriptions  = [{"title": self.fontMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}] # name
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.fontMeasurementParameters[1:-3])]   # dir, g1, p1, g2, p2
+        _columnDescriptions += [{"title": self.fontMeasurementParameters[-3], 'width': self._colValue, 'editable': False}]                             # value
+        _columnDescriptions += [{"title": self.fontMeasurementParameters[-2], 'width': self._colValue, 'editable': True}]                              # parent
+        _columnDescriptions += [{"title": self.fontMeasurementParameters[-1], 'width': self._colValue, 'editable': False}]                             # scale
 
         x = y = p = self.padding
         tab.measurements = List(
@@ -332,14 +337,7 @@ class FontMeasurements(BaseWindowController):
             return
 
         tab = self._tabs['font']
-        newListItem = {
-            'name'      : None,
-            'direction' : None,
-            'glyph 1'   : None,
-            'point 1'   : None,
-            'glyph 2'   : None,
-            'point 2'   : None,
-        }
+        newListItem = { m: None for m in self.fontMeasurementParameters }
         tab.measurements.append(newListItem)
         self.updateFontDistances()
 
@@ -360,6 +358,7 @@ class FontMeasurements(BaseWindowController):
                 'point 1'   : item.get('point 1'),
                 'glyph 2'   : item.get('glyph 2'),
                 'point 2'   : item.get('point 2'),
+                'parent'    : item.get('parent'),
             }
 
             # guess direction from name
@@ -376,17 +375,24 @@ class FontMeasurements(BaseWindowController):
         self.updateFontDistances()
 
     def updateFontDistances(self):
+
         items = self._tabs['font'].measurements.get()
+
         for item in items:
             gName1 = item.get('glyph 1')
             gName2 = item.get('glyph 2')
+
             if gName1 is None or gName2 is None:
                 continue
+
             gName1, gName2 = str(gName1), str(gName2)
+
             if gName1 not in self.font or gName2 not in self.font:
                 continue
+
             g1 = self.font[gName1]
             g2 = self.font[gName2]
+
             try:
                 index1 = int(item.get('point 1'))
                 index2 = int(item.get('point 2'))
@@ -394,6 +400,7 @@ class FontMeasurements(BaseWindowController):
                 p2 = getPointAtIndex(g2, index2)
                 distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
                 item['value'] = distance
+
             except:
                 pass
 
@@ -416,17 +423,26 @@ class FontMeasurements(BaseWindowController):
 
         listItems = []
         for name in measurements.keys():
-            item = {
+            listItem = {
                 'name'      : name,
                 'direction' : measurements[name].get('direction'), 
                 'glyph 1'   : measurements[name].get('glyph 1'),
                 'point 1'   : measurements[name].get('point 1'),
                 'glyph 2'   : measurements[name].get('glyph 2'),
                 'point 2'   : measurements[name].get('point 2'),
+                'parent'    : measurements[name].get('parent'),
             }
-            listItems.append(item)
+
+            _listItem = {}
+            for k, v in listItem.items():
+                if v is None:
+                   v = '' 
+                _listItem[k] = v
+
+            listItems.append(_listItem)
 
         tab.measurements.set(listItems)
+
         self.updateFontDistances()
 
     def importFontMeasurementsCallback(self, sender):

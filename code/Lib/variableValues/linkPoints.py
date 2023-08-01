@@ -327,18 +327,26 @@ def saveMeasurePointToLib(glyph, ptIndex, name=None, direction=None, key=KEY, ve
 ### FONT-LEVEL MEASUREMENT
 
 def saveLinkToLib_font(font, name, link, key=KEY, verbose=True):
+
     if key not in font.lib:
         font.lib[key] = {}
+
     if verbose:
         print(f'saving link "{name}" to the font lib ({font.info.familyName} {font.info.styleName})...')
+
     if name not in font.lib[key]:
         font.lib[key][name] = {}
+
     for k, v in link.items():
+
         if k is None or v is None:
             continue
+
         k, v = str(k), str(v)
+
         if k == '<null>' or v == '<null>':
             continue
+
         font.lib[key][name][k] = v
 
 def deleteLink_font(font, name, key=KEY):

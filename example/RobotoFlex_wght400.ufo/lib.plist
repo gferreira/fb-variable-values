@@ -959,6 +959,8 @@
         <string>zero</string>
         <key>glyph 2</key>
         <string>zero</string>
+        <key>parent</key>
+        <string>XTSB</string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -972,6 +974,8 @@
         <string>o</string>
         <key>glyph 2</key>
         <string>o</string>
+        <key>parent</key>
+        <string>XTSB</string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -985,6 +989,8 @@
         <string>n</string>
         <key>glyph 2</key>
         <string>n</string>
+        <key>parent</key>
+        <string>XTSB</string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -998,6 +1004,8 @@
         <string>one</string>
         <key>glyph 2</key>
         <string>one</string>
+        <key>parent</key>
+        <string>XOPQ</string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1011,6 +1019,8 @@
         <string>n</string>
         <key>glyph 2</key>
         <string>n</string>
+        <key>parent</key>
+        <string>XOPQ</string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1024,6 +1034,8 @@
         <string>H</string>
         <key>glyph 2</key>
         <string>H</string>
+        <key>parent</key>
+        <string></string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1037,6 +1049,8 @@
         <string>H</string>
         <key>glyph 2</key>
         <string>H</string>
+        <key>parent</key>
+        <string>XOPQ</string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1050,6 +1064,8 @@
         <string>zero</string>
         <key>glyph 2</key>
         <string>zero</string>
+        <key>parent</key>
+        <string></string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1063,6 +1079,8 @@
         <string>zero</string>
         <key>glyph 2</key>
         <string>zero</string>
+        <key>parent</key>
+        <string>XTRA</string>
         <key>point 1</key>
         <string>14</string>
         <key>point 2</key>
@@ -1076,6 +1094,8 @@
         <string>n</string>
         <key>glyph 2</key>
         <string>n</string>
+        <key>parent</key>
+        <string>XTRA</string>
         <key>point 1</key>
         <string>20</string>
         <key>point 2</key>
@@ -1089,6 +1109,8 @@
         <string>H</string>
         <key>glyph 2</key>
         <string>H</string>
+        <key>parent</key>
+        <string></string>
         <key>point 1</key>
         <string>11</string>
         <key>point 2</key>
@@ -1102,6 +1124,8 @@
         <string>H</string>
         <key>glyph 2</key>
         <string>H</string>
+        <key>parent</key>
+        <string></string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1115,6 +1139,8 @@
         <string>H</string>
         <key>glyph 2</key>
         <string>H</string>
+        <key>parent</key>
+        <string>XTRA</string>
         <key>point 1</key>
         <string>11</string>
         <key>point 2</key>
@@ -1128,6 +1154,8 @@
         <string>O</string>
         <key>glyph 2</key>
         <string>O</string>
+        <key>parent</key>
+        <string>XTSB</string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1141,6 +1169,8 @@
         <string>H</string>
         <key>glyph 2</key>
         <string>H</string>
+        <key>parent</key>
+        <string>XTSB</string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1154,6 +1184,8 @@
         <string>zero</string>
         <key>glyph 2</key>
         <string>zero</string>
+        <key>parent</key>
+        <string>YOPQ</string>
         <key>point 1</key>
         <string>11</string>
         <key>point 2</key>
@@ -1167,6 +1199,8 @@
         <string>f</string>
         <key>glyph 2</key>
         <string>f</string>
+        <key>parent</key>
+        <string>YOPQ</string>
         <key>point 1</key>
         <string>4</string>
         <key>point 2</key>
@@ -1180,6 +1214,8 @@
         <string>H</string>
         <key>glyph 2</key>
         <string>H</string>
+        <key>parent</key>
+        <string>XOPQ</string>
         <key>point 1</key>
         <string>10</string>
         <key>point 2</key>
@@ -1193,6 +1229,8 @@
         <string>H</string>
         <key>glyph 2</key>
         <string>H</string>
+        <key>parent</key>
+        <string>YOPQ</string>
         <key>point 1</key>
         <string>10</string>
         <key>point 2</key>
@@ -1206,6 +1244,8 @@
         <string>h</string>
         <key>glyph 2</key>
         <string>h</string>
+        <key>parent</key>
+        <string></string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1219,6 +1259,8 @@
         <string>n</string>
         <key>glyph 2</key>
         <string>p</string>
+        <key>parent</key>
+        <string></string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1232,6 +1274,8 @@
         <string>zero</string>
         <key>glyph 2</key>
         <string>zero</string>
+        <key>parent</key>
+        <string></string>
         <key>point 1</key>
         <string>11</string>
         <key>point 2</key>
@@ -1245,6 +1289,8 @@
         <string>h</string>
         <key>glyph 2</key>
         <string>h</string>
+        <key>parent</key>
+        <string></string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
@@ -1258,6 +1304,8 @@
         <string>H</string>
         <key>glyph 2</key>
         <string>H</string>
+        <key>parent</key>
+        <string></string>
         <key>point 1</key>
         <string>0</string>
         <key>point 2</key>
