@@ -19,8 +19,8 @@
       <point x="97" y="1386" type="line"/>
       <point x="97" y="1500" type="line"/>
       <point x="670" y="1500" type="line"/>
-      <point x="670" y="1386" type="line"/>
-      <point x="480" y="1352" type="line"/>
+      <point x="670" y="1384" type="line"/>
+      <point x="480" y="1350" type="line"/>
       <point x="478" y="834" type="line"/>
       <point x="490" y="189" type="line" smooth="yes"/>
       <point x="494" y="-29"/>
@@ -34,7 +34,7 @@
     <dict>
       <key>com.fontBureau.glyphMeasurements</key>
       <dict>
-        <key>-1 11</key>
+        <key>-1 12</key>
         <dict>
           <key>direction</key>
           <string>y</string>
@@ -47,6 +47,27 @@
           <string>x</string>
           <key>name</key>
           <string>XTUC</string>
+        </dict>
+        <key>10 11</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSUC</string>
+        </dict>
+        <key>12 13</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSUC</string>
+        </dict>
+        <key>13 14</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSUC</string>
         </dict>
         <key>4 19</key>
         <dict>
@@ -61,6 +82,13 @@
           <string>x</string>
           <key>name</key>
           <string>XUCS</string>
+        </dict>
+        <key>9 10</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSUC</string>
         </dict>
         <key>9 14</key>
         <dict>

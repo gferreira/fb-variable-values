@@ -105,12 +105,8 @@ def nscolor2rgb(nsColor):
 
 
 
-class FontMeasurements(BaseWindowController):
+class Measurements(BaseWindowController):
     
-    # TO-DO: 
-    # - rewrite handling of font- and glyph-level measurements
-    # - add intermediate level between font data and UI (see VarFontAssistant)
-
     title        = 'Measurements'
     key          = 'com.fontBureau.measurements'
 
@@ -124,21 +120,24 @@ class FontMeasurements(BaseWindowController):
     sizeStyle    = 'normal'
 
     _tabsTitles  = ['font', 'glyph']
-
     _colName     = 95
-    _colValue    = 65   
+    _colValue    = 65
+
+    settings = {
+        'measurementsColor' : (1, 0, 0, 1),
+        'strokeWidth1'      : 1,
+        'strokeWidth2'      : 20,
+        'radius1'           : 10,
+    }
 
     fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'value', 'parent', 'scale']
     glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'value', 'parent', 'scale']
 
-    _fonts = {}
+    #: measurements for current font
+    fontMeasurements  = {}
 
-    settings = {
-        'measurementsColor' : (1, 0.35, 0, 1),
-        'strokeWidth1'      : 3,
-        'strokeWidth2'      : 30,
-        'radius1'           : 8,
-    }
+    #: measurements for current glyph
+    glyphMeasurements = {}
 
     def __init__(self):
         self.w = FloatingWindow(
@@ -152,8 +151,8 @@ class FontMeasurements(BaseWindowController):
         self.initializeGlyphTab()
 
         self.setUpBaseWindowBehavior()
-        addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
         addObserver(self, "fontBecameCurrent",   "fontBecameCurrent")
+        addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
         addObserver(self, "backgroundPreview",   "drawBackground")
         addObserver(self, "drawLabelCell",       "glyphCellDrawBackground")
 
@@ -326,123 +325,149 @@ class FontMeasurements(BaseWindowController):
 
     # font
 
-    def newFontMeasurementCallback(self, sender):
-        '''
-        Create a link between two points, save it in the font lib, update the measurements list.
-
-        '''
-        f = self.font
-        if not f:
-            return
-
-        tab = self._tabs['font']
-        newListItem = { m: None for m in self.fontMeasurementParameters }
-        tab.measurements.append(newListItem)
-        self.updateFontDistances()
-
-    def editFontMeasurementCallback(self, sender):
-        f = self.font
-        if not f:
-            return
-
-        items = self._tabs['font'].measurements.get()
-
-        for item in items:
-            name = item.get('name')
-            if name is None or str(name) == '<null>':
-                continue
-            L = {
-                'direction' : item.get('direction'),
-                'glyph 1'   : item.get('glyph 1'),
-                'point 1'   : item.get('point 1'),
-                'glyph 2'   : item.get('glyph 2'),
-                'point 2'   : item.get('point 2'),
-                'parent'    : item.get('parent'),
-            }
-
-            # guess direction from name
-            if str(L['direction']) == '<null>':
-                if name[0] == 'X':
-                    item['direction'] = 'x'
-                    L['direction'] = 'x'
-                if name[0] == 'Y':
-                    item['direction'] = 'y'
-                    L['direction'] = 'y'
-
-            saveLinkToLib_font(f, name, L, verbose=False)
-
-        self.updateFontDistances()
-
-    def updateFontDistances(self):
-
-        items = self._tabs['font'].measurements.get()
-
-        for item in items:
-            gName1 = item.get('glyph 1')
-            gName2 = item.get('glyph 2')
-
-            if gName1 is None or gName2 is None:
-                continue
-
-            gName1, gName2 = str(gName1), str(gName2)
-
-            if gName1 not in self.font or gName2 not in self.font:
-                continue
-
-            g1 = self.font[gName1]
-            g2 = self.font[gName2]
-
-            try:
-                index1 = int(item.get('point 1'))
-                index2 = int(item.get('point 2'))
-                p1 = getPointAtIndex(g1, index1)
-                p2 = getPointAtIndex(g2, index2)
-                distance = getDistance((p1.x, p1.y), (p2.x, p2.y), item['direction'])
-                item['value'] = distance
-
-            except:
-                pass
-
     def loadFontMeasurements(self, sender):
         '''
-        Load current measurements from the font lib into the list.
+        Load measurements from the current font's lib into a dictionary.
+
+        '''
+        f = self.font
+        if not f:
+            return
+
+        self.fontMeasurements = getLinks_font(f)
+
+        self.updateFontMeasurements()
+
+    def updateFontMeasurements(self):
+        '''
+        Load measurements from dictionary into font measurements list.
 
         '''
         tab = self._tabs['font']
 
-        f = self.font
-        if not f:
-            tab.measurements.set([])
-            return
-
-        measurements = getLinks_font(f)
-        if measurements is None:
+        if not self.fontMeasurements:
             tab.measurements.set([])
             return
 
         listItems = []
-        for name in measurements.keys():
+        for measurementName in self.fontMeasurements.keys():
+            # get data from dict
             listItem = {
-                'name'      : name,
-                'direction' : measurements[name].get('direction'), 
-                'glyph 1'   : measurements[name].get('glyph 1'),
-                'point 1'   : measurements[name].get('point 1'),
-                'glyph 2'   : measurements[name].get('glyph 2'),
-                'point 2'   : measurements[name].get('point 2'),
-                'parent'    : measurements[name].get('parent'),
+                'name'      : measurementName,
+                'direction' : self.fontMeasurements[measurementName].get('direction'), 
+                'glyph 1'   : self.fontMeasurements[measurementName].get('glyph 1'),
+                'point 1'   : self.fontMeasurements[measurementName].get('point 1'),
+                'glyph 2'   : self.fontMeasurements[measurementName].get('glyph 2'),
+                'point 2'   : self.fontMeasurements[measurementName].get('point 2'),
+                'parent'    : self.fontMeasurements[measurementName].get('parent'),
+                'value'     : None,
+                'scale'     : None,
             }
 
-            _listItem = {}
-            for k, v in listItem.items():
-                if v is None:
-                   v = '' 
-                _listItem[k] = v
+            # measure distance
 
-            listItems.append(_listItem)
+            gName1 = listItem.get('glyph 1')
+            gName2 = listItem.get('glyph 2')
+
+            # glyph names must be strings
+            if isinstance(gName1, str) and isinstance(gName2, str):
+
+                # glyph names must not be empty
+                if len(gName1.strip()) and len(gName2.strip()):
+
+                    # glyphs must be included in the font
+                    if not (gName1 not in self.font or gName2 not in self.font):
+
+                        g1 = self.font[gName1]
+                        g2 = self.font[gName2]
+
+                        try:
+                            index1 = int(listItem.get('point 1'))
+                            index2 = int(listItem.get('point 2'))
+                            p1 = getPointAtIndex(g1, index1)
+                            p2 = getPointAtIndex(g2, index2)
+                            distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
+                            listItem['value'] = distance
+
+                        except:
+                            pass
+
+            listItem = { k : ('' if v is None else v) for k, v in listItem.items() }
+            listItems.append(listItem)
 
         tab.measurements.set(listItems)
 
-        self.updateFontDistances()
+    def newFontMeasurementCallback(self, sender):
+        '''
+        Create an empty link between two points, and add it to the measurements list.
+
+        '''
+        f = self.font
+        if not f:
+            return
+
+        # attrs = ['direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'parent']
+
+        tab = self._tabs['font']
+
+        listItem = {
+            'name'      : 'untitled',
+            'direction' : '',
+            'glyph 1'   : '',
+            'point 1'   : '',
+            'glyph 2'   : '',
+            'point 2'   : '',
+            'parent'    : '',
+            'value'     : '',
+            'scale'     : '',
+        }
+        tab.measurements.append(listItem)
+
+        # self.fontMeasurements['untitled'] = { m: None for m in attrs }
+        # self.updateFontMeasurements()
+
+    def editFontMeasurementCallback(self, sender):
+
+        f = self.font
+        if not f:
+            return
+
+        tab       = self._tabs['font']
+        items     = tab.measurements.get()
+        selection = tab.measurements.getSelection()
+
+        if not selection:
+            return
+
+        item = items[selection[0]]
+
+        # collect measurement data
+        name = item.get('name')
+        measurementAttrs = {
+            'direction' : item.get('direction'),
+            'glyph 1'   : item.get('glyph 1'),
+            'point 1'   : item.get('point 1'),
+            'glyph 2'   : item.get('glyph 2'),
+            'point 2'   : item.get('point 2'),
+            'parent'    : item.get('parent'),
+        }
+        # if name is valid and direction is empty,
+        # try to guess the direction from name
+        if len(name.strip()) and len(item['direction'].strip()) == 0:
+            if name[0] == 'X':
+                measurementAttrs['direction'] = 'x'
+                item['direction'] = 'x'
+            if name[0] == 'Y':
+                measurementAttrs['direction'] = 'y'
+                item['direction'] = 'y'
+
+        # save measurement to dict
+        # self.fontMeasurements[name] = measurementAttrs
+
+        # save measurement to font
+        saveLinkToLib_font(f, name, measurementAttrs, verbose=False)
+
+        # self.loadFontMeasurements(None)
 
     def importFontMeasurementsCallback(self, sender):
         pass
@@ -752,8 +777,6 @@ class FontMeasurements(BaseWindowController):
 
             ctx.textBox(txt, (x, y, w, h), align='center')
 
-        r = self.settings['radius1'] * previewScale
-
         ctx.save()
 
         for linkID, L in links.items():
@@ -782,28 +805,17 @@ class FontMeasurements(BaseWindowController):
                 # draw link
                 ctx.stroke(*self.measurementsColor)
                 ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
-                ctx.lineCap('round')
-                ctx.lineDash(1*previewScale, 5*previewScale)
+                ctx.lineDash(3*previewScale, 3*previewScale)
                 ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
-    
+
                 if self.selectedGlyphMeasurementIDs is not None:
                     if linkID in self.selectedGlyphMeasurementIDs:
-
                         # draw measurement
                         ctx.fill(None)
                         ctx.lineDash(None)
-                        ctx.lineCap('butt')
                         ctx.stroke(*self.measurementsColorDim)
                         ctx.strokeWidth(self.settings['strokeWidth2']*previewScale)
                         ctx.line(P1, P2)
-
-                        # draw link points
-                        ctx.fill(None)
-                        ctx.stroke(*self.measurementsColor)
-                        ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
-                        ctx.oval(pt1.x-r, pt1.y-r, r*2, r*2)
-                        ctx.oval(pt2.x-r, pt2.y-r, r*2, r*2)
-
                         # draw caption
                         ctx.stroke(None)
                         ctx.fill(*self.measurementsColor)
@@ -812,19 +824,20 @@ class FontMeasurements(BaseWindowController):
 
                 ctx.restore()
 
-            # # one-point measurements
-            # elif len(partsID) == 1:
-            #     index1 = partsID[0].strip()
-            #     pt1 = getPointAtIndex(glyph, int(index1))
-            #     ctx.save()
-            #     if self.selectedGlyphMeasurementIDs is not None and linkID in self.selectedGlyphMeasurementIDs:
-            #         ctx.fill(*self.measurementsColorDim)
-            #     else:
-            #         ctx.fill(None)
-            #     ctx.stroke(*self.measurementsColor)
-            #     ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
-            #     ctx.oval(pt1.x-r, pt1.y-r, r*2, r*2)
-            #     ctx.restore()
+            # one-point measurements
+            elif len(partsID) == 1:
+                index1 = partsID[0].strip()
+                pt1 = getPointAtIndex(glyph, int(index1))
+                r = self.settings['radius1'] * previewScale
+                ctx.save()
+                if self.selectedGlyphMeasurementIDs is not None and linkID in self.selectedGlyphMeasurementIDs:
+                    ctx.fill(*self.measurementsColorDim)
+                else:
+                    ctx.fill(None)
+                ctx.stroke(*self.measurementsColor)
+                ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
+                ctx.oval(pt1.x-r, pt1.y-r, r*2, r*2)
+                ctx.restore()
 
             else:
                 continue
@@ -834,5 +847,5 @@ class FontMeasurements(BaseWindowController):
 
 if __name__ == '__main__':
 
-    OpenWindow(FontMeasurements)
+    OpenWindow(Measurements)
 
