@@ -56,19 +56,19 @@
           <key>name</key>
           <string>XSLC</string>
         </dict>
-        <key>2 -1</key>
-        <dict>
-          <key>direction</key>
-          <string>x</string>
-          <key>name</key>
-          <string>XLCS</string>
-        </dict>
         <key>2 11</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
           <string>XOLC</string>
+        </dict>
+        <key>4 -1</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XLCS</string>
         </dict>
         <key>4 5</key>
         <dict>

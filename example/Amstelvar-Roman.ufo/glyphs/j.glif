@@ -24,18 +24,18 @@
       <point x="198" y="-490"/>
     </contour>
     <contour>
-      <point x="152" y="1337" type="qcurve" smooth="yes"/>
-      <point x="152" y="1396"/>
+      <point x="152" y="1336" type="qcurve" smooth="yes"/>
+      <point x="152" y="1395"/>
       <point x="217" y="1460"/>
       <point x="278" y="1460" type="qcurve" smooth="yes"/>
       <point x="335" y="1460"/>
-      <point x="404" y="1392"/>
-      <point x="404" y="1337" type="qcurve" smooth="yes"/>
-      <point x="404" y="1278"/>
+      <point x="404" y="1391"/>
+      <point x="404" y="1336" type="qcurve" smooth="yes"/>
+      <point x="404" y="1277"/>
       <point x="339" y="1214"/>
       <point x="278" y="1214" type="qcurve" smooth="yes"/>
       <point x="221" y="1214"/>
-      <point x="152" y="1282"/>
+      <point x="152" y="1281"/>
     </contour>
   </outline>
   <lib>
@@ -48,6 +48,13 @@
           <string>y</string>
           <key>name</key>
           <string>YTDE</string>
+        </dict>
+        <key>-1 10</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTLC</string>
         </dict>
         <key>-1 5</key>
         <dict>
@@ -62,6 +69,20 @@
           <string>y</string>
           <key>name</key>
           <string>YOLC</string>
+        </dict>
+        <key>16 22</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XDOT</string>
+        </dict>
+        <key>19 25</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YDOT</string>
         </dict>
         <key>5 12</key>
         <dict>

@@ -58,10 +58,17 @@
     <dict>
       <key>com.fontBureau.glyphMeasurements</key>
       <dict>
+        <key>1 2</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSVL</string>
+        </dict>
         <key>12 35</key>
         <dict>
           <key>direction</key>
-          <string>y</string>
+          <string>a</string>
           <key>name</key>
           <string>YOLC</string>
         </dict>
@@ -85,6 +92,13 @@
           <string>y</string>
           <key>name</key>
           <string>YTLC</string>
+        </dict>
+        <key>24 25</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSVL</string>
         </dict>
         <key>6 41</key>
         <dict>

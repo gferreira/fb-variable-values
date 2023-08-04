@@ -951,6 +951,19 @@
     </array>
     <key>com.fontBureau.glyphMeasurements</key>
     <dict>
+      <key>XDOT</key>
+      <dict>
+        <key>direction</key>
+        <string>x</string>
+        <key>glyph 1</key>
+        <string>period</string>
+        <key>glyph 2</key>
+        <string>period</string>
+        <key>point 1</key>
+        <string>0</string>
+        <key>point 2</key>
+        <string>6</string>
+      </dict>
       <key>XFIR</key>
       <dict>
         <key>direction</key>
@@ -1175,6 +1188,19 @@
         <string>0</string>
         <key>point 2</key>
         <string>-1</string>
+      </dict>
+      <key>YDOT</key>
+      <dict>
+        <key>direction</key>
+        <string>y</string>
+        <key>glyph 1</key>
+        <string>period</string>
+        <key>glyph 2</key>
+        <string>period</string>
+        <key>point 1</key>
+        <string>3</string>
+        <key>point 2</key>
+        <string>9</string>
       </dict>
       <key>YOFI</key>
       <dict>

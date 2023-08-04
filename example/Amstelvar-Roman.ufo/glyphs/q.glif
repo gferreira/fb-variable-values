@@ -65,6 +65,13 @@
           <key>name</key>
           <string>XOLC</string>
         </dict>
+        <key>12 13</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSLC</string>
+        </dict>
         <key>12 99</key>
         <dict>
           <key>direction</key>
@@ -72,12 +79,33 @@
           <key>name</key>
           <string>XLCS</string>
         </dict>
+        <key>13 14</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSLC</string>
+        </dict>
         <key>15 -1</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
           <string>YTDE</string>
+        </dict>
+        <key>15 16</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSLC</string>
+        </dict>
+        <key>16 17</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSLC</string>
         </dict>
         <key>17 12</key>
         <dict>
@@ -113,6 +141,20 @@
           <string>y</string>
           <key>name</key>
           <string>YOLC</string>
+        </dict>
+        <key>8 9</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSLC</string>
+        </dict>
+        <key>9 10</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSLC</string>
         </dict>
       </dict>
     </dict>

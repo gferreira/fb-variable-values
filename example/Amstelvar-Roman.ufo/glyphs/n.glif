@@ -56,13 +56,6 @@
           <key>name</key>
           <string>YSLC</string>
         </dict>
-        <key>0 7</key>
-        <dict>
-          <key>direction</key>
-          <string>y</string>
-          <key>name</key>
-          <string>YTLC</string>
-        </dict>
         <key>1 2</key>
         <dict>
           <key>direction</key>
@@ -146,6 +139,13 @@
           <string>y</string>
           <key>name</key>
           <string>YSLC</string>
+        </dict>
+        <key>36 12</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YTLC</string>
         </dict>
         <key>4 5</key>
         <dict>

@@ -76,6 +76,20 @@
           <key>name</key>
           <string>YSLC</string>
         </dict>
+        <key>14 20</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XDOT</string>
+        </dict>
+        <key>17 23</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YDOT</string>
+        </dict>
         <key>2 -1</key>
         <dict>
           <key>direction</key>

@@ -38,12 +38,33 @@
     <dict>
       <key>com.fontBureau.glyphMeasurements</key>
       <dict>
-        <key>0 6</key>
+        <key>0 1</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSUC</string>
+        </dict>
+        <key>0 7</key>
         <dict>
           <key>direction</key>
           <string>y</string>
           <key>name</key>
           <string>YTUC</string>
+        </dict>
+        <key>1 2</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSUC</string>
+        </dict>
+        <key>11 12</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSUC</string>
         </dict>
         <key>11 16</key>
         <dict>
@@ -52,12 +73,26 @@
           <key>name</key>
           <string>XOUC</string>
         </dict>
-        <key>2 -1</key>
+        <key>12 13</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSUC</string>
+        </dict>
+        <key>14 15</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSUC</string>
+        </dict>
+        <key>15 16</key>
         <dict>
           <key>direction</key>
           <string>x</string>
           <key>name</key>
-          <string>XUCS</string>
+          <string>XSUC</string>
         </dict>
         <key>2 23</key>
         <dict>
@@ -65,6 +100,41 @@
           <string>x</string>
           <key>name</key>
           <string>XOUC</string>
+        </dict>
+        <key>23 24</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSUC</string>
+        </dict>
+        <key>24 25</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSUC</string>
+        </dict>
+        <key>4 -1</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XUCS</string>
+        </dict>
+        <key>4 5</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSUC</string>
+        </dict>
+        <key>5 6</key>
+        <dict>
+          <key>direction</key>
+          <string>y</string>
+          <key>name</key>
+          <string>YSUC</string>
         </dict>
         <key>99 16</key>
         <dict>
