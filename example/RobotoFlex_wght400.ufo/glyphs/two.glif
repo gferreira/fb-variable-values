@@ -40,9 +40,9 @@
         <key>0 17</key>
         <dict>
           <key>direction</key>
-          <string>x</string>
+          <string>y</string>
           <key>name</key>
-          <string>XTFI</string>
+          <string>YTFI</string>
         </dict>
         <key>12 13</key>
         <dict>

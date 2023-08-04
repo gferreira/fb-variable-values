@@ -129,7 +129,7 @@ class FontMeasurements(BaseWindowController):
     _colValue    = 65   
 
     fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'value', 'parent', 'scale']
-    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'value', 'parent', 'scale']
+    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'value', 'parent', 'scale', 'check']
 
     _fonts = {}
 
@@ -213,9 +213,9 @@ class FontMeasurements(BaseWindowController):
         tab = self._tabs['glyph']
 
         _columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-3])]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-3:-1])]
-        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-1]}]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-4])]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-4:])]
+        # _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-2:])]
 
         x = y = p = self.padding
         tab.measurements = List(
@@ -575,6 +575,17 @@ class FontMeasurements(BaseWindowController):
                         if distance and fontDistance:
                             scaleValue = distance / float(fontDistance)
                             listItem['scale'] = f'{scaleValue:.3f}'
+                            deviation = abs(1.0-scaleValue)
+                            if deviation == 0:
+                                check = '='
+                            elif deviation <= 0.1:
+                                check = '!'
+                            elif deviation <= 0.5:
+                                check = '!!'
+                            else:
+                                check = '!!!'
+                            listItem['check'] = check
+
             _listItem = {}
             for k, v in listItem.items():
                 if v is None:

@@ -64,9 +64,9 @@
         <key>11 32</key>
         <dict>
           <key>direction</key>
-          <string>y</string>
+          <string>a</string>
           <key>name</key>
-          <string>YOLC</string>
+          <string>XOLC</string>
         </dict>
         <key>14 29</key>
         <dict>
