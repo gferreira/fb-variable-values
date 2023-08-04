@@ -129,7 +129,7 @@ class FontMeasurements(BaseWindowController):
     _colValue    = 65   
 
     fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'value', 'parent', 'scale']
-    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'value', 'parent', 'scale']
+    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'value', 'parent', 'scale', 'check']
 
     _fonts = {}
 
@@ -154,6 +154,7 @@ class FontMeasurements(BaseWindowController):
         self.setUpBaseWindowBehavior()
         addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
         addObserver(self, "fontBecameCurrent",   "fontBecameCurrent")
+        addObserver(self, "foregroundPreview",   "draw")
         addObserver(self, "backgroundPreview",   "drawBackground")
         addObserver(self, "drawLabelCell",       "glyphCellDrawBackground")
 
@@ -213,9 +214,9 @@ class FontMeasurements(BaseWindowController):
         tab = self._tabs['glyph']
 
         _columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-3])]
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-3:-1])]
-        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-1]}]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-4])]
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-4:])]
+        # _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-2:])]
 
         x = y = p = self.padding
         tab.measurements = List(
@@ -321,6 +322,7 @@ class FontMeasurements(BaseWindowController):
         super().windowCloseCallback(sender)
         removeObserver(self, "fontBecameCurrent")
         removeObserver(self, "currentGlyphChanged")
+        removeObserver(self, "draw")
         removeObserver(self, "drawBackground")
         removeObserver(self, "glyphCellDrawBackground")
 
@@ -575,6 +577,17 @@ class FontMeasurements(BaseWindowController):
                         if distance and fontDistance:
                             scaleValue = distance / float(fontDistance)
                             listItem['scale'] = f'{scaleValue:.3f}'
+                            deviation = abs(1.0-scaleValue)
+                            if deviation == 0:
+                                check = '='
+                            elif deviation <= 0.1:
+                                check = '!'
+                            elif deviation <= 0.5:
+                                check = '!!'
+                            else:
+                                check = '!!!'
+                            listItem['check'] = check
+
             _listItem = {}
             for k, v in listItem.items():
                 if v is None:
@@ -609,9 +622,9 @@ class FontMeasurements(BaseWindowController):
     # observers
     # ---------
 
-    def backgroundPreview(self, notification):
+    def foregroundPreview(self, notification):
         '''
-        Draw a visualization of the glyph measurements in the Glyph View.
+        Draw the values of the glyph measurements in the foreground of the Glyph View.
 
         '''
         s = notification['scale']
@@ -619,7 +632,20 @@ class FontMeasurements(BaseWindowController):
         if self.glyph is None:
             return
 
-        self.drawPreview(self.glyph, s)
+        self.drawPreviewForeground(self.glyph, s)
+
+    def backgroundPreview(self, notification):
+        '''
+        Draw a visualization of the glyph measurements in the background of the Glyph View.
+
+        '''
+        s = notification['scale']
+
+        if self.glyph is None:
+            return
+
+        self.drawPreviewBackground(self.glyph, s)
+
 
     def drawLabelCell(self, notification):
 
@@ -726,7 +752,7 @@ class FontMeasurements(BaseWindowController):
     # methods
     # -------
 
-    def drawPreview(self, glyph, previewScale):
+    def drawPreviewBackground(self, glyph, previewScale):
         '''
         Draw the current glyph's measurements in the background of the Glyph View.
 
@@ -734,23 +760,6 @@ class FontMeasurements(BaseWindowController):
         links = getLinks(glyph)
         if not len(links):
             return
-
-        def _drawLinkMeasurement(p1, p2, name, direction):
-            value = getDistance(p1, p2, direction)
-            if type(value) is int:
-                txt = str(value)
-            else:
-                txt = '%.2f' % value if not value.is_integer() else str(int(value))
-
-            txt = f'{name}={txt}'
-
-            w, h = ctx.textSize(txt)
-            x = p1[0] + (p2[0] - p1[0]) * 0.5
-            y = p1[1] + (p2[1] - p1[1]) * 0.5
-            x -= w * 0.5
-            y -= h * 0.4
-
-            ctx.textBox(txt, (x, y, w, h), align='center')
 
         r = self.settings['radius1'] * previewScale
 
@@ -804,12 +813,6 @@ class FontMeasurements(BaseWindowController):
                         ctx.oval(pt1.x-r, pt1.y-r, r*2, r*2)
                         ctx.oval(pt2.x-r, pt2.y-r, r*2, r*2)
 
-                        # draw caption
-                        ctx.stroke(None)
-                        ctx.fill(*self.measurementsColor)
-                        ctx.fontSize(9*previewScale)
-                        _drawLinkMeasurement(P1, P2, L.get('name'), L.get('direction'))
-
                 ctx.restore()
 
             # # one-point measurements
@@ -830,6 +833,81 @@ class FontMeasurements(BaseWindowController):
                 continue
 
         ctx.restore()
+
+    def drawPreviewForeground(self, glyph, previewScale):
+        '''
+        Draw the current glyph's measurements in the background of the Glyph View.
+
+        '''
+        links = getLinks(glyph)
+        if not len(links):
+            return
+
+        def _drawLinkMeasurement(p1, p2, name, direction):
+            value = getDistance(p1, p2, direction)
+            if type(value) is int:
+                txt = str(value)
+            else:
+                txt = '%.2f' % value if not value.is_integer() else str(int(value))
+
+            txt = f'{name}={txt}'
+
+            w, h = ctx.textSize(txt)
+            x = p1[0] + (p2[0] - p1[0]) * 0.5
+            y = p1[1] + (p2[1] - p1[1]) * 0.5
+            x -= w * 0.5
+            y -= h * 0.3
+
+            ctx.oval(x-h/2, y, h, h)
+            ctx.oval(x+w-h/2, y, h, h)
+            ctx.rect(x, y, w, h)
+            ctx.fill(1)
+            ctx.textBox(txt, (x, y, w, h), align='center')
+
+        r = self.settings['radius1'] * previewScale
+
+        ctx.save()
+
+        for linkID, L in links.items():
+            partsID = linkID.split()
+
+            # two-point measurements
+            if len(partsID) == 2:
+                index1, index2 = partsID
+                index1, index2 = int(index1), int(index2)
+
+                pt1 = getPointAtIndex(glyph, index1)
+                pt2 = getPointAtIndex(glyph, index2)
+
+                if L.get('direction') == 'x':
+                    P1 = pt1.x, pt1.y
+                    P2 = pt2.x, pt1.y
+                elif L.get('direction') == 'y':
+                    P1 = pt2.x, pt1.y
+                    P2 = pt2.x, pt2.y 
+                else: # angled
+                    P1 = pt1.x, pt1.y
+                    P2 = pt2.x, pt2.y
+
+                ctx.save()
+
+                if self.selectedGlyphMeasurementIDs is not None:
+                    if linkID in self.selectedGlyphMeasurementIDs:
+                        ctx.stroke(None)
+                        ctx.fill(*self.measurementsColor)
+                        ctx.fontSize(9*previewScale)
+                        _drawLinkMeasurement(P1, P2, L.get('name'), L.get('direction'))
+
+                ctx.restore()
+
+
+            else:
+                continue
+
+        ctx.restore()
+
+
+
 
 
 if __name__ == '__main__':

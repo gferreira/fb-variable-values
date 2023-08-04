@@ -60,7 +60,19 @@
           <string>YTUC</string>
         </dict>
         <key>1 2</key>
-        <dict/>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XSUC</string>
+        </dict>
+        <key>10 23</key>
+        <dict>
+          <key>direction</key>
+          <string>x</string>
+          <key>name</key>
+          <string>XOUC</string>
+        </dict>
         <key>2 30</key>
         <dict>
           <key>direction</key>
@@ -75,7 +87,7 @@
           <key>name</key>
           <string>YOUC</string>
         </dict>
-        <key>28 23</key>
+        <key>29 23</key>
         <dict>
           <key>direction</key>
           <string>x</string>
@@ -102,13 +114,6 @@
           <string>x</string>
           <key>name</key>
           <string>XUCS</string>
-        </dict>
-        <key>4 28</key>
-        <dict>
-          <key>direction</key>
-          <string>x</string>
-          <key>name</key>
-          <string>XOUC</string>
         </dict>
         <key>4 5</key>
         <dict>
