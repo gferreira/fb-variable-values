@@ -31,7 +31,7 @@
   </outline>
   <lib>
     <dict>
-      <key>com.fontBureau.glyphMeasurements</key>
+      <key>com.fontBureau.measurements</key>
       <dict>
         <key>0 19</key>
         <dict>

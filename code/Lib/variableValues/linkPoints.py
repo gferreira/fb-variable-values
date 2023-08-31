@@ -1,3 +1,4 @@
+import json
 from math import sqrt
 from fontParts.fontshell.point import RPoint
 
@@ -8,7 +9,7 @@ Tools to make various kinds of measurements in a font.
 
 '''
 
-KEY = 'com.fontBureau.glyphMeasurements'
+KEY = 'com.fontBureau.measurements'
 
 def getPointAtIndex(glyph, ptIndex):
     '''Get the point at the given linear point index.
@@ -116,22 +117,6 @@ def getDistance(p1, p2, direction=None):
 
 ### GLYPH-LEVEL MEASUREMENT
 
-def makeLink(glyph, pt1, pt2):
-    '''
-    Create a link between two given points.
-
-    Args:
-        pt1 (RPoint): A point.
-        pt2 (RPoint): Another point in the same glyph.
-
-    Returns:
-        A tuple of two identifiers, one for each point.
-
-    '''
-    index1 = getIndexForPoint(glyph, pt1)
-    index2 = getIndexForPoint(glyph, pt2)
-    return index1, index2
-
 def linkSelectedPoints(glyph, verbose=True):
     '''
     Create a new link between two selected points.
@@ -143,6 +128,10 @@ def linkSelectedPoints(glyph, verbose=True):
         A tuple of two identifiers, one for each selected point.
 
     '''
+    def makeLink(glyph, pt1, pt2):
+        index1 = getIndexForPoint(glyph, pt1)
+        index2 = getIndexForPoint(glyph, pt2)
+        return index1, index2
 
     if not len(glyph.selectedPoints) == 2:
         if verbose:
@@ -294,6 +283,14 @@ def getSelectedLinks(glyph, key=KEY):
     IDs = getSelectedIDs(glyph)
     return [(ID1, ID2) for ID1, ID2 in links if (ID1 in IDs or ID2 in IDs)]
 
+makeGlyphMeasurementID          = linkSelectedPoints
+saveGlyphMeasurement            = saveLinkToLib
+newGlyphMeasurement             = linkPoints
+deleteGlyphMeasurement          = deleteLink
+clearGlyphMeasurements          = deleteAllLinks
+getSelectedGlyphMeasurements    = getSelectedLinks
+deleteSelectedGlyphMeasurements = deleteSelectedLinks
+
 # single-point measurements
 
 def newMeasurePoint(glyph, name=None, direction=None, key=KEY):
@@ -360,6 +357,78 @@ def getLinks_font(font, key=KEY):
         return {}
     return font.lib[key]
 
-def setLinks_font(font, links, key=KEY):
-    pass
+# def setLinks_font(font, links, key=KEY):
+#     font.lib[key] = links
+
+### IMPORT / EXPORT
+
+def exportMeasurements(font, jsonPath, verbose=True, key=KEY):
+    '''
+    Export measurement data from the current font as an external JSON file.
+
+    '''
+
+    # get font measurements
+    fontMeasurements = getLinks_font(font, key=key)
+
+    # get glyph measurements
+    glyphsMeasurements = {}
+    for glyphName in font.glyphOrder:
+        if glyphName not in font:
+            continue
+        glyphMeasurements = getLinks(font[glyphName], key=key)
+        if not len(glyphMeasurements):
+            continue
+        glyphsMeasurements[glyphName] = glyphMeasurements
+
+    # combine font & glyph measurements into a single dict
+    measurementsDict = {
+        'font'   : fontMeasurements,
+        'glyphs' : glyphsMeasurements,
+    }
+
+    # save measurements dict as a JSON file
+    if verbose:
+        print(f'exporting measurements to {jsonPath}...')
+
+    with open(jsonPath, 'w', encoding='utf-8') as f:
+        json.dump(measurementsDict, f, indent=2)
+
+    if verbose:
+        print('...done.\n')
+
+def readMeasurements(jsonPath):
+    '''
+    Read measurement data from external JSON file into a dict.
+
+    '''
+    with open(jsonPath, 'r', encoding='utf-8') as f:
+        measurementsDict = json.load(f)
+    return measurementsDict
+
+def importMeasurements(font, jsonPath, verbose=True, key=KEY):
+    '''
+    Import measurement data from external JSON file into the current font.
+
+    '''
+    if verbose:
+        print(f'importing measurements from {jsonPath}...')
+
+    measurements = readMeasurements(jsonPath)
+
+    # store measurements in font lib
+    if verbose:
+        print('\timporting font measurements...')
+    font.lib[key] = measurements['font']
+
+    # store measurements in glyph libs
+    if verbose:
+        print('\timporting glyph measurements...')
+    for glyphName in measurements['glyphs'].keys():
+        if glyphName not in font:
+            continue
+        font[glyphName].lib[key] = measurements['glyphs'][glyphName]
+
+    if verbose:
+        print('...done.\n')
 

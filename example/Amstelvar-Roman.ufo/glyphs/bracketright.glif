@@ -22,7 +22,7 @@
   </outline>
   <lib>
     <dict>
-      <key>com.fontBureau.glyphMeasurements</key>
+      <key>com.fontBureau.measurements</key>
       <dict/>
     </dict>
   </lib>

@@ -6,6 +6,7 @@ from variableValues.linkPoints import getPointAtIndex
 # functions
 # ---------
 
+### DEPRECATED
 def exportMeasurementDescriptionsToCSV(measurements, csvPath):
     '''
     Export list of measurement descriptions to CSV file.
@@ -56,6 +57,7 @@ def exportMeasurementDescriptionsToCSV(measurements, csvPath):
         for m in measurements:
             writer.writerow(m)
 
+### DEPRECATED
 def importMeasurementDescriptionsFromCSV(csvPath):
     '''
     Import measurement descriptions from CSV file into a Python list.
@@ -71,6 +73,8 @@ def importMeasurementDescriptionsFromCSV(csvPath):
 # -------
 # objects
 # -------
+
+# rewrite using the newer API (dicts not tuples)
 
 class DesignspaceMeasurements:
 

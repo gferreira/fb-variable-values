@@ -40,7 +40,7 @@
   </outline>
   <lib>
     <dict>
-      <key>com.fontBureau.glyphMeasurements</key>
+      <key>com.fontBureau.measurements</key>
       <dict/>
       <key>com.typemytype.robofont.guideline.showMeasurements.Iz6BEWeM15</key>
       <true/>

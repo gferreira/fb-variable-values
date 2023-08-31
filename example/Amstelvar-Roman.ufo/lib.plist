@@ -13,7 +13,7 @@
         <string>unicode</string>
       </dict>
     </array>
-    <key>com.fontBureau.glyphMeasurements</key>
+    <key>com.fontBureau.measurements</key>
     <dict>
       <key>XDOT</key>
       <dict>

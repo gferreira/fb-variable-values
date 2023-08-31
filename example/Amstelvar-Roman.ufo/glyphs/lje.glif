@@ -59,7 +59,7 @@
   </outline>
   <lib>
     <dict>
-      <key>com.fontBureau.glyphMeasurements</key>
+      <key>com.fontBureau.measurements</key>
       <dict/>
       <key>com.typemytype.robofont.guideline.showMeasurements.NbdfSyw2GO</key>
       <true/>

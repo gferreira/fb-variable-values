@@ -9,7 +9,7 @@
   </outline>
   <lib>
     <dict>
-      <key>com.fontBureau.glyphMeasurements</key>
+      <key>com.fontBureau.measurements</key>
       <dict/>
       <key>com.typemytype.robofont.Image.Brightness</key>
       <integer>0</integer>
