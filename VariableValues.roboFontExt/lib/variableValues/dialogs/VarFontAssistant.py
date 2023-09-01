@@ -14,8 +14,9 @@ import drawBot as DB
 from drawBot.ui.drawView import DrawView
 from mojo.roboFont import OpenWindow
 from variableValues.dialogs.base import DesignSpaceSelector
-from variableValues.measurements import importMeasurementDescriptionsFromCSV, FontMeasurements
+# from variableValues.measurements import importMeasurementDescriptionsFromCSV, FontMeasurements
 from variableValues.kerningPreview import VariableKerningPreview
+from variableValues.linkPoints import readMeasurements, getPointAtIndex, getDistance
 
 
 class VarFontAssistant(DesignSpaceSelector):
@@ -738,7 +739,7 @@ class VarFontAssistant(DesignSpaceSelector):
 
         paths = dropInfo["data"]
         paths = [path for path in paths if path not in existingPaths]
-        paths = [path for path in paths if os.path.splitext(path)[-1].lower() == '.csv']
+        paths = [path for path in paths if os.path.splitext(path)[-1].lower() == '.json']
 
         if not paths:
             return False
@@ -746,7 +747,7 @@ class VarFontAssistant(DesignSpaceSelector):
         if not isProposal:
             tab = self._tabs['measurements']
             for path in paths:
-                label = os.path.splitext(os.path.split(path)[-1])[0]
+                label = os.path.split(path)[-1]
                 self._measurementFiles[label] = path
                 tab.measurementFiles.append(label)
                 tab.measurementFiles.setSelection([0])
@@ -767,7 +768,8 @@ class VarFontAssistant(DesignSpaceSelector):
 
         # collect measurements into dict
         measurementFilePath = self._measurementFiles[self.selectedMeasurementFile]
-        measurementTuples = importMeasurementDescriptionsFromCSV(measurementFilePath)
+        measurements = readMeasurements(measurementFilePath)
+        print(measurements)
 
         self._measurements = {}
         for source in self.selectedSources:
@@ -776,11 +778,32 @@ class VarFontAssistant(DesignSpaceSelector):
             f = OpenFont(sourcePath, showInterface=False)
 
             self._measurements[sourceFileName] = {}
-            M = FontMeasurements(f, measurementTuples)
-            for key, measurement in M.measurements.items():
-                self._measurements[sourceFileName][key] = measurement.value
+
+            for key, attrs in measurements['font'].items():
+                glyphName1 = attrs['glyph 1']
+                glyphName2 = attrs['glyph 2']
+                index1 = attrs['point 1']
+                index2 = attrs['point 2']
+                direction = attrs['direction']
+
+                if isinstance(index1, str):
+                    index1 = int(index1)
+                if isinstance(index2, str):
+                    index2 = int(index2)
+
+                if glyphName1 in f and glyphName2 in f:
+                    g1 = f[glyphName1]
+                    g2 = f[glyphName2]
+                    p1 = getPointAtIndex(g1, index1)
+                    p2 = getPointAtIndex(g2, index2)
+                    distance = getDistance((p1.x, p1.y), (p2.x, p2.y), direction)
+                else:
+                    distance = ''
+
+                self._measurements[sourceFileName][key] = distance
+
             f.close()
-        
+
         self.updateMeasurementsCallback(None)
 
     def selectMeasurementFileCallback(self, sender):
@@ -792,9 +815,8 @@ class VarFontAssistant(DesignSpaceSelector):
             return
 
         measurementFilePath = self._measurementFiles[self.selectedMeasurementFile]
-        measurementTuples = importMeasurementDescriptionsFromCSV(measurementFilePath)
-        measurementNames = [m[0] for m in measurementTuples]
-        tab.measurements.set(measurementNames)
+        measurements = readMeasurements(measurementFilePath)
+        tab.measurements.set(measurements['font'].keys())
 
     def updateMeasurementsCallback(self, sender):
 
@@ -817,7 +839,6 @@ class VarFontAssistant(DesignSpaceSelector):
             listItem = {
                 "file name" : fontName,
                 "value"     : value,
-                "level"     : abs(value),
             }
             measurementItems.append(listItem)
             values.append(value)
@@ -837,11 +858,6 @@ class VarFontAssistant(DesignSpaceSelector):
                 "title"    : 'value',
                 'width'    : self._colValue,
             },
-            {
-                "title"    : 'level',
-                'width'    : self._colValue*1.5,
-                'cell'     : LevelIndicatorListCell(style="continuous", minValue=min(values), maxValue=max(values)),
-            },
         ]
         tab.fontMeasurements = List(
                 fontMeasurementsPosSize,
@@ -850,18 +866,7 @@ class VarFontAssistant(DesignSpaceSelector):
                 allowsEmptySelection=False,
                 columnDescriptions=columnDescriptions,
                 allowsSorting=True,
-                # editCallback=self.editGlyphValueCallback,
                 enableDelete=False)
-
-    def visualizeMeasurementsCallback(self, sender):
-        pass
-
-    def exportMeasurementsCallback(self, sender):
-        '''
-        Export measurement values as a CSV file.
-
-        '''
-        pass
 
     # glyph values
 
@@ -984,16 +989,6 @@ class VarFontAssistant(DesignSpaceSelector):
             if self.verbose:
                 print(f'changed {glyphName}.{glyphAttr} in {fontName}: {oldValue} → {newValue}\n')
             self._glyphValues[fontName][glyphName][glyphAttr] = int(newValue)
-
-    def visualizeGlyphValuesCallback(self, sender):
-        pass
-
-    def exportGlyphValuesCallback(self, sender):
-        '''
-        Export current glyph values as a CSV file.
-
-        '''
-        pass
 
     def saveGlyphValuesCallback(self, sender):
         '''
@@ -1159,8 +1154,8 @@ class VarFontAssistant(DesignSpaceSelector):
         # draw kerning preview
 
         # print(fontName)
-        print(self._sources.keys())
-        print(self._kerning.keys())
+        # print(self._sources.keys())
+        # print(self._kerning.keys())
 
         V = VariableKerningPreview(self.selectedDesignspacePath)
         V.selectedSources = [self._sources[fontName] for fontName in self._kerning.keys()] # proofs[proofLevel][proofGroup]
@@ -1205,12 +1200,6 @@ class VarFontAssistant(DesignSpaceSelector):
         # tab.kerningValues.set(kerningListItems)
 
         self.updateKerningPreviewCallback(None)
-
-    def visualizeKerningCallback(self, sender):
-        pass
-
-    def exportKerningCallback(self, sender):
-        pass
 
     def saveKerningCallback(self, sender):
         '''

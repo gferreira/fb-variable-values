@@ -6,11 +6,10 @@ import os
 from math import sqrt
 from defconAppKit.windows.baseWindow import BaseWindowController
 from vanilla import *
-from mojo.UI import UpdateCurrentGlyphView
+from mojo.UI import UpdateCurrentGlyphView, PutFile, GetFile
 from mojo import drawingTools as ctx
 from mojo.roboFont import *
 from mojo.events import addObserver, removeObserver
-from variableValues.measurements import *
 from variableValues.linkPoints import *
 
 '''
@@ -18,28 +17,27 @@ M E A S U R E M E N T S
 
 A tool to measure distances in glyphs and store them in the font.
 
-Font Measurements
------------------
+# FONT MEASUREMENTS
 
-'XTRA' : {
+'XTUC' : {
     'glyph 1'   : 'H',
     'point 1'   : 11,
     'glyph 2'   : 'H',
     'point 2'   : 8,
     'direction' : 'x',
+    'parent'    : 'XTRA',
 }
 
-Glyph Measurements
-------------------
+# GLYPH MEASUREMENTS
 
 f'{ptIndex1} {ptIndex2}' : {
     'name'      : 'XTRA',
-    'direction' : 'x', # y
+    'direction' : 'x',
 }
 
 f'{ptIndex}' : {
     'name'      : 'YTAS',
-    'direction' : 0, # 1
+    'direction' : 0,
 }
 
 '''
@@ -145,10 +143,24 @@ class Measurements(BaseWindowController):
                 minSize=(self.width*0.9, 360))
 
         x = y = p = self.padding
-        self.w.tabs = Tabs((x, y, -p, -p), self._tabsTitles)
+        self.w.tabs = Tabs((x, y, -p, -(self.lineHeight + p*2)), self._tabsTitles)
 
         self.initializeFontTab()
         self.initializeGlyphTab()
+
+        x = -self.buttonWidth*2 -p*2
+        y = -self.lineHeight -p
+        self.w.importMeasurements = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'import',
+                callback=self.importMeasurementsCallback,
+            )
+        x = -self.buttonWidth -p
+        self.w.exportMeasurements = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'export',
+                callback=self.exportMeasurementsCallback,
+            )
 
         self.setUpBaseWindowBehavior()
         addObserver(self, "fontBecameCurrent",   "fontBecameCurrent")
@@ -194,19 +206,6 @@ class Measurements(BaseWindowController):
                 callback=self.newFontMeasurementCallback,
             )
 
-        x = -self.buttonWidth*2 -p*2
-        tab.importMeasurements = Button(
-                (x, y, self.buttonWidth, self.lineHeight),
-                'import',
-                callback=self.importFontMeasurementsCallback,
-            )
-        x = -self.buttonWidth -p
-        tab.exportMeasurements = Button(
-                (x, y, self.buttonWidth, self.lineHeight),
-                'export',
-                callback=self.exportFontMeasurementsCallback,
-            )
-
     def initializeGlyphTab(self):
 
         tab = self._tabs['glyph']
@@ -242,18 +241,18 @@ class Measurements(BaseWindowController):
                 color=rgb2nscolor(self.settings['measurementsColor'])
             )
 
-        x = -self.buttonWidth*2 -p*2
-        tab.importMeasurements = Button(
-                (x, y, self.buttonWidth, self.lineHeight),
-                'import',
-                callback=self.importGlyphMeasurementsCallback,
-            )
-        x = -self.buttonWidth -p
-        tab.exportMeasurements = Button(
-                (x, y, self.buttonWidth, self.lineHeight),
-                'export',
-                callback=self.exportGlyphMeasurementsCallback,
-            )
+        # x = -self.buttonWidth*2 -p*2
+        # tab.importMeasurements = Button(
+        #         (x, y, self.buttonWidth, self.lineHeight),
+        #         'import',
+        #         callback=self.importGlyphMeasurementsCallback,
+        #     )
+        # x = -self.buttonWidth -p
+        # tab.exportMeasurements = Button(
+        #         (x, y, self.buttonWidth, self.lineHeight),
+        #         'export',
+        #         callback=self.exportGlyphMeasurementsCallback,
+        # )
 
     # -------------
     # dynamic attrs
@@ -322,6 +321,44 @@ class Measurements(BaseWindowController):
         removeObserver(self, "currentGlyphChanged")
         removeObserver(self, "drawBackground")
         removeObserver(self, "glyphCellDrawBackground")
+
+    def importMeasurementsCallback(self, sender):
+        if self.font is None:
+            return
+
+        if self.verbose:
+            print("importing measurements...")
+
+        jsonPath = GetFile(message='Select JSON file with measurements:')
+
+        if self.verbose:
+            print(f'\timporting data from {jsonPath}...')
+
+        importMeasurements(self.font, jsonPath)
+
+        self.loadFontMeasurements(None)
+
+        if self.verbose:
+            print('...done.\n')
+
+    def exportMeasurementsCallback(self, sender):
+        if self.font is None:
+            return
+
+        # get json file path for saving
+
+        jsonFileName = 'measurements.json'
+        jsonPath = PutFile(message='Save measurements into JSON file:', fileName=jsonFileName)
+
+        if jsonPath is None:
+            if self.verbose:
+                print('[cancelled]\n')
+            return
+
+        if os.path.exists(jsonPath):
+            os.remove(jsonPath)
+
+        exportMeasurements(self.font, jsonPath)
 
     # font
 
@@ -469,12 +506,6 @@ class Measurements(BaseWindowController):
 
         # self.loadFontMeasurements(None)
 
-    def importFontMeasurementsCallback(self, sender):
-        pass
-
-    def exportFontMeasurementsCallback(self, sender):
-        pass
-
     # glyph
 
     def newGlyphMeasurementCallback(self, sender):
@@ -611,12 +642,6 @@ class Measurements(BaseWindowController):
 
     def updatePreviewCallback(self, sender):
         UpdateCurrentGlyphView()
-
-    def importGlyphMeasurementsCallback(self, sender):
-        pass
-
-    def exportGlyphMeasurementsCallback(self, sender):
-        pass
 
     def measurementsColorCallback(self, sender):
         '''
