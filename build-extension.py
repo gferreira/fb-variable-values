@@ -8,7 +8,7 @@ from hTools3.modules.sys import pycClear, pyCacheClear, removeGitFiles
 # settings
 # --------
 
-version          = '0.1.3'
+version          = '0.1.4'
 baseFolder       = os.path.dirname(__file__)
 libFolder        = os.path.join(baseFolder, 'code', 'Lib')
 licensePath      = os.path.join(baseFolder, 'LICENSE')
@@ -47,7 +47,7 @@ def buildExtension():
             'shortKey'      : '',
         },
         {
-            'path'          : 'variableValues/dialogs/FontMeasurements.py',
+            'path'          : 'variableValues/dialogs/Measurements.py',
             'preferredName' : 'Measurements',
             'shortKey'      : '',
         },
