@@ -26,8 +26,9 @@ class VarFontAssistant(DesignSpaceSelector):
 
     _tabsTitles       = ['designspace', 'font values', 'glyph values', 'kerning', 'measurements']
 
-    _measurementFiles = {}
-    _measurements     = {}
+    _measurementFiles    = {}
+    _measurements        = {}
+    _measurementsPermill = {}
 
     _fontAttrs        = {
         'unitsPerEm'                   : 'unitsPerEm',
@@ -143,10 +144,14 @@ class VarFontAssistant(DesignSpaceSelector):
                 'width'    : self._colValue,
             },
             {
-                "title"    : 'level',
-                'width'    : self._colValue*1.5,
-                'cell'     : LevelIndicatorListCell(style="continuous", maxValue=1600),
+                "title"    : 'permill',
+                'width'    : self._colValue,
             },
+            # {
+            #     "title"    : 'level',
+            #     'width'    : self._colValue*1.5,
+            #     'cell'     : LevelIndicatorListCell(style="continuous", maxValue=1600),
+            # },
         ]
         y += self.lineHeight + p/2
         tab.fontMeasurements = List(
@@ -769,15 +774,16 @@ class VarFontAssistant(DesignSpaceSelector):
         # collect measurements into dict
         measurementFilePath = self._measurementFiles[self.selectedMeasurementFile]
         measurements = readMeasurements(measurementFilePath)
-        print(measurements)
 
         self._measurements = {}
+        self._measurementsPermill = {}
         for source in self.selectedSources:
             sourceFileName = source['file name']
             sourcePath = self._sources[sourceFileName]
             f = OpenFont(sourcePath, showInterface=False)
 
             self._measurements[sourceFileName] = {}
+            self._measurementsPermill[sourceFileName] = {}
 
             for key, attrs in measurements['font'].items():
                 glyphName1 = attrs['glyph 1']
@@ -797,10 +803,12 @@ class VarFontAssistant(DesignSpaceSelector):
                     p1 = getPointAtIndex(g1, index1)
                     p2 = getPointAtIndex(g2, index2)
                     distance = getDistance((p1.x, p1.y), (p2.x, p2.y), direction)
+                    permill = round(float(distance) * 1000 / f.info.unitsPerEm)
                 else:
-                    distance = ''
+                    distance = permill = ''
 
                 self._measurements[sourceFileName][key] = distance
+                self._measurementsPermill[sourceFileName][key] = permill
 
             f.close()
 
@@ -836,9 +844,11 @@ class VarFontAssistant(DesignSpaceSelector):
         measurementItems = []
         for fontName in self._measurements.keys():
             value = self._measurements[fontName][measurementName]
+            valuePermill = self._measurementsPermill[fontName][measurementName]
             listItem = {
                 "file name" : fontName,
                 "value"     : value,
+                "permill"   : valuePermill,
             }
             measurementItems.append(listItem)
             values.append(value)
@@ -856,6 +866,10 @@ class VarFontAssistant(DesignSpaceSelector):
             },
             {
                 "title"    : 'value',
+                'width'    : self._colValue,
+            },
+            {
+                "title"    : 'permill',
                 'width'    : self._colValue,
             },
         ]
