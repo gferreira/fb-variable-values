@@ -90,6 +90,9 @@ class Measurement:
     def measure(self, font):
         self.font = font
 
+        if self.font is None:
+            return
+
         if self.point1 is None or self.point2 is None:
             return
 
