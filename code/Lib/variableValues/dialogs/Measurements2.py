@@ -1,6 +1,8 @@
 from importlib import reload
 import variableValues.linkPoints
 reload(variableValues.linkPoints)
+import variableValues.measurements 
+reload(variableValues.measurements )
 
 import os
 from math import sqrt
@@ -136,10 +138,10 @@ class Measurements2(BaseWindowController):
     measurementFilePath = None
 
     #: measurements for current font
-    # fontMeasurements  = {}
+    fontMeasurements  = {}
 
     #: measurements for current glyph
-    # glyphMeasurements = {}
+    glyphMeasurements = {}
 
     def __init__(self):
         self.w = FloatingWindow(
@@ -153,25 +155,25 @@ class Measurements2(BaseWindowController):
         self.initializeGlyphTab()
 
         y = -self.lineHeight -p
+        x = -(self.buttonWidth + p)*2
         self.w.loadMeasurements = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
                 'load…',
                 callback=self.loadMeasurementsCallback,
             )
 
-        x += self.buttonWidth + p
+        x = -self.buttonWidth -p
         self.w.saveMeasurements = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
                 'save',
                 callback=self.saveMeasurementsCallback,
             )
 
-        x = -self.buttonWidth -p
-        self.w.exportMeasurements = Button(
-                (x, y, self.buttonWidth, self.lineHeight),
-                'export…',
-                callback=self.exportMeasurementsCallback,
-            )
+        # self.w.exportMeasurements = Button(
+        #         (x, y, self.buttonWidth, self.lineHeight),
+        #         'export…',
+        #         callback=self.exportMeasurementsCallback,
+        #     )
 
         self.setUpBaseWindowBehavior()
         addObserver(self, "fontBecameCurrent",   "fontBecameCurrent")
@@ -336,41 +338,63 @@ class Measurements2(BaseWindowController):
         self.glyphMeasurements = measurements['glyphs']
 
         self.loadFontMeasurements()
-        # self.updateFontMeasurements()
-        self.updateGlyphMeasurements()
+        self.loadGlyphMeasurements()
+
+        self.measurementFilePath = jsonPath
 
         if self.verbose:
             print('...done.\n')
 
     def saveMeasurementsCallback(self, sender):
-        pass
+        
+        fontItems  = self._tabs['font'].measurements
 
-    def exportMeasurementsCallback(self, sender):
-        if self.font is None:
-            return
+        fontMeasurements = {
+            i['name']: {
+                'direction' : i['direction'],
+                'glyph 1'   : i['glyph 1'],
+                'point 1'   : i['point 1'],
+                'glyph 2'   : i['glyph 2'],
+                'point 2'   : i['point 2'],
+                'parent'    : i['parent'],
+            } for i in fontItems
+        }
 
-        # get json file path for saving
+        glyphMeasurements = self.glyphMeasurements
 
-        jsonFileName = 'measurements.json'
-        jsonPath = PutFile(message='Save measurements into JSON file:', fileName=jsonFileName)
+        measurementsDict = {
+            'font'   : fontMeasurements,
+            'glyphs' : glyphMeasurements,
+        }
 
-        if jsonPath is None:
-            if self.verbose:
-                print('[cancelled]\n')
-            return
+        # save measurements dict as a JSON file
+        if self.verbose:
+            print(f'saving measurements to {self.measurementFilePath}...', end=' ')
 
-        if os.path.exists(jsonPath):
-            os.remove(jsonPath)
+        if self.measurementFilePath is None:
+            jsonFileName = 'measurements.json'
+            jsonPath = PutFile(message='Save measurements into JSON file:', fileName=jsonFileName)
 
-        exportMeasurements(self.font, jsonPath)
+            if jsonPath is None:
+                if self.verbose:
+                    print('[cancelled]\n')
+                return
+
+            if os.path.exists(jsonPath):
+                os.remove(jsonPath)
+
+        with open(jsonPath, 'w', encoding='utf-8') as f:
+            json.dump(measurementsDict, f, indent=2)
+
+        self.measurementFilePath = jsonPath
+
+        if self.verbose:
+            print('done.\n')
 
     # font
 
     def loadFontMeasurements(self):
-        '''
-        Load measurements from dictionary into font measurements list.
 
-        '''
         tab = self._tabs['font']
 
         if not self.fontMeasurements:
@@ -379,7 +403,6 @@ class Measurements2(BaseWindowController):
 
         listItems = []
         for name in self.fontMeasurements.keys():
-            # get data from dict
             listItem = {
                 'name'      : name,
                 'direction' : self.fontMeasurements[name].get('direction'), 
@@ -394,7 +417,7 @@ class Measurements2(BaseWindowController):
             }
             listItems.append(listItem)
 
-        # replace None with empty string to avoid `<null>`
+        # replace `None` with empty string to avoid `<null>`
         items = []
         for item in listItems:
             listItem = { k : ('' if v is None else v) for k, v in item.items() }
@@ -418,14 +441,18 @@ class Measurements2(BaseWindowController):
 
         # measure distances
         for item in items:
-            M = Measurement(
-                item['name'],
-                item['direction'],
-                item['glyph 1'], int(item['point 1']),
-                item['glyph 2'], int(item['point 2']),
-                item['parent'])
 
-            distance = M.measure(self.font)
+            distance = None
+
+            if item['glyph 1'] and item['glyph 2'] and item['point 1'] and item['point 2']:
+                M = Measurement(
+                    item['name'],
+                    item['direction'],
+                    item['glyph 1'], int(item['point 1']),
+                    item['glyph 2'], int(item['point 2'])
+                )
+                M.absolute = True
+                distance = M.measure(self.font)
 
             if distance is None:
                 item['units']   = ''
@@ -443,13 +470,22 @@ class Measurements2(BaseWindowController):
         distances = { i['name']: i['units'] for i in items }
 
         for item in items:
+            item['scale'] = ''
             distance = item['units']
-            parent = item['parent']
+            if distance == '':
+                continue
 
-            if parent is None or not len(parent) or parent not in distances:
+            parent = item.get('parent')
+
+            if not (distance and parent):
+                continue
+
+            if parent not in distances:
                 continue
 
             fontDistance = distances[parent]
+            if fontDistance == '':
+                continue
 
             if distance == 0 and fontDistance == 0:
                 item['scale'] = f'{1:.3f}'
@@ -457,114 +493,202 @@ class Measurements2(BaseWindowController):
                 scaleValue = distance / float(fontDistance)
                 item['scale'] = f'{scaleValue:.3f}'
 
-
     def newFontMeasurementCallback(self, sender):
-        pass
+
+        tab = self._tabs['font']
+
+        newItem = { attr: '' for attr in self.fontMeasurementParameters }
+        newItem['name'] = '_new'
+
+        tab.measurements.append(newItem)
 
     def editFontMeasurementCallback(self, sender):
 
-        # tab       = self._tabs['font']
-        # items     = tab.measurements.get()
-        # selection = tab.measurements.getSelection()
+        tab = self._tabs['font']
 
-        # if not selection:
-        #     return
+        fontMeasurements = {}
+        for item in tab.measurements.get():
+            # auto set direction from name
+            if not len(item['direction'].strip()):
+                if item['name'][0] == 'X':
+                    direction = 'x'
+                    item['direction'] = 'x'
+                if item['name'][0] == 'Y':
+                    direction = 'y'
+                    item['direction'] = 'y'
+            # make font measurement dict
+            fontMeasurements[item['name']] = {
+                'glyph 1'   : item.get('glyph 1'),
+                'point 1'   : item.get('point 1'),
+                'glyph 2'   : item.get('glyph 2'),
+                'point 2'   : item.get('point 2'),
+                'direction' : item.get('direction'),
+                'parent'    : item.get('parent'),
+            }
 
-        # item = items[selection[0]]
-
-        # name = item.get('name')
-        # attrs = {
-        #     'direction' : item.get('direction'),
-        #     'glyph 1'   : item.get('glyph 1'),
-        #     'point 1'   : item.get('point 1'),
-        #     'glyph 2'   : item.get('glyph 2'),
-        #     'point 2'   : item.get('point 2'),
-        #     'parent'    : item.get('parent'),
-        # }
-
-        # self.fontMeasurements[name] = attrs
+        self.fontMeasurements = fontMeasurements
 
         self.updateFontMeasurements()
 
     # glyph
 
     def newGlyphMeasurementCallback(self, sender):
-        pass
+
+        g = self.glyph
+        if not g:
+            return
+
+        tab = self._tabs['glyph']
+
+        if not len(g.selectedPoints) == 2:
+            if self.verbose:
+                print('please select two points')
+            return
+
+        pt1 = g.selectedPoints[0]
+        pt2 = g.selectedPoints[1]
+
+        index1 = getIndexForPoint(g, pt1)
+        index2 = getIndexForPoint(g, pt2)
+
+        newItem = { attr: '' for attr in self.glyphMeasurementParameters }
+        newItem['name'] = '_new'
+        newItem['point 1'] = index1
+        newItem['point 2'] = index2
+
+        tab.measurements.append(newItem)
 
     def editGlyphMeasurementCallback(self, sender):
-        pass
+
+        g = self.glyph
+        if not g:
+            return
+
+        tab = self._tabs['glyph']
+
+        glyphMeasurements = {}
+        for item in tab.measurements.get():
+            # auto set direction from name
+            if not len(item['direction'].strip()):
+                if item['name'][0] == 'X':
+                    direction = 'x'
+                    item['direction'] = 'x'
+                if item['name'][0] == 'Y':
+                    direction = 'y'
+                    item['direction'] = 'y'
+            # make glyph measurement dict
+            glyphMeasurements[f"{item['point 1']} {item['point 2']}"] = {
+                'name'      : item['name'],
+                'direction' : item['direction'],
+            }
+
+        self.glyphMeasurements[g.name] = glyphMeasurements
+
+        self.updateGlyphMeasurements()
 
     def updateGlyphMeasurements(self):
-        pass
 
-    # def loadGlyphMeasurements(self, sender):
-    #     '''
-    #     Load all measurements from the glyph lib into the measurements list.
+        tab = self._tabs['glyph']
+        items = tab.measurements.get()
 
-    #     '''
-    #     tab = self._tabs['glyph']
+        # get font-level values to calculate scale
+        # fontValues = { i['name']: i['units'] for i in self._tabs['font'].measurements.get() }
 
-    #     g = self.glyph
-    #     if not g:
-    #         tab.measurements.set([])
-    #         return
+        # clear measurement values
+        if not self.glyph:
+            for item in items:
+                item['units']   = ''
+                item['permill'] = ''
+                item['scale']   = ''
+            return
 
-    #     measurements = getLinks(g)
+        # measure distances
+        for item in items:
+            M = Measurement(
+                item['name'],
+                item['direction'],
+                self.glyph.name, int(item['point 1']),
+                self.glyph.name, int(item['point 2']),
+                item['parent'])
+            M.absolute = True
+            distance = M.measure(self.font)
 
-    #     listItems = []
-    #     for key in measurements.keys():
-    #         # get point or points
-    #         keyParts = key.split()
-    #         if len(keyParts) == 2:
-    #             index1, index2 = keyParts
-    #             index1, index2 = int(index1), int(index2)
-    #         elif len(keyParts) == 1:
-    #             index1 = keyParts[0].strip()
-    #             index2 = None
-    #         else:
-    #             continue
-    #         name = measurements[key].get('name')
-    #         direction = measurements[key].get('direction')
-    #         listItem = {
-    #             'name'      : name,
-    #             'direction' : direction, 
-    #             'point 1'   : index1,
-    #             'point 2'   : index2, 
-    #         }   
-    #         if index2 is not None:
-    #             # get distance between points
-    #             p1 = getPointAtIndex(g, index1)
-    #             p2 = getPointAtIndex(g, index2)
-    #             distance = getDistance((p1.x, p1.y), (p2.x, p2.y), listItem['direction'])
-    #             listItem['units'] = distance
-    #             listItem['permill'] = round(distance * 1000 / self.font.info.unitsPerEm)
+            if distance is None:
+                item['units']   = ''
+                item['permill'] = ''
+                item['scale']   = ''
+                continue
 
-    #         _listItem = {}
-    #         for k, v in listItem.items():
-    #             if v is None:
-    #                v = '' 
-    #             _listItem[k] = v
-    #         listItems.append(_listItem)
+            item['units'] = distance
 
+            # convert value to permill
+            if distance and self.font.info.unitsPerEm:
+                item['permill'] = abs(round(distance * 1000 / self.font.info.unitsPerEm))
 
-    #     # # get font measurement
-    #     # fontMeasurements = self._tabs['font'].measurements.get()
-    #     # if name is not None:
-    #     #     for m in fontMeasurements:
-    #     #         if name == m['name']:
-    #     #             fontDistance = m['units']
-    #     #             break
-    #     #         listItem['parent'] = fontDistance
-    #     #         # get measurement scale
-    #     #         if distance and fontDistance:
-    #     #             scaleValue = distance / float(fontDistance)
-    #     #             listItem['scale'] = f'{scaleValue:.3f}'
+    def loadGlyphMeasurements(self):
 
+        tab = self._tabs['glyph']
 
-    #     tab.measurements.set(listItems)
+        g = self.glyph
+
+        if not g:
+            tab.measurements.set([])
+            return
+
+        measurements = self.glyphMeasurements.get(g.name)
+
+        if measurements is None:
+            tab.measurements.set([])
+            return
+
+        listItems = []
+        for key in measurements.keys():
+            # get point or points
+            keyParts = key.split()
+            if len(keyParts) == 2:
+                index1, index2 = keyParts
+                index1, index2 = int(index1), int(index2)
+            elif len(keyParts) == 1:
+                index1 = keyParts[0].strip()
+                index2 = None
+            else:
+                continue
+            listItem = {
+                'name'      : measurements[key].get('name'),
+                'direction' : measurements[key].get('direction'), 
+                'point 1'   : index1,
+                'point 2'   : index2, 
+                'units'     : None,
+                'permill'   : None,
+                'parent'    : measurements[key].get('parent'),
+                'scale'     : None,
+
+            }   
+            listItems.append(listItem)
+
+        # replace `None` with empty string to avoid `<null>`
+        items = []
+        for item in listItems:
+            listItem = { k : ('' if v is None else v) for k, v in item.items() }
+            items.append(listItem)
+
+        tab.measurements.set(items)
+
+        # get font measurement ### SOMETHING HERE CRASHES RF3
+        # fontMeasurements = self._tabs['font'].measurements.get()
+        # if name is not None:
+        #     for m in fontMeasurements:
+        #         if name == m['name']:
+        #             fontDistance = m['units']
+        #             break
+        #         listItem['parent'] = fontDistance
+        #         # get measurement scale
+        #         if distance and fontDistance:
+        #             scaleValue = distance / float(fontDistance)
+        #             listItem['scale'] = f'{scaleValue:.3f}'
 
     def updatePreviewCallback(self, sender):
-        pass
+        UpdateCurrentGlyphView()
 
     def measurementsColorCallback(self, sender):
         pass
@@ -574,10 +698,28 @@ class Measurements2(BaseWindowController):
     # ---------
 
     def backgroundPreview(self, notification):
-        pass
+        s = notification['scale']
+
+        if self.glyph is None:
+            return
+
+        self.drawPreview(self.glyph, s)
 
     def drawLabelCell(self, notification):
-        pass
+
+        glyph = notification['glyph']
+
+        measurements = self.glyphMeasurements.get(glyph.name)
+        if not len(measurements):
+            return
+
+        ctx.save()
+        ctx.font('Menlo-Bold')
+        ctx.fontSize(10)
+        ctx.translate(3, 3)
+        ctx.fill(0, 0, 1)
+        ctx.text('M', (0, -3))
+        ctx.restore()
 
     # font
 
@@ -588,10 +730,18 @@ class Measurements2(BaseWindowController):
     # glyph
 
     def currentGlyphChanged(self, notification):
-        pass
+        if self.glyph is not None:
+            self.glyph.removeObserver(self, "Glyph.Changed")
+
+        self.glyph = notification['glyph']
+
+        if self.glyph is not None:
+            self.glyph.addObserver(self, "glyphChangedObserver", "Glyph.Changed")
+
+        self.loadGlyphMeasurements()
 
     def glyphChangedObserver(self, notification):
-        pass
+        self.updateGlyphMeasurements()
 
     # -------
     # methods
@@ -602,9 +752,12 @@ class Measurements2(BaseWindowController):
         Draw the current glyph's measurements in the background of the Glyph View.
 
         '''
-        links = getLinks(glyph)
-        if not len(links):
-            return
+        # links = getLinks(glyph)
+        # if not len(links):
+        #     return
+
+
+        tab = self._tabs['glyph']
 
         def _drawLinkMeasurement(p1, p2, name, direction):
             value = getDistance(p1, p2, direction)
@@ -625,68 +778,57 @@ class Measurements2(BaseWindowController):
 
         ctx.save()
 
-        for linkID, L in links.items():
-            partsID = linkID.split()
+        for item in tab.measurements.get():
+            index1 = item['point 1']
+            index2 = item['point 2']
 
-            # two-point measurements
-            if len(partsID) == 2:
-                index1, index2 = partsID
-                index1, index2 = int(index1), int(index2)
-
-                pt1 = getPointAtIndex(glyph, index1)
-                pt2 = getPointAtIndex(glyph, index2)
-
-                if L.get('direction') == 'x':
-                    P1 = pt1.x, pt1.y
-                    P2 = pt2.x, pt1.y
-                elif L.get('direction') == 'y':
-                    P1 = pt2.x, pt1.y
-                    P2 = pt2.x, pt2.y 
-                else: # angled
-                    P1 = pt1.x, pt1.y
-                    P2 = pt2.x, pt2.y
-
-                ctx.save()
-
-                # draw link
-                ctx.stroke(*self.measurementsColor)
-                ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
-                ctx.lineDash(3*previewScale, 3*previewScale)
-                ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
-
-                if self.selectedGlyphMeasurementIDs is not None:
-                    if linkID in self.selectedGlyphMeasurementIDs:
-                        # draw measurement
-                        ctx.fill(None)
-                        ctx.lineDash(None)
-                        ctx.stroke(*self.measurementsColorDim)
-                        ctx.strokeWidth(self.settings['strokeWidth2']*previewScale)
-                        ctx.line(P1, P2)
-                        # draw caption
-                        ctx.stroke(None)
-                        ctx.fill(*self.measurementsColor)
-                        ctx.fontSize(9*previewScale)
-                        _drawLinkMeasurement(P1, P2, L.get('name'), L.get('direction'))
-
-                ctx.restore()
-
-            # one-point measurements
-            elif len(partsID) == 1:
-                index1 = partsID[0].strip()
-                pt1 = getPointAtIndex(glyph, int(index1))
-                r = self.settings['radius1'] * previewScale
-                ctx.save()
-                if self.selectedGlyphMeasurementIDs is not None and linkID in self.selectedGlyphMeasurementIDs:
-                    ctx.fill(*self.measurementsColorDim)
-                else:
-                    ctx.fill(None)
-                ctx.stroke(*self.measurementsColor)
-                ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
-                ctx.oval(pt1.x-r, pt1.y-r, r*2, r*2)
-                ctx.restore()
-
-            else:
+            try:
+                index1 = int(index1)
+                index2 = int(index2)
+            except:
                 continue
+
+            pt1 = getPointAtIndex(glyph, index1)
+            pt2 = getPointAtIndex(glyph, index2)
+
+            name      = item['name']
+            direction = item['direction']
+
+            if direction == 'x':
+                P1 = pt1.x, pt1.y
+                P2 = pt2.x, pt1.y
+            elif direction == 'y':
+                P1 = pt2.x, pt1.y
+                P2 = pt2.x, pt2.y 
+            else: # angled
+                P1 = pt1.x, pt1.y
+                P2 = pt2.x, pt2.y
+
+            ctx.save()
+
+            # draw link
+            ctx.stroke(*self.measurementsColor)
+            ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
+            ctx.lineDash(3*previewScale, 3*previewScale)
+            ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
+
+            linkID = f'{index1} {index2}'
+
+            if self.selectedGlyphMeasurementIDs is not None:
+                if linkID in self.selectedGlyphMeasurementIDs:
+                    # draw measurement
+                    ctx.fill(None)
+                    ctx.lineDash(None)
+                    ctx.stroke(*self.measurementsColorDim)
+                    ctx.strokeWidth(self.settings['strokeWidth2']*previewScale)
+                    ctx.line(P1, P2)
+                    # draw caption
+                    ctx.stroke(None)
+                    ctx.fill(*self.measurementsColor)
+                    ctx.fontSize(9*previewScale)
+                    _drawLinkMeasurement(P1, P2, name, direction)
+
+            ctx.restore()
 
         ctx.restore()
 

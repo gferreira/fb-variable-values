@@ -47,6 +47,7 @@ class Measurement:
     '''
 
     font = None
+    absolute = False
 
     def __init__(self, name, direction, glyphName1, pointIndex1, glyphName2, pointIndex2, parent=None):
         self.name        = name
@@ -104,6 +105,9 @@ class Measurement:
 
         else:
             d = sqrt((self.point2.x - self.point1.x)**2 + (self.point2.y - self.point1.y)**2)
+
+        if self.absolute:
+            d = abs(d)
 
         return d
 
