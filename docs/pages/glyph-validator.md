@@ -46,7 +46,7 @@ glyph marks
 Font marks
 ----------
 
-Glyph test results are shown in the Font Overview’s glyph cells if the option *font marks* is activated.
+Labels for glyph test results are shown in the Font Overview’s glyph cells if the option *font marks* is activated.
 
 ![]({{ site.url }}/images/GlyphValidator-1.png){: .img-fluid}
 
@@ -54,7 +54,7 @@ Glyph test results are shown in the Font Overview’s glyph cells if the option 
 Glyph marks
 -----------
 
-Glyph test results are shown in the Gklyph View if the option *glyph marks* is activated.
+Labels for glyph test results are shown in the Glyph View if the option *glyph marks* is activated.
 
 ![]({{ site.url }}/images/GlyphValidator-2.png){: .img-fluid}
 

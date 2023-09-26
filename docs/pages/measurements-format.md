@@ -17,6 +17,8 @@ Data structure
 
 A measurement establishes a link between two points and allows us to calculate the distance between them.
 
+The order of the points determine if the measurement is positive or negative.
+
 ### Font-level measurements
 
 - A font may contain multiple font-level measurements.

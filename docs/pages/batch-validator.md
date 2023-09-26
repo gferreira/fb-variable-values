@@ -37,7 +37,6 @@ validate
 : ^
   Select target fonts to validate.  
   Click on the button to perform glyph tests in all glyphs of all selected fonts.  
-  The test results are shown in RoboFont’s console window.  
 </div>
 </div>
 
@@ -45,4 +44,11 @@ validate
 Output
 ------
 
+<div class='row'>
+<div class='col' markdown='1'>
 ![]({{ site.url }}/images/BatchValidator-1.png){: .img-fluid}
+</div>
+<div class='col' markdown='1'>
+A report of the test results is printed to RoboFont’s Output window.  
+</div>
+</div>

@@ -34,7 +34,7 @@ The VariableValues extension can also be installed manually if you download the 
 Simply double-click the file `VariableValues.roboFontExt` to have it installed in RoboFont.
 
 <div class="alert alert-warning" role="alert" markdown='1'>
-<i class="bi bi-exclamation-circle me-1"></i> If you install the extension manually, you will not be notified automatically about updates.
+<i class="bi bi-exclamation-circle me-1"></i> If you install the extension manually, you will not be notified about updates.
 {: .card-text }
 </div>
 
