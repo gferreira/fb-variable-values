@@ -75,8 +75,8 @@ Initial public release.
 - <span class='badge'>Added</span> Rebuilding documentation with Jekyll and GitHub Pages.
 
 
-[Measurements]: ../measurements
-[GlyphValidator]: #
-[BatchValidator]: #
-[VarFont Assistant > Measurements]: #
+[Measurements]: ../dialogs/measurements
+[GlyphValidator]: ../dialogs/glyph-validator
+[BatchValidator]: ../dialogs/batch-validator
+[VarFont Assistant > Measurements]: ../dialogs/varfont-assistant/#measurements
 [ParamaRoundup]: http://github.com/FontBureau/Parama-roundup
