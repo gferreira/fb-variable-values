@@ -21,6 +21,8 @@ class FontMeasurements:
 
     '''
 
+    absolute = False
+
     def __init__(self, definitions=[]):
         self.definitions = definitions
         self.values = {}
@@ -32,6 +34,7 @@ class FontMeasurements:
     def measure(self, font):
         for d in self.definitions:
             M = Measurement(*d)
+            M.absolute = self.absolute
             self.values[M.name] = M.measure(font)
 
     def print(self):
@@ -47,6 +50,7 @@ class Measurement:
     '''
 
     font = None
+    absolute = False
 
     def __init__(self, name, direction, glyphName1, pointIndex1, glyphName2, pointIndex2, parent=None):
         self.name        = name
@@ -90,6 +94,9 @@ class Measurement:
     def measure(self, font):
         self.font = font
 
+        if self.font is None:
+            return
+
         if self.point1 is None or self.point2 is None:
             return
 
@@ -101,6 +108,9 @@ class Measurement:
 
         else:
             d = sqrt((self.point2.x - self.point1.x)**2 + (self.point2.y - self.point1.y)**2)
+
+        if self.absolute:
+            d = abs(d)
 
         return d
 

@@ -5,7 +5,7 @@ excludeNavigation: true
 ---
 
 @import "highlights"
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex&display=swap')
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400;8..144,600&display=swap')
 
 body
   font-family: 'Roboto Flex', sans-serif !important
@@ -19,7 +19,7 @@ main, footer
     &:hover
       border-bottom: solid 1px
   a[href*="//"]:not([href*="localhost:4000"]),
-  a[href*="//"]:not([href*="gferreira.github.io/VariableSpacing"])
+  a[href*="//"]:not([href*="gferreira.github.io/VariableValues"])
     &:not(.page-link)
       &:hover
         border-bottom-width: 3px !important
@@ -28,12 +28,16 @@ main, footer
 ul
   padding-left: 1.5em
 
+strong
+  font-weight: 800
+
 .container
   max-width: 960px
 
 .changelog
   .badge
     background-color: #DFDFDF !important
+    text-transform: lowercase
     color: #6c757d
     width: 7em
     height: 1.6em

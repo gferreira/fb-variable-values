@@ -2,6 +2,7 @@ from importlib import reload
 import variableValues.kerningPairPlus 
 reload(variableValues.kerningPairPlus)
 
+import os
 import drawBot as DB
 from fontParts.world import OpenFont, NewFont, RGlyph
 from fontTools.pens.transformPen import TransformPointPen
@@ -51,7 +52,7 @@ class VariableKerningPreview:
     showValue    = True
     showFontName = False
 
-    _kerning= {}
+    _kerning = {}
     _allPairs = []
 
     selectedSources = []
@@ -61,11 +62,10 @@ class VariableKerningPreview:
 
     def __init__(self, designspacePath):
         self.designspace = DesignSpacePlus(designspacePath)
-        print(self.sources.keys())
 
     @property
     def sources(self):
-        return { src.filename.replace('.ufo', ''): src.path for src in self.designspace.document.sources }
+        return { os.path.splitext(os.path.split(src.path)[-1])[0]: src.path for src in self.designspace.document.sources }
 
     def loadKerning(self):
 
@@ -74,6 +74,8 @@ class VariableKerningPreview:
         self._kerning = {}
 
         for source in self.selectedSources:
+            # print(source)
+
             sourcePath = self.sources[source]
             f = OpenFont(sourcePath, showInterface=False)
 
@@ -119,7 +121,7 @@ class VariableKerningPreview:
             DB.translate(x, y)
             DB.scale(self.sampleScale)
 
-            # draw font name caption
+            # draw font name caption    
             if i == 0 and self.showFontName:
                 DB.fill(1, 0, 0)
                 DB.fontSize(self.sampleFontSize)
@@ -175,10 +177,10 @@ class VariableKerningPreview:
 
     def draw(self):
 
-        print('KERNING', self._kerning.keys())
-        print()
-        print('SOURCES', self.sources.keys())
-        print()
+        # print('KERNING', self._kerning.keys())
+        # print()
+        # print('SOURCES', self.sources.keys())
+        # print()
 
         pairs = []
         for i, pair in enumerate(self._allPairs):
@@ -216,3 +218,29 @@ class VariableKerningPreview:
             y -= self.sampleHeight
 
         return True
+
+
+if __name__ == '__main__':
+
+    # run in RF DrawBot extension
+
+    designspacePath = '/Users/gferreira/hipertipo/fonts/roboto-flex/sources/RobotoFlex.designspace'
+
+    V = VariableKerningPreview(designspacePath)
+    V.showMetrics  = True
+    V.showKerning  = True
+    V.showValue    = True
+    V.showFontName = True
+
+    # select some sources
+    V.selectedSources = list(V.sources.keys())[:5]
+    
+    # load kerning for these sources
+    V.loadKerning()
+
+    # select a kerning pair by index
+    pairIndex = 2
+    
+    # preview selected pair / sources 
+    V.drawPair((V._allPairs[pairIndex], pairIndex))
+

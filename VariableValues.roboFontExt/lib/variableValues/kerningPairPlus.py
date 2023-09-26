@@ -22,7 +22,7 @@ CONTEXTS = {
 
 
 class KerningPairPlus:
-
+    
     '''
     A simple kerning pair which provides additional data about itself:
 

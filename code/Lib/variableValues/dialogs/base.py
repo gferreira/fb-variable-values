@@ -255,9 +255,13 @@ class DesignSpaceSelector:
             sourcesListPosSize, sourcesItems,
             columnDescriptions=sourcesDescriptions,
             allowsMultipleSelection=True,
-            allowsSorting=True, # sorting by columns vs. by axes sorting can get in conflict :/
+            allowsSorting=False, ### BUG: sort by columns leads to empty selection error
             enableDelete=False,
+            selectionCallback=self.selectedSourcesCallback,
             doubleClickCallback=self.openSourceCallback)
+
+    def selectedSourcesCallback(self, sender):
+        print(self.selectedSources) # list items
 
     # ---------
     # callbacks

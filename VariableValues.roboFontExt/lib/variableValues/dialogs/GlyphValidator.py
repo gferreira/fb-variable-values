@@ -155,10 +155,8 @@ class GlyphValidator:
         ctx.fontSize(10)
         ctx.translate(3, 3)
         for check in self.checkResults.keys():
-            checkbox = getatttr(self.w, check)
-            print(check, checkbox)
-            print(checkbox.get())
-            if checkbox.get() is not True:
+            checkbox = getattr(self.w, check)
+            if not checkbox.get():
                 continue
             if self.checkResults[check]:
                 ctx.fill(0, 1, 0)

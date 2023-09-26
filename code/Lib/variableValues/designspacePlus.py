@@ -56,7 +56,7 @@ class DesignSpacePlus:
 
     @property
     def othervars(self):
-        return list(set(self.document.sources).difference(set([self.default]+self.duovars+self.trivars+self.quadvars)))
+        return list(set(self.document.sources).difference(set([self.default] + self.duovars + self.trivars + self.quadvars)))
 
     def _getSourceSet(self, n):
         varSet = []

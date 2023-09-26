@@ -1,7 +1,8 @@
 ---
-title  : Changelog
-layout : default
-class  : changelog
+title     : Changelog
+layout    : default
+class     : changelog
+permalink : /changelog/
 ---
 
 All notable changes to VariableValues are documented in this file.
@@ -33,6 +34,14 @@ types of changes:
 
 -->
 
+0.1.4
+-----
+
+- <span class='badge'>Changed</span> Rewriting [Measurements] tool around external JSON files with measurement data.
+- <span class='badge'>Changed</span> Rewriting [VarFont Assistant > Measurements] around the new measurement files.
+- <span class='badge'>Changed</span> Updating documentation and screenshots.
+
+
 0.1.3
 -----
 
@@ -40,20 +49,20 @@ types of changes:
 - <span class='badge'>Added</span> Adding kerning preview to VarFont Assistant.
 - <span class='badge'>Added</span> Adding `kerningPairPlus` and `kerningPreview` as separate modules for command-line use.
 - <span class='badge'>Added</span> Adding `variableValues.validation` with functions to compare glyph and font data.
-- <span class='badge'>Added</span> Adding [GlyphValidator](#) and [BatchValidator](#) dialogs.
+- <span class='badge'>Added</span> Adding [GlyphValidator] and [BatchValidator] dialogs.
 
 
 0.1.2
 -----
 
-- <span class='badge'>Added</span> Adding [Measurements](../measurements) tool to create and visualize measurements at the font and glyph levels.
+- <span class='badge'>Added</span> Adding [Measurements] tool to create and visualize measurements at the font and glyph levels.
 - <span class='badge'>Added</span> Adding example font (Roboto) with font- and glyph-level measurements included.
 
 
 0.1.1
 -----
 
-- <span class='badge'>Added</span> Adding `measurements` module to measure distances in a font. Based on [ParamaRoundup](http://github.com/FontBureau/Parama-roundup).
+- <span class='badge'>Added</span> Adding `measurements` module to measure distances in a font. Based on [ParamaRoundup].
 - <span class='badge'>Added</span> Adding extension package and `.mechanic` file for easy installation in RoboFont.
 - <span class='badge'>Changed</span> Updating documentation content and stylesheet.
 
@@ -64,3 +73,10 @@ types of changes:
 Initial public release.
 
 - <span class='badge'>Added</span> Rebuilding documentation with Jekyll and GitHub Pages.
+
+
+[Measurements]: ../measurements
+[GlyphValidator]: #
+[BatchValidator]: #
+[VarFont Assistant > Measurements]: #
+[ParamaRoundup]: http://github.com/FontBureau/Parama-roundup

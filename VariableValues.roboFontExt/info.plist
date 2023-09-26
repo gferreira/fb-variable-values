@@ -14,7 +14,7 @@
 		</dict>
 		<dict>
 			<key>path</key>
-			<string>variableValues/dialogs/Measurements.py</string>
+			<string>variableValues/dialogs/Measurements2.py</string>
 			<key>preferredName</key>
 			<string>Measurements</string>
 			<key>shortKey</key>
@@ -56,7 +56,7 @@
 	<key>requiresVersionMinor</key>
 	<string>4</string>
 	<key>timeStamp</key>
-	<real>1693938094.4491782</real>
+	<real>1695733600.8478668</real>
 	<key>version</key>
 	<string>0.1.4</string>
 </dict>

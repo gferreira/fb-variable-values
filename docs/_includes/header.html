@@ -1,0 +1,15 @@
+  <nav class="navbar navbar-expand-lg bg-body-secondary px-2">
+    <div class="container">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="navbar-nav">
+          <a class="nav-link {% if page.name == 'index.md' %}active{% endif %}" href="{{ site.url }}">index</a>
+          <a class="nav-link {% if page.name == 'install.md' %}active{% endif %}" href="{{ site.url }}/install/">install</a>
+          <a class="nav-link {% if page.name == 'dialogs.md' %}active{% endif %}" href="{{ site.url }}/dialogs/">dialogs</a>
+          <a class="nav-link {% if page.name == 'measurements-format.md' %}active{% endif %}" href="{{ site.url }}/measurements-format/">format</a>
+        </div>
+      </div>
+    </div>
+  </nav>

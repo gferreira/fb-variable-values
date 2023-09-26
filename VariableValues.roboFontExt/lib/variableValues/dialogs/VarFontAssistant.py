@@ -580,6 +580,9 @@ class VarFontAssistant(DesignSpaceSelector):
 
         tab = self._tabs['font values']
 
+        if self.verbose:
+            print('loading font info values for selected sources...')
+
         # empty list
         if not self.selectedDesignspace:
             tab.fontInfo.set([])
@@ -593,9 +596,13 @@ class VarFontAssistant(DesignSpaceSelector):
             f = OpenFont(sourcePath, showInterface=False)
             info = f.info.asDict()
             self._fontValues[sourceFileName] = {}
+            print(f'\tloading font info values for {sourceFileName}...')
             for attr, attrLabel in self._fontAttrs.items():
                 self._fontValues[sourceFileName][attrLabel] = info.get(attr)
             f.close()
+
+        if self.verbose:
+            print('...done.\n')
 
         self.updateFontValuesCallback(None)
 
@@ -674,7 +681,8 @@ class VarFontAssistant(DesignSpaceSelector):
             return
 
         i = selection[0]
-        item = tab.fontValues.get()[i]
+        items = tab.fontValues.get()
+        item = items[i]
 
         # save change to internal dict
         fontAttr = self.selectedFontAttr

@@ -47,7 +47,7 @@ def buildExtension():
             'shortKey'      : '',
         },
         {
-            'path'          : 'variableValues/dialogs/Measurements.py',
+            'path'          : 'variableValues/dialogs/Measurements2.py',
             'preferredName' : 'Measurements',
             'shortKey'      : '',
         },

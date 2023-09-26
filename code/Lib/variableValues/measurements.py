@@ -21,6 +21,8 @@ class FontMeasurements:
 
     '''
 
+    absolute = False
+
     def __init__(self, definitions=[]):
         self.definitions = definitions
         self.values = {}
@@ -32,6 +34,7 @@ class FontMeasurements:
     def measure(self, font):
         for d in self.definitions:
             M = Measurement(*d)
+            M.absolute = self.absolute
             self.values[M.name] = M.measure(font)
 
     def print(self):

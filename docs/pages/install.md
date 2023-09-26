@@ -1,6 +1,7 @@
 ---
-title  : Installing VariableValues
-layout : default
+title     : Installing VariableValues
+layout    : default
+permalink : /install/
 ---
 
 VariableValues is packaged and distributed as a [RoboFont extension].
@@ -15,13 +16,14 @@ Installing with Mechanic
 
 It is recommended to install VariableValues using [Mechanic], so it can automatically check for updates and install them.
 
-1. Download the file `VariableValues.mechanic` from the repository.
+1. Download the file `VariableValues.mechanic` from the [GitHub repository].
 2. Go to the Mechanic extension’s settings.
 3. Use the plus button to add the `.mechanic` file to the list of [Single Extension Items].
 
+[GitHub repository]: http://github.com/gferreira/fb-variable-values
 [RoboFont extension]: http://robofont.com/documentation/extensions/
 [Mechanic]: http://github.com/robofont-mechanic/mechanic-2
-[Single Extension Items]: http://robofont.com/documentation/extensions/managing-extension-streams/#adding-single-extension-items
+[Single Extension Items]: http://robofont.com/documentation/how-tos/extensions/managing-extension-streams/#adding-single-extension-items
 
 
 Installing manually
@@ -31,8 +33,8 @@ The VariableValues extension can also be installed manually if you download the 
 
 Simply double-click the file `VariableValues.roboFontExt` to have it installed in RoboFont.
 
-<div class="alert alert-primary" role="alert" markdown='1'>
-If you install the extension manually, you will *not* be notified automatically about updates.
+<div class="alert alert-warning" role="alert" markdown='1'>
+<i class="bi bi-exclamation-circle me-1"></i> If you install the extension manually, you will not be notified automatically about updates.
 {: .card-text }
 </div>
 
@@ -49,4 +51,4 @@ This mode allows developers to make changes to the code while using and testing 
 3. Add the file `VariableValues/code/Lib/start.py` to the list of start-up scripts.
 4. Save the settings and restart RoboFont; VariableValues will now appear under the *Extensions* menu.
 
-[Extensions > Start Up Scripts]: http://robofont.com/documentation/workspace/preferences-window/extensions/#start-up-scripts
+[Extensions > Start Up Scripts]: http://robofont.com/documentation/reference/workspace/preferences-window/extensions/#start-up-scripts

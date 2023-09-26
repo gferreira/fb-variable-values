@@ -1,4 +1,0 @@
----
-title  : BatchValidator
-layout : default
----
