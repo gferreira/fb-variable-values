@@ -1,7 +1,7 @@
 extensionName: VariableValues
-repository: https://github.com/gferreira/VariableValues
+repository: https://github.com/gferreira/fb-variable-values
 extensionPath: VariableValues.roboFontExt
-description: A RoboFont extension to visualize and edit values in a designspace.
+description: A RoboFont extension to view and edit data in multiple designspace sources.
 developer: Gustavo Ferreira
 developerURL: https://github.com/gferreira
 tags: [variable fonts, font info, designspace, workflow]
