@@ -13,6 +13,7 @@ from mojo.UI import UpdateCurrentGlyphView, PutFile, GetFile
 from mojo import drawingTools as ctx
 from mojo.roboFont import *
 from mojo.events import addObserver, removeObserver
+from mojo.extensions import setExtensionDefaultColor, getExtensionDefaultColor
 from variableValues.linkPoints import *
 from variableValues.measurements import Measurement
 
@@ -92,7 +93,7 @@ class Measurements2(BaseWindowController):
     padding      = 10
     lineHeight   = 22
     verbose      = True
-    buttonWidth  = 85
+    buttonWidth  = 90
     buttonHeight = 25
     sizeStyle    = 'normal'
 
@@ -236,7 +237,7 @@ class Measurements2(BaseWindowController):
         tab.measurementsColor = ColorWell(
                 (x, y, self.buttonWidth, self.lineHeight),
                 callback=self.measurementsColorCallback,
-                color=rgb2nscolor(self.settings['measurementsColor'])
+                color=rgb2nscolor(self.measurementsColor)
             )
 
         x = -(self.buttonWidth + p)
@@ -291,9 +292,21 @@ class Measurements2(BaseWindowController):
     # options
 
     @property
+    def measurementsColorKey(self):
+        return f'{self.key}.measurementsColor'
+
+    @property
     def measurementsColor(self):
-        tab = self._tabs['glyph']
-        return nscolor2rgb(tab.measurementsColor.get())
+        color = getExtensionDefaultColor(self.measurementsColorKey, fallback=self.settings['measurementsColor'])
+        if type(color) is not tuple:
+            color = nscolor2rgb(color)
+        return color
+
+    @measurementsColor.setter
+    def measurementsColor(self, color):
+        if type(color) is tuple:
+            color = rgb2nscolor(color)
+        setExtensionDefaultColor(self.measurementsColorKey, color)
 
     @property
     def measurementsColorDim(self):
@@ -515,7 +528,8 @@ class Measurements2(BaseWindowController):
         UpdateCurrentGlyphView()
 
     def measurementsColorCallback(self, sender):
-        pass
+        self.measurementsColor = nscolor2rgb(sender.get())
+        self.updatePreviewCallback(None)
 
     # ---------
     # observers
