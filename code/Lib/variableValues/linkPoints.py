@@ -46,6 +46,28 @@ def getPointAtIndex(glyph, ptIndex):
     ci, pi = points[ptIndex]
     return glyph.contours[ci].points[pi]
 
+def getAnchorPoint(font, anchor):
+    '''
+    X -> xheight
+    A -> ascender
+    B -> baseline
+    C -> capheight
+    D -> descender
+    '''
+    P = RPoint()
+    P.x = 0
+    if anchor == 'X':
+        P.y = font.info.xHeight
+    elif anchor == 'C':
+        P.y = font.info.capHeight
+    elif anchor == 'D':
+        P.y = font.info.descender
+    elif anchor == 'A':
+        P.y = font.info.ascender
+    else: # baseline
+        P.y = 0 
+    return P
+
 def getIndexForPoint(glyph, pt):
     '''Get the linear point index for a given point.
 

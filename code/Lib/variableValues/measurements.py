@@ -84,12 +84,18 @@ class Measurement:
     @property
     def point1(self):
         if self.glyph1 is not None:
-            return getPointAtIndex(self.glyph1, self.pointIndex1)
+            if isinstance(self.pointIndex1, int):
+                return getPointAtIndex(self.glyph1, self.pointIndex1)
+            else:
+                return getAnchorPoint(self.font, self.pointIndex1)
 
     @property
     def point2(self):
         if self.glyph2 is not None:
-            return getPointAtIndex(self.glyph2, self.pointIndex2)
+            if isinstance(self.pointIndex2, int):
+                return getPointAtIndex(self.glyph2, self.pointIndex2)
+            else:
+                return getAnchorPoint(self.font, self.pointIndex2)
 
     def measure(self, font):
         self.font = font
