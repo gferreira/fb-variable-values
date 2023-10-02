@@ -55,7 +55,7 @@ The order of the points determine if the measurement is positive or negative.
 
 ### Reference points
 
-Point index columns support *reference points* assigned to the following characters:
+Point index columns support special reference points assigned to the following characters:
 
 | character | description | x           | y                    |
 |-----------|-------------|-------------|----------------------|
