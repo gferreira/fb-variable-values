@@ -23,12 +23,13 @@ A tool to create and visualize font- and glyph-level measurements.
 Font measurements
 -----------------
 
-Create and edit font-level measurements.
+Use the **font** tab to create and edit font-level measurements.
 
 ![]({{ site.url }}/images/Measurements-1.png){: .img-fluid}
 
 new
-: Click on the button to add a new empty font-level measurement to the list.
+: Click on the button to add a new empty font-level measurement to the list.  
+  Double-click the new item's cells to edit its content.
 
 <div class="alert alert-primary" role="alert" markdown='1'>
 For more information about each column see [Measurements format > Font-level measurements](../../measurements-format/#font-level-measurements).
@@ -39,7 +40,7 @@ For more information about each column see [Measurements format > Font-level mea
 Glyph measurements
 ------------------
 
-Create and edit glyph-level measurements.
+Use the **glyph** tab to create and edit glyph-level measurements.
 
 ![]({{ site.url }}/images/Measurements-2.png){: .img-fluid}
 
@@ -48,6 +49,9 @@ new
 
 color
 : The color of measurement lines and captions in the Glyph View display.
+
+flip
+: Flip point indexes in the selected measurements to invert measurement direction.
 
 <div class="alert alert-primary" role="alert" markdown='1'>
 For more information about each column see [Measurements format > Glyph-level measurements](../../measurements-format/#glyph-level-measurements).
@@ -63,7 +67,7 @@ Glyph measurements preview
 The Glyph View displays a visualization of the measurements in the current glyph.
 
 - Dotted lines indicate a measurement between pairs of points.
-- Select a measurement in the dialog to highlight it and show its name, direction and distance.
+- Select one or more measurements in the dialog to highlight and show their name, direction and distance.
 
 
 Loading and saving
@@ -74,6 +78,6 @@ Reading and writing measurement data to external files.
 load…
 : Load measurement data from an external JSON file into the UI.
 
-save
+save…
 : Save the current measurement data to an external JSON file.
 

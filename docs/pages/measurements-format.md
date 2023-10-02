@@ -23,6 +23,7 @@ The order of the points determine if the measurement is positive or negative.
 
 - A font may contain multiple font-level measurements.
 - Font measurement names must be unique.
+- The order of the measurements matters.
 
 | attribute | description                                            |
 |-----------|--------------------------------------------------------|
@@ -41,6 +42,7 @@ The order of the points determine if the measurement is positive or negative.
 - Glyph measurement names are usually related to font-level measurements.
 - Glyph measurement names must **not** be unique.
 - Glyph measurement identifiers are created from the point indexes.
+- The order of glyph measurements follows the order of font measurements.
 
 | attribute | description                                            |
 |-----------|--------------------------------------------------------|
@@ -51,14 +53,18 @@ The order of the points determine if the measurement is positive or negative.
 | parent    | parent measurement (optional)                          |
 {: .table .table-hover }
 
-### Special points
+### Reference points
 
-Two special “ghost points” at the glyph’s left edge (origin) and right edge (advance width) are available.
+Point index columns support *reference points* assigned to the following characters:
 
-| point       | index                                      | example |
-|-------------|--------------------------------------------|---------|
-| left edge   | smaller than zero                          | -1      |
-| right edge  | larger than the total point count in glyph | 99      |
+| character | description | x           | y                    |
+|-----------|-------------|-------------|----------------------|
+| A         | ascender    | 0           | font.info.ascender   |
+| B         | baseline    | 0           | 0                    |
+| C         | cap height  | 0           | font.info.capHeight  |
+| D         | descender   | 0           | font.info.descender  |
+| X         | x-height    | 0           | font.info.xHeight    |
+| W         | width       | glyph.width | 0                    |
 {: .table .table-hover }
 
 
@@ -97,10 +103,12 @@ glyphMeasurements = {
 ```
 
 
-JSON example
-------------
+JSON format
+-----------
 
-Measurements can also be stored in standalone JSON files. This makes it easier to use the same measurement definitions for all sources in a designspace.
+Measurements can be stored in standalone JSON files using the format below.
+
+The same set of measurement definitions can be used to measure all sources in a designspace.
 
 ```json
 {

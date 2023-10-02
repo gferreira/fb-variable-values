@@ -34,6 +34,14 @@ types of changes:
 
 -->
 
+0.1.5
+-----
+
+- <span class='badge'>Added</span> Adding reference points and description to [Measurements] tool.
+- <span class='badge'>Added</span> Making Measurements tool remember choice of preview color.
+- <span class='badge'>Changed</span> Improving visualisation of small measurements with larger color bands.
+
+
 0.1.4
 -----
 

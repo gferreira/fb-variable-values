@@ -8,7 +8,7 @@ from hTools3.modules.sys import pycClear, pyCacheClear, removeGitFiles
 # settings
 # --------
 
-version          = '0.1.4'
+version          = '0.1.5'
 baseFolder       = os.path.dirname(__file__)
 libFolder        = os.path.join(baseFolder, 'code', 'Lib')
 licensePath      = os.path.join(baseFolder, 'LICENSE')

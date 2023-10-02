@@ -29,7 +29,17 @@ class FontMeasurements:
 
     def read(self, jsonPath):
         M = readMeasurements(jsonPath)
-        self.definitions = [(name, attrs['direction'], attrs['glyph 1'], int(attrs['point 1']), attrs['glyph 2'], int(attrs['point 2']), attrs.get('parent')) for name, attrs in M['font'].items()]
+        self.definitions = []
+        for name, attrs in M['font'].items():
+            try:
+                pt1 = int(attrs['point 1'])
+            except:
+                pt1 = attrs['point 1']
+            try:            
+                pt2 = int(attrs['point 2'])
+            except:
+                pt2 = attrs['point 2']
+            self.definitions.append((name, attrs['direction'], attrs['glyph 1'], pt1, attrs['glyph 2'], pt2, attrs.get('parent')))
 
     def measure(self, font):
         for d in self.definitions:
@@ -64,22 +74,14 @@ class Measurement:
     @property
     def glyph1(self):
         if self.font:
-            if self.glyphName1 in self.font:
+            if self.glyphName1 and self.glyphName1 in self.font:
                 return self.font[self.glyphName1]
-        #     else:
-        #         print(f"glyph 1 ({self.glyphName1}) not in font")
-        # else:
-        #     print('no font given')
 
     @property
     def glyph2(self):
         if self.font:
-            if self.glyphName2 in self.font:
+            if self.glyphName2 and self.glyphName2 in self.font:
                 return self.font[self.glyphName2]
-        #     else:
-        #         print(f"glyph 2 ({self.glyphName2}) not in font")
-        # else:
-        #     print('no font given')
 
     @property
     def point1(self):

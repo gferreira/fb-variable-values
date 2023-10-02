@@ -110,7 +110,7 @@ class Measurements2(BaseWindowController):
     }
 
     fontMeasurementParameters  = ['name', 'direction', 'glyph 1', 'point 1', 'glyph 2', 'point 2', 'units', 'permill', 'parent', 'scale', 'description']
-    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'units', 'permill', 'parent', 'scale']
+    glyphMeasurementParameters = ['name', 'direction', 'point 1', 'point 2', 'units', 'permill', 'parent', 'scale', 'description']
 
     measurementFilePath = None
 
@@ -209,9 +209,10 @@ class Measurements2(BaseWindowController):
         tab = self._tabs['glyph']
 
         _columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]     # name
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-4])]      # dir, p1, p2
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-4:-1])]     # units, permill, parent
-        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-1]}]                                                                             # scale
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-5])]      # dir, p1, p2
+        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-5:-2])]     # units, permill, parent
+        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-2], 'width': self._colValue, }]                                                  # scale
+        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-1]}]                                                                             # description
 
         x = y = p = self.padding
         tab.measurements = List(
@@ -697,9 +698,6 @@ class Measurements2(BaseWindowController):
         tab = self._tabs['glyph']
         items = tab.measurements.get()
 
-        # get font-level values to calculate scale
-        # fontValues = { i['name']: i['units'] for i in self._tabs['font'].measurements.get() }
-
         # clear measurement values
         if not self.glyph:
             for item in items:
@@ -707,6 +705,11 @@ class Measurements2(BaseWindowController):
                 item['permill'] = ''
                 item['scale']   = ''
             return
+
+        # get font-level values to calculate scale
+        fontItems = self._tabs['font'].measurements.get()
+        fontValues = { i['name']: i['units'] for i in fontItems }
+        fontDescriptions = { i['name']: i['description'] for i in fontItems }
 
         # measure distances
         for item in items:
@@ -720,12 +723,11 @@ class Measurements2(BaseWindowController):
                 index2 = item['point 2']
 
             M = Measurement(
-                item['name'],
-                item['direction'],
+                item['name'], item['direction'],
                 self.glyph.name, index1,
                 self.glyph.name, index2,
                 item['parent'])
-            # M.absolute = True
+
             distance = M.measure(self.font)
 
             if distance is None:
@@ -739,6 +741,29 @@ class Measurements2(BaseWindowController):
             # convert value to permill
             if distance and self.font.info.unitsPerEm:
                 item['permill'] = round(distance * 1000 / self.font.info.unitsPerEm)
+
+            # connect with font-level measurement
+            name = item['name']
+            if name in fontValues:
+                item['parent'] = fontValues[name]
+            # if name in fontDescriptions:
+            #     item['description'] = fontDescriptions[name]
+
+        # newItems = []
+        # for item in items:
+        #     newItem = item.copy() 
+        #     if newItem['name'] in fontMeasurements:
+        #         newItem['parent'] = fontMeasurements[name]
+        #         newItem['description'] = descriptions[name]
+        #         # get measurement scale
+        #         try:
+        #             scaleValue = int(newItem['units']) / float(fontMeasurements[name])
+        #             newItem['scale'] = f'{scaleValue:.3f}'
+        #         except:
+        #             pass
+        #     newItems.append(newItem)
+        # 
+        # tab.measurements.set(newItems)
 
     def loadGlyphMeasurements(self):
 
@@ -800,19 +825,6 @@ class Measurements2(BaseWindowController):
             sortedItemsClean.append(itemClean)
 
         tab.measurements.set(sortedItemsClean)
-
-        # get font measurement ### SOMETHING HERE CRASHES RF3
-        # fontMeasurements = self._tabs['font'].measurements.get()
-        # if name is not None:
-        #     for m in fontMeasurements:
-        #         if name == m['name']:
-        #             fontDistance = m['units']
-        #             break
-        #         listItem['parent'] = fontDistance
-        #         # get measurement scale
-        #         if distance and fontDistance:
-        #             scaleValue = distance / float(fontDistance)
-        #             listItem['scale'] = f'{scaleValue:.3f}'
 
     def drawPreview(self, glyph, previewScale):
         '''
