@@ -1,4 +1,7 @@
 import ezui
+from mojo.UI import PutFile, GetFile
+from mojo.subscriber import Subscriber, registerRoboFontSubscriber, unregisterRoboFontSubscriber, registerGlyphEditorSubscriber, unregisterGlyphEditorSubscriber, registerCurrentGlyphSubscriber, unregisterCurrentGlyphSubscriber
+from variableValues.linkPoints import readMeasurements
 
 '''
 M E A S U R E M E N T S v3
@@ -7,17 +10,60 @@ RoboFont4 = EZUI + Subscriber + Merz
 
 '''
 
+class MeasurementsGlyphEditor(Subscriber):
+
+    def roboFontDidSwitchCurrentGlyph(self, info):
+        self.glyph = info["glyph"]
+        self.update()
+
+    def update(self):
+        if not self.controller:
+            return 
+
+        table = self.controller.w.getItem("glyphMeasurements")
+        items = []
+
+        if not self.glyph:
+            table.set(items)
+            return
+
+        measurements = self.controller.glyphMeasurements.get(self.glyph.name)
+
+        if measurements is None:
+            table.set(items)
+            return
+
+        for key in measurements.keys():
+            parts = key.split()
+            if len(parts) == 2:
+                index1, index2 = parts
+            else:
+                continue
+            item = table.makeItem(
+                name=measurements[key].get('name'),
+                direction=measurements[key].get('direction'), 
+                point1=index1,
+                point2=index2, 
+                units=None,
+                permill=None,
+                parent=measurements[key].get('parent'),
+                scale=None
+            )
+            items.append(item)
+
+        table.set(items)
+
+
 class Measurements3(ezui.WindowController):
     
-    title = 'Measurements'
-    key   = 'com.fontBureau.measurements3'
+    title        = 'Measurements'
+    key          = 'com.fontBureau.measurements3'
+    buttonWidth  = 70
+    colWidth     = 55
+    verbose      = True
 
-    buttonWidth = 70
-    colWidth = 55
-
-    # -------
-    # methods
-    # -------
+    fontMeasurements  = {}
+    glyphMeasurements = {}
 
     def build(self):
         content = """
@@ -113,7 +159,9 @@ class Measurements3(ezui.WindowController):
                     dict(
                         identifier="description",
                         title="description",
+                        width=self.colWidth*6,
                         minWidth=self.colWidth*4,
+                        maxWidth=self.colWidth*10,
                         editable=True
                     ),
                 ],
@@ -184,7 +232,9 @@ class Measurements3(ezui.WindowController):
                     dict(
                         identifier="description",
                         title="description",
+                        width=self.colWidth*6,
                         minWidth=self.colWidth*4,
+                        maxWidth=self.colWidth*10,
                         editable=False
                     ),
                 ],
@@ -221,18 +271,41 @@ class Measurements3(ezui.WindowController):
             descriptionData=descriptionData,
             controller=self,
             size=(800, 600),
-            minSize=(800, 600),
+            minSize=(600, 400),
         )
 
     def started(self):
         self.w.open()
+        MeasurementsGlyphEditor.controller = self
+        registerCurrentGlyphSubscriber(MeasurementsGlyphEditor)
+
+    def destroy(self):
+        unregisterCurrentGlyphSubscriber(MeasurementsGlyphEditor)
+        MeasurementsGlyphEditor.controller = None
 
     # ---------
     # callbacks
     # ---------
 
     def loadButtonCallback(self, sender):
-        print("load button was pushed.")
+
+        if self.verbose:
+            print("loading measurement data from file...")
+
+        jsonPath = GetFile(message='Select JSON file with measurements:')
+
+        if self.verbose:
+            print(f'\tloading data from {jsonPath}...')
+
+        measurements = readMeasurements(jsonPath)
+
+        self.fontMeasurements  = measurements['font']
+        self.glyphMeasurements = measurements['glyphs']
+
+        self.loadFontMeasurements()
+
+        if self.verbose:
+            print('...done.\n')
 
     def saveButtonCallback(self, sender):
         print("save button was pushed.")
@@ -265,6 +338,29 @@ class Measurements3(ezui.WindowController):
     def flipButtonCallback(self, sender):
         print("flip button was pushed.")
 
+    # -------
+    # methods
+    # -------
+
+    def loadFontMeasurements(self):
+        table = self.w.getItem("fontMeasurements")
+        items = []
+        for name, data in self.fontMeasurements.items():
+            item = table.makeItem(
+                name=name,
+                direction=data.get('direction'),
+                glyph1=data.get('glyph 1'),
+                point1=data.get('point 1'),
+                glyph2=data.get('glyph 2'),
+                point2=data.get('point 2'),
+                units=data.get('units'),
+                permill=data.get('permill'),
+                parent=data.get('parent'),
+                scale=data.get('scale'),
+                description=data.get('description'),                
+            )
+            items.append(item)
+        table.set(items)
 
 # ----
 # test
