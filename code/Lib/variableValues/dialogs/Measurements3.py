@@ -1,7 +1,8 @@
 import ezui
 from mojo.UI import PutFile, GetFile
-from mojo.subscriber import Subscriber, registerRoboFontSubscriber, unregisterRoboFontSubscriber, registerGlyphEditorSubscriber, unregisterGlyphEditorSubscriber, registerCurrentGlyphSubscriber, unregisterCurrentGlyphSubscriber
+from mojo.subscriber import Subscriber, registerRoboFontSubscriber, unregisterRoboFontSubscriber, registerGlyphEditorSubscriber, unregisterGlyphEditorSubscriber
 from variableValues.linkPoints import readMeasurements
+from variableValues.measurements import Measurement
 
 '''
 M E A S U R E M E N T S v3
@@ -10,51 +11,18 @@ RoboFont4 = EZUI + Subscriber + Merz
 
 '''
 
-class MeasurementsGlyphEditor(Subscriber):
+class MeasurementsSubscriber(Subscriber):
 
     def roboFontDidSwitchCurrentGlyph(self, info):
-        self.glyph = info["glyph"]
-        self.update()
+        self.controller.glyph = info["glyph"]
+        self.controller.loadGlyphMeasurements()
+        self.controller.updateGlyphMeasurements()
 
-    def update(self):
-        if not self.controller:
-            return 
-
-        table = self.controller.w.getItem("glyphMeasurements")
-        items = []
-
-        if not self.glyph:
-            table.set(items)
-            return
-
-        measurements = self.controller.glyphMeasurements.get(self.glyph.name)
-
-        if measurements is None:
-            table.set(items)
-            return
-
-        for key in measurements.keys():
-            parts = key.split()
-            if len(parts) == 2:
-                index1, index2 = parts
-            else:
-                continue
-            item = table.makeItem(
-                name=measurements[key].get('name'),
-                direction=measurements[key].get('direction'), 
-                point1=index1,
-                point2=index2, 
-                units=None,
-                permill=None,
-                parent=measurements[key].get('parent'),
-                scale=None
-            )
-            items.append(item)
-
-        table.set(items)
+    def glyphEditorGlyphDidChangeOutline(self, info):
+        self.controller.updateGlyphMeasurements()
 
 
-class Measurements3(ezui.WindowController):
+class MeasurementsController(ezui.WindowController):
     
     title        = 'Measurements'
     key          = 'com.fontBureau.measurements3'
@@ -274,14 +242,18 @@ class Measurements3(ezui.WindowController):
             minSize=(600, 400),
         )
 
+        glyph = None
+
     def started(self):
         self.w.open()
-        MeasurementsGlyphEditor.controller = self
-        registerCurrentGlyphSubscriber(MeasurementsGlyphEditor)
+        MeasurementsSubscriber.controller = self
+        # registerRoboFontSubscriber(MeasurementsSubscriber)
+        registerGlyphEditorSubscriber(MeasurementsSubscriber)
 
     def destroy(self):
-        unregisterCurrentGlyphSubscriber(MeasurementsGlyphEditor)
-        MeasurementsGlyphEditor.controller = None
+        # unregisterRoboFontSubscriber(MeasurementsSubscriber)
+        unregisterGlyphEditorSubscriber(MeasurementsSubscriber)
+        MeasurementsSubscriber.controller = None
 
     # ---------
     # callbacks
@@ -362,10 +334,102 @@ class Measurements3(ezui.WindowController):
             items.append(item)
         table.set(items)
 
+    def loadGlyphMeasurements(self):
+
+        table = self.w.getItem("glyphMeasurements")
+        items = []
+
+        if not self.glyph:
+            table.set(items)
+            return
+
+        measurements = self.glyphMeasurements.get(self.glyph.name)
+
+        if measurements is None:
+            table.set(items)
+            return
+
+        for key in measurements.keys():
+            parts = key.split()
+            if len(parts) == 2:
+                index1, index2 = parts
+            else:
+                continue
+            item = table.makeItem(
+                name=measurements[key].get('name'),
+                direction=measurements[key].get('direction'), 
+                point1=index1,
+                point2=index2, 
+                units=None,
+                permill=None,
+                parent=measurements[key].get('parent'),
+                scale=None
+            )
+            items.append(item)
+
+        table.set(items)
+
+    def updateGlyphMeasurements(self):
+
+        table = self.w.getItem("glyphMeasurements")
+        items = table.get()
+
+        if not self.glyph:
+            for i, item in enumerate(items):
+                table.setItemValue(i, 'units', None)
+                table.setItemValue(i, 'permill', None)
+                table.setItemValue(i, 'scale', None)
+            return
+
+        # get font-level values to calculate scale
+        fontItems        = self.w.getItem("fontMeasurements").get()
+        fontValues       = { i['name']: i['units'] for i in fontItems }
+        fontDescriptions = { i['name']: i['description'] for i in fontItems }
+
+        # measure distances
+        for i, item in enumerate(items):
+            try:
+                index1 = int(item['point1'])
+            except:
+                index1 = item['point1']
+            try:
+                index2 = int(item['point2'])
+            except:
+                index2 = item['point2']
+
+            M = Measurement(
+                item['name'], item['direction'],
+                self.glyph.name, index1,
+                self.glyph.name, index2,
+                item['parent'])
+
+            distance = M.measure(self.glyph.font)
+
+            if distance is None:
+                table.setItemValue(i, 'units', None)
+                table.setItemValue(i, 'permill', None)
+                table.setItemValue(i, 'scale', None)
+                continue
+
+            table.setItemValue(i, 'units', str(distance))
+
+            # convert value to permill
+            if distance and self.glyph.font.info.unitsPerEm:
+                table.setItemValue(i, 'permill', str(round(distance * 1000 / self.glyph.font.info.unitsPerEm)))
+
+            # connect with font-level measurement
+            name = item['name']
+            if name in fontValues:
+                parent = fontValues.get(name)
+                if parent is not None:
+                    table.setItemValue(i, 'parent', str(fontValues[name]))
+                else:
+                    table.setItemValue(i, 'parent', None)
+
 # ----
 # test
 # ----
 
 if __name__ == '__main__':
 
-    OpenWindow(Measurements3)
+    OpenWindow(MeasurementsController)
