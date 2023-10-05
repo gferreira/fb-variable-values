@@ -312,30 +312,31 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
             self._glyphAttrs[sourceFileName] = {}
             for glyphName in glyphNames:
-                g = f[glyphName]
-                self._glyphAttrs[sourceFileName][glyphName] = {}
-                for attr in self._glyphAttrsLabels:
-                    if attr == 'width':
-                        value = g.width
-                    elif attr == 'left':
-                        value = g.leftMargin
-                    elif attr == 'right':
-                        value = g.rightMargin
-                    elif attr == 'contours':
-                        value = len(g.contours)
-                    elif attr == 'segments':
-                        value = 0
-                        for c in g.contours:
-                            value += len(c)
-                    elif attr == 'points':
-                        value = 0
-                        for c in g.contours:
-                            value += len(c.points)
-                    elif attr == 'anchors':
-                        value = len(g.anchors)
-                    elif attr == 'components':
-                        value = len(g.components)
-                    self._glyphAttrs[sourceFileName][glyphName][attr] = value
+                if glyphName in f:
+                    g = f[glyphName]
+                    self._glyphAttrs[sourceFileName][glyphName] = {}
+                    for attr in self._glyphAttrsLabels:
+                        if attr == 'width':
+                            value = g.width
+                        elif attr == 'left':
+                            value = g.leftMargin
+                        elif attr == 'right':
+                            value = g.rightMargin
+                        elif attr == 'contours':
+                            value = len(g.contours)
+                        elif attr == 'segments':
+                            value = 0
+                            for c in g.contours:
+                                value += len(c)
+                        elif attr == 'points':
+                            value = 0
+                            for c in g.contours:
+                                value += len(c.points)
+                        elif attr == 'anchors':
+                            value = len(g.anchors)
+                        elif attr == 'components':
+                            value = len(g.components)
+                        self._glyphAttrs[sourceFileName][glyphName][attr] = value
 
             # f.close()
 
@@ -350,8 +351,13 @@ class VarGlyphAssistant(DesignSpaceSelector):
         listItems = []
         for sourceFileName in self._glyphAttrs:
             listItem = { 'file name' : sourceFileName }
-            for attr in self._glyphAttrs[sourceFileName][glyphName]:
-                listItem[attr] = self._glyphAttrs[sourceFileName][glyphName][attr]
+            if glyphName in self._glyphAttrs[sourceFileName]:
+                for attr in self._glyphAttrs[sourceFileName][glyphName]:
+                    listItem[attr] = self._glyphAttrs[sourceFileName][glyphName][attr]
+            else:
+                for attr in self._glyphAttrsLabels:
+                    listItem[attr] = ''
+
             listItems.append(listItem)
 
         tab.glyphAttributes.set(listItems)
@@ -375,8 +381,11 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
             self._glyphCompatibility[sourceFileName] = {}
             for glyphName in glyphNames:
-                g = f[glyphName]
-                segments = getSegmentTypes(g)
+                if glyphName in f:
+                    g = f[glyphName]
+                    segments = getSegmentTypes(g)
+                else:
+                    segments = None
                 self._glyphCompatibility[sourceFileName][glyphName] = segments
 
             # f.close()
@@ -396,16 +405,23 @@ class VarGlyphAssistant(DesignSpaceSelector):
         sMax = 0
         for sourceFileName in self._glyphCompatibility:
             segmentsGlyph = self._glyphCompatibility[sourceFileName][glyphName]
-            if len(segmentsGlyph) > sMax:
-                sMax = len(segmentsGlyph)
+            try:
+                if len(segmentsGlyph) > sMax:
+                    sMax = len(segmentsGlyph)
+            except:
+                pass
 
         listItems = []
         segmentsGlyphs = []
         for sourceFileName in self._glyphCompatibility:
             listItem = { 'file name' : sourceFileName }
             segmentsGlyph = self._glyphCompatibility[sourceFileName][glyphName]
-            for si, segment in enumerate(segmentsGlyph):
-                listItem[str(si)] = segment
+            if segmentsGlyph:
+                for si, segment in enumerate(segmentsGlyph):
+                    listItem[str(si)] = segment
+            else:
+                for i in range(sMax):
+                    listItem[str(i)] = ''
             listItems.append(listItem)
             segmentsGlyphs.append(segmentsGlyph)
 

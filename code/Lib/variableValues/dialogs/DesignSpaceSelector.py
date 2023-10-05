@@ -108,11 +108,11 @@ class DesignSpaceSelector:
                 [],
                 drawFocusRing=False,
                 editCallback=self.editAxesCallback,
-                selfDropSettings=dict(type="genericListPboardType",
-                        operation=AppKit.NSDragOperationMove,
-                        callback=self.genericDropSelfCallback),
-                dragSettings=dict(type="genericListPboardType",
-                        callback=self.genericDragCallback),
+                # selfDropSettings=dict(type="genericListPboardType",
+                #         operation=AppKit.NSDragOperationMove,
+                #         callback=self.genericDropSelfCallback),
+                # dragSettings=dict(type="genericListPboardType",
+                #         callback=self.genericDragCallback),
                 columnDescriptions=axesDescriptions,
             )
 
@@ -255,13 +255,14 @@ class DesignSpaceSelector:
             sourcesListPosSize, sourcesItems,
             columnDescriptions=sourcesDescriptions,
             allowsMultipleSelection=True,
-            allowsSorting=False, ### BUG: sort by columns leads to empty selection error
+            allowsSorting=True, ### either this, or sortable axes -- both produce a bug
             enableDelete=False,
             selectionCallback=self.selectedSourcesCallback,
             doubleClickCallback=self.openSourceCallback)
 
     def selectedSourcesCallback(self, sender):
-        print(self.selectedSources) # list items
+        # print(self.selectedSources) # list items
+        pass
 
     # ---------
     # callbacks

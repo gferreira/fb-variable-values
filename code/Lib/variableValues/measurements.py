@@ -99,8 +99,16 @@ class Measurement:
             else:
                 return getAnchorPoint(self.font, self.pointIndex2)
 
-    def measure(self, font):
+    def measure(self, font, verbose=False):
         self.font = font
+
+        if verbose:
+            print(f'measuring {self.font}...')
+            print(f'\tglyph 1   : {self.glyphName1} {self.glyph1}')
+            print(f'\tpoint 1   : {self.pointIndex1} {self.point1}')
+            print(f'\tglyph 2   : {self.glyphName2}  {self.glyph2}')
+            print(f'\tpoint 2   : {self.pointIndex2} {self.point2}')
+            print(f'\tdirection : {self.direction}')
 
         if self.font is None:
             return
@@ -119,6 +127,10 @@ class Measurement:
 
         if self.absolute:
             d = abs(d)
+
+        if verbose:
+            print(f'\tdistance : {d}')
+            print('...done.\n')
 
         return d
 

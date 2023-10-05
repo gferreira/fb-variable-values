@@ -4,7 +4,6 @@ reload(variableValues.validation)
 
 import os
 import AppKit
-# from functools import cached_property
 from vanilla import *
 from mojo import drawingTools as ctx
 from mojo.UI import UpdateCurrentGlyphView, GetFile, OutputWindow
@@ -13,7 +12,7 @@ from mojo.roboFont import OpenFont, OpenWindow, CurrentFont
 from variableValues.validation import *
 
 
-class BatchValidator:
+class FontValidator:
 
     title        = 'FontValidator'
     padding      = 10
@@ -492,4 +491,4 @@ class BatchValidator:
 
 if __name__ == '__main__':
 
-    OpenWindow(BatchValidator)
+    OpenWindow(FontValidator)
