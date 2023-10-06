@@ -1,8 +1,8 @@
 from importlib import reload
 import variableValues.measurements
 reload(variableValues.measurements)
-import variableValues.dialogs.base
-reload(variableValues.dialogs.base)
+import variableValues.dialogs.DesignSpaceSelector
+reload(variableValues.dialogs.DesignSpaceSelector)
 
 import AppKit
 import os

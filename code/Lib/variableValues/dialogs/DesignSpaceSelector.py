@@ -25,14 +25,12 @@ class DesignSpaceSelector:
 
     _colLeft      = 160
     _colFontName  = 160
-    _colValue     = 60
+    _colValue     = 50
 
     _tabsTitles   = ['designspace'] # expand in subclass
 
     #: A dictionary of designspace names (keys) and their .designspace paths (values).
     _designspaces = {}
-
-    # _axesOrder    = []
 
     _axisColumns  = ['name', 'tag', 'default', 'minimum', 'maximum']
     
@@ -233,7 +231,7 @@ class DesignSpaceSelector:
 
         # make list items
         sourcesDescriptions  = [{'title': 'n', 'width': 20}]
-        sourcesDescriptions += [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName, 'maxWidth': self._colFontName*3}]
+        sourcesDescriptions += [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName}] # , 'maxWidth': self._colFontName*3
         sourcesDescriptions += [{'title': axis.tag, 'width': self._colValue} for axis in self.selectedDesignspacePlus.document.axes]
         sourcesItems = []
         for source in self.sources:

@@ -1,6 +1,7 @@
 ---
-title  : VariableValues
-layout : default
+title     : VariableValues
+layout    : default
+permalink : /
 ---
 
 <span class='badge bg-secondary'>version {{ site.version }}</span>

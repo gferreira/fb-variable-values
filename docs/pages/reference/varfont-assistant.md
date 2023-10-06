@@ -1,20 +1,19 @@
 ---
 title     : VarFont Assistant
 layout    : default
-permalink : /dialogs/varfont-assistant/
+permalink : /reference/dialogs/varfont-assistant/
 ---
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb small">
     <li class="breadcrumb-item"><a href="{{ site.url }}">Index</a></li>
-    <li class="breadcrumb-item"><a href="../../dialogs">dialogs</a></li>
+    <li class="breadcrumb-item"><a href="../../../reference">Reference</a></li>
     <li class="breadcrumb-item active" aria-current="page">{{ page.title }}</li>
   </ol>
 </nav>
 
-A tool to view and edit font values in multiple designspace sources.
+A tool to view and edit font-level values in multiple designspace sources.
 {: .lead}
-
 
 * Table of Contents
 {:toc}
@@ -33,12 +32,12 @@ designspaces
 axes
 : ^
   A list of axes in the selected designspace.  
-  Drag the items to change the font sorting order.
 
 sources
 : ^
   A list of all sources in the selected designspace.  
   Select which sources to collect values from.
+  Click on the column headers to change the sorting order.
 
 
 Font values

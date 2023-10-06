@@ -1,9 +1,13 @@
+from importlib import reload
+import variableValues.dialogs.DesignSpaceSelector
+reload(variableValues.dialogs.DesignSpaceSelector)
+
 import AppKit
 import os, sys
 from vanilla import  Window, EditText, TextBox, Box, List, Button, Tabs, LevelIndicatorListCell
 from defconAppKit.controls.glyphCollectionView import GlyphCollectionView
 from mojo.roboFont import OpenWindow, OpenFont
-from variableValues.dialogs.base import DesignSpaceSelector
+from variableValues.dialogs.DesignSpaceSelector import DesignSpaceSelector
 
 '''
 A tool to check sources for glyph consistency between each other.
@@ -29,14 +33,10 @@ class VarGlyphAssistant(DesignSpaceSelector):
     
     title         = 'VarGlyph Assistant'
     key           = 'com.hipertipo.varGlyphAssistant'
-
-    _colGlyphs    = 100
     _colFontName  = 240
-    _colValue     = 80
+    _tabsTitles   = ['designspace', 'glyphs set', 'attributes', 'compatibility']
 
-    _tabsTitles   = ['designspace', 'glyphs', 'attributes', 'compatibility', 'relationships']
-
-    _glyphAttrs       = {}
+    _glyphAttrs = {}
     _glyphAttrsLabels = [
         'width',
         'left',
@@ -47,20 +47,8 @@ class VarGlyphAssistant(DesignSpaceSelector):
         'anchors',
         'components',
     ]
+    _glyphCompatibility = {}
 
-    _glyphCompatibility  = {}
-
-    _glyphTestsLabels = [
-        'Name',
-        'Glyph 2',
-        'Formula',
-    ]
-    _glyphTests = [
-        'is centered',
-        'match left',
-        'match right',
-        'match width',
-    ]
 
     def __init__(self):
         self.w = Window(
@@ -74,7 +62,6 @@ class VarGlyphAssistant(DesignSpaceSelector):
         self.initializeGlyphsTab()
         self.initializeAttributesTab()
         self.initializeCompatibilityTab()
-        self.initializeValidationTab()
 
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
         self.w.open()
@@ -83,7 +70,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     def initializeGlyphsTab(self):
 
-        tab = self._tabs['glyphs']
+        tab = self._tabs['glyphs set']
 
         x = p = self.padding
         y = p/2
@@ -139,7 +126,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
         y += self.lineHeight + p/2
         tab.glyphs = List(
-                (x, y, self._colGlyphs, -(self.lineHeight + p*2)),
+                (x, y, self._colLeft, -(self.lineHeight + p*2)),
                 [],
                 allowsMultipleSelection=False,
                 allowsEmptySelection=False,
@@ -147,7 +134,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
             )
 
         y = p/2
-        x2 = x + self._colGlyphs + p
+        x2 = x + self._colLeft + p
         tab.glyphAttributesLabel = TextBox(
                 (x2, y, -p, self.lineHeight),
                 'attributes')
@@ -180,7 +167,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
         y += self.lineHeight + p/2
         tab.glyphs = List(
-                (x, y, self._colGlyphs, -(self.lineHeight + p*2)),
+                (x, y, self._colLeft, -(self.lineHeight + p*2)),
                 [],
                 allowsMultipleSelection=False,
                 allowsEmptySelection=False,
@@ -188,7 +175,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
             )
 
         y = p/2
-        x2 = x + self._colGlyphs + p
+        x2 = x + self._colLeft + p
         tab.segmentsLabel = TextBox(
                 (x2, y, -p, self.lineHeight),
                 'segments')
@@ -209,60 +196,6 @@ class VarGlyphAssistant(DesignSpaceSelector):
                 (x, y, self.buttonWidth, self.lineHeight),
                 'load',
                 callback=self.updateCompatibilityCallback,
-            )
-
-    def initializeValidationTab(self):
-
-        tab = self._tabs['relationships']
-
-        x = p = self.padding
-        y = p/2
-        tab.glyphsLabel = TextBox(
-                (x, y, -p, self.lineHeight),
-                'glyphs')
-
-        y += self.lineHeight + p/2
-        tab.glyphs = List(
-                (x, y, self._colGlyphs, -(self.lineHeight + p*2)),
-                [],
-                allowsMultipleSelection=False,
-                allowsEmptySelection=False,
-            )
-
-        y = p/2
-        x2 = x + self._colGlyphs + p
-        tab.testsLabel = TextBox(
-                (x2, y, -p, self.lineHeight),
-                'test files')
-
-        y += self.lineHeight + p/2
-        tab.tests = List(
-                (x2, y, -p, self.lineHeight*5),
-                [], # testItems,
-                allowsMultipleSelection=True,
-                allowsEmptySelection=False,
-                # columnDescriptions=[{"title": t} for t in self._glyphTestsLabels],
-            )
-
-        y += self.lineHeight*5 + p
-        tab.resultsLabel = TextBox(
-                (x2, y, -p, self.lineHeight),
-                'test results')
-
-        y += self.lineHeight + p/2
-        _columnDescriptions  = [{"title": t, 'minWidth': self._colFontName, 'width': self._colFontName*1.5} for t in ['file name']]
-        _columnDescriptions += [{"title": t, 'width': self._colValue} for t in self._glyphTests]
-        tab.results = List(
-                (x2, y, -p, -(self.lineHeight + p*2)),
-                [],
-                columnDescriptions=_columnDescriptions,
-            )
-
-        y = -(self.lineHeight + p)
-        tab.updateValues = Button(
-                (x, y, self.buttonWidth, self.lineHeight),
-                'load',
-                # callback=self.updateMeasurementsCallback,
             )
 
     # -------------
@@ -301,7 +234,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
             return
 
         tab = self._tabs['attributes']
-        glyphNames = self._tabs['glyphs'].glyphNames.get().split(' ')
+        glyphNames = self._tabs['glyphs set'].glyphNames.get().split(' ')
 
         # collect glyph values into dict
         self._glyphAttrs = {}
@@ -370,7 +303,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
             return
 
         tab = self._tabs['compatibility']
-        glyphNames = self._tabs['glyphs'].glyphNames.get().split(' ')
+        glyphNames = self._tabs['glyphs set'].glyphNames.get().split(' ')
 
         # collect glyph compatibility data into dict
         self._glyphCompatibility = {}
@@ -440,7 +373,6 @@ class VarGlyphAssistant(DesignSpaceSelector):
                 allowsEmptySelection=False,
             )
 
-    # validation
 
 
 if __name__ == '__main__':

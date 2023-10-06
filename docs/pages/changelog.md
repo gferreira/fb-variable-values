@@ -34,6 +34,16 @@ types of changes:
 
 -->
 
+
+0.1.6
+-----
+
+- <span class='badge'>Added</span> Merging GlyphValidator and BatchValidator into [FontValidator].
+- <span class='badge'>Added</span> Adding [VarGlyph Assistant] to edit glyph-level data in a designspace.
+- <span class='badge'>Changed</span> Removing the “glyphs” tab from VarFont Assistant.
+- <span class='badge'>Changed</span> Enabling sorting sources by axis values, disabling sort by axes order in DesignSpaceSelector.
+- <span class='badge'>Changed</span> Reorganising documentation around [Documentation System] structure.
+
 0.1.5
 -----
 
@@ -86,5 +96,8 @@ Initial public release.
 [Measurements]: ../dialogs/measurements
 [GlyphValidator]: ../dialogs/glyph-validator
 [BatchValidator]: ../dialogs/batch-validator
+[FontValidator]: #
 [VarFont Assistant > Measurements]: ../dialogs/varfont-assistant/#measurements
 [ParamaRoundup]: http://github.com/FontBureau/Parama-roundup
+[Documentation System]: http://documentation.divio.com/
+[VarGlyph Assistant]: #

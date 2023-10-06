@@ -1,12 +1,19 @@
 ---
 title     : Measurements format
 layout    : default
-permalink : /measurements-format/
+permalink : /reference/measurements-format/
 ---
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb small">
+    <li class="breadcrumb-item"><a href="{{ site.url }}">Index</a></li>
+    <li class="breadcrumb-item"><a href="../../../reference">Reference</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ page.title }}</li>
+  </ol>
+</nav>
 
 A data format to store definitions of font-level and glyph-level measurements.
 {: .lead}
-
 
 * Table of Contents
 {:toc}

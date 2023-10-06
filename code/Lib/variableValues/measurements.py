@@ -2,9 +2,6 @@ import os, csv
 from fontTools.agl import UV2AGL
 from variableValues.linkPoints import *
 
-# -------
-# objects
-# -------
 
 class FontMeasurements:
 
@@ -50,6 +47,7 @@ class FontMeasurements:
     def print(self):
         for k, v in self.values.items():
             print(k, v)
+
 
 class Measurement:
 

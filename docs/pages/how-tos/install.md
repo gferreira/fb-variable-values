@@ -1,8 +1,16 @@
 ---
 title     : Installing VariableValues
 layout    : default
-permalink : /install/
+permalink : /how-tos/install/
 ---
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb small">
+    <li class="breadcrumb-item"><a href="{{ site.url }}">Index</a></li>
+    <li class="breadcrumb-item"><a href="../../how-tos">How-Tos</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ page.title }}</li>
+  </ol>
+</nav>
 
 VariableValues is packaged and distributed as a [RoboFont extension].
 {: .lead}
