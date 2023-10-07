@@ -1,7 +1,7 @@
 ---
 title     : How-Tos
 layout    : default
-permalink : /how-Tos/
+permalink : /how-tos/
 ---
 
 - [Installing VariableValues](install)
