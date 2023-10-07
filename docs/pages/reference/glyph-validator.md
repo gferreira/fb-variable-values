@@ -1,7 +1,7 @@
 ---
 title     : GlyphValidator
 layout    : default
-permalink : /reference/dialogs/glyph-validator
+permalink : /reference/glyph-validator
 ---
 
 <nav aria-label="breadcrumb">

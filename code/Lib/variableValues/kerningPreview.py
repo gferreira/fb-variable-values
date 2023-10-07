@@ -146,6 +146,10 @@ class VariableKerningPreview:
                 glyphNameNext = font.groups[gNameNext][0]
             else:
                 glyphNameNext = gNameNext
+            
+            if glyphNameNext not in font:
+                continue
+
             gNext = font[glyphNameNext]
 
             # get glyph/group for current glyph name

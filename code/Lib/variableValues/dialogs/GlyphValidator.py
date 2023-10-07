@@ -6,6 +6,9 @@ from mojo.roboFont import OpenWindow, CurrentFont
 from variableValues.validation import *
 
 
+### DEPRECATED : use FontValidator ###
+
+
 class GlyphValidator:
 
     title       = "validate"

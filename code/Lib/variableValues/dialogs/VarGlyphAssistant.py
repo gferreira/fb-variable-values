@@ -4,15 +4,11 @@ reload(variableValues.dialogs.DesignSpaceSelector)
 
 import AppKit
 import os, sys
+import plistlib
 from vanilla import  Window, EditText, TextBox, Box, List, Button, Tabs, LevelIndicatorListCell
-from defconAppKit.controls.glyphCollectionView import GlyphCollectionView
 from mojo.roboFont import OpenWindow, OpenFont
 from variableValues.dialogs.DesignSpaceSelector import DesignSpaceSelector
 
-'''
-A tool to check sources for glyph consistency between each other.
-
-'''
 
 def getSegmentTypes(glyph):
     segments = []
@@ -31,10 +27,10 @@ def getSegmentTypes(glyph):
 
 class VarGlyphAssistant(DesignSpaceSelector):
     
-    title         = 'VarGlyph Assistant'
-    key           = 'com.hipertipo.varGlyphAssistant'
-    _colFontName  = 240
-    _tabsTitles   = ['designspace', 'glyphs set', 'attributes', 'compatibility']
+    title = 'VarGlyph Assistant'
+    key   = 'com.hipertipo.varGlyphAssistant'
+
+    _tabsTitles = ['designspace', 'glyph sets', 'attributes', 'compatibility']
 
     _glyphAttrs = {}
     _glyphAttrsLabels = [
@@ -49,11 +45,13 @@ class VarGlyphAssistant(DesignSpaceSelector):
     ]
     _glyphCompatibility = {}
 
+    _glyphSetsFiles = {}
+    _glyphSets = {}
 
     def __init__(self):
         self.w = Window(
                 (self.width, self.height), title=self.title,
-                minSize=(self.width*0.9, 360))
+                minSize=(self.width, 360))
 
         x = y = p = self.padding
         self.w.tabs = Tabs((x, y, -p, -p), self._tabsTitles)
@@ -70,42 +68,52 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     def initializeGlyphsTab(self):
 
-        tab = self._tabs['glyphs set']
+        tab = self._tabs['glyph sets']
 
         x = p = self.padding
         y = p/2
-        tab.glyphNameFilesLabel = TextBox(
+        x2 = x + self._colLeft + p
+
+        tab.glyphSetsFilesLabel = TextBox(
                 (x, y, -p, self.lineHeight),
-                'glyph name files')
+                'glyph set files')
 
         y += self.lineHeight + p/2
-        tab.glyphNameFiles = List(
-                (x, y, -p, self.lineHeight*5),
+        tab.glyphSetsFiles = List(
+                (x, y, -p, self.lineHeight*3),
                 [],
                 allowsMultipleSelection=False,
                 allowsEmptySelection=False,
-                # selectionCallback=self.selectGlyphAttrsCallback,
-            )
+                enableDelete=True,
+                selectionCallback=self.selectGlyphSetsFileCallback,
+                otherApplicationDropSettings=dict(
+                    type=AppKit.NSFilenamesPboardType,
+                    operation=AppKit.NSDragOperationCopy,
+                    callback=self.dropGlyphSetsFilesCallback),
+                )
 
-        y += self.lineHeight*5 + p
-        tab.glyphsNamesLabel = TextBox(
-                (x, y, -p, self.lineHeight),
+        y += self.lineHeight*3 + p
+        tab.glyphSetsLabel = TextBox(
+                (x, y, self._colLeft, self.lineHeight),
+                'glyph sets')
+
+        tab.glyphNamesLabel = TextBox(
+                (x2, y, -p, self.lineHeight),
                 'glyph names')
 
         y += self.lineHeight + p/2
-        tab.glyphNames = EditText(
-                (x, y, -p, -self.lineHeight-p*2),
-                'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z',
+        tab.glyphSets = List(
+                (x, y, self._colLeft, -self.lineHeight-p*2),
+                [],
+                allowsMultipleSelection=True,
+                allowsEmptySelection=False,
+                selectionCallback=self.selectGlyphSetCallback,
             )
 
-        # tab.glyphs = GlyphCollectionView((x, y, -p, -self.lineHeight -p*2),
-        #     # allowDrag=True,
-        #     # selectionCallback=self.collectionViewSelectionCallback,
-        #     # doubleClickCallback=self.collectionViewDoubleClickCallback,
-        #     # deleteCallback=self.collectionViewDeleteCallback,
-        #     # selfDropSettings=selfDropSettings,
-        #     # selfApplicationDropSettings=dropSettings
-        # )
+        tab.glyphNames = EditText(
+                (x2, y, -p, -self.lineHeight-p*2),
+                '',
+            )
 
         y = -(self.lineHeight + p)
         tab.updateGlyphs = Button(
@@ -144,8 +152,8 @@ class VarGlyphAssistant(DesignSpaceSelector):
                 (x2, y, -p, -(self.lineHeight + p*2)),
                 [],
                 allowsMultipleSelection=False,
-                allowsEmptySelection=False,
-                columnDescriptions=[{"title": t, 'width': self._colFontName*1.5, 'minWidth': self._colFontName} if ti == 0 else {"title": t, 'width': self._colValue} for ti, t in enumerate(['file name'] + self._glyphAttrsLabels)],
+                allowsEmptySelection=True,
+                columnDescriptions=[{"title": t, 'width': self._colFontName*1.5, 'minWidth': self._colFontName} if ti == 0 else {"title": t, 'width': self._colValue*1.25} for ti, t in enumerate(['file name'] + self._glyphAttrsLabels)],
             )
 
         y = -(self.lineHeight + p)
@@ -184,12 +192,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
         tab.segments = List(
                 (x2, y, -p, -(self.lineHeight + p*2)),
                 [],
-                # columnDescriptions=[{"title": t} for t in ['file name'] + list(range(9))],
             )
-
-        # y = -(self.lineHeight*2 + p*4)
-        # tab.box = Box((x2, y, -p, self.lineHeight+p*2))
-        # tab.box.text = TextBox((p, p/2, -p, self.lineHeight), "")
 
         y = -(self.lineHeight + p)
         tab.updateValues = Button(
@@ -201,6 +204,32 @@ class VarGlyphAssistant(DesignSpaceSelector):
     # -------------
     # dynamic attrs
     # -------------
+
+    @property
+    def selectedGlyphSetsFile(self):
+        tab = self._tabs['glyph sets']
+        selection = tab.glyphSetsFiles.getSelection()
+        glyphSetsFiles = tab.glyphSetsFiles.get()
+        selectedGlyphSetsFiles = [gs for i, gs in enumerate(glyphSetsFiles) if i in selection]
+        if not len(selectedGlyphSetsFiles):
+            return
+        return selectedGlyphSetsFiles[0]
+
+    @property
+    def selectedGlyphSetsFilePath(self):
+        if not self.selectedGlyphSetsFile:
+            return
+        return self._glyphSetsFiles[self.selectedGlyphSetsFile]
+
+    @property
+    def selectedGlyphSet(self):
+        tab = self._tabs['glyph sets']
+        selection = tab.glyphSets.getSelection()
+        glyphSets = tab.glyphSets.get()
+        selectedGlyphSets = [gs for i, gs in enumerate(glyphSets) if i in selection]
+        if not len(selectedGlyphSets):
+            return
+        return selectedGlyphSets[0]
 
     @property
     def selectedGlyphAttributes(self):
@@ -226,6 +255,64 @@ class VarGlyphAssistant(DesignSpaceSelector):
     # callbacks
     # ---------
 
+    # glyph sets
+
+    def dropGlyphSetsFilesCallback(self, sender, dropInfo):
+        isProposal = dropInfo["isProposal"]
+        existingPaths = sender.get()
+
+        paths = dropInfo["data"]
+        paths = [path for path in paths if path not in existingPaths]
+        paths = [path for path in paths if os.path.splitext(path)[-1] == '.roboFontSets']
+
+        if not paths:
+            return False
+
+        if not isProposal:
+            tab = self._tabs['glyph sets']
+            for path in paths:
+                label = os.path.split(path)[-1]
+                self._glyphSetsFiles[label] = path
+                tab.glyphSetsFiles.append(label)
+                tab.glyphSetsFiles.setSelection([0])
+
+        return True
+
+    def selectGlyphSetsFileCallback(self, sender):
+
+        tab = self._tabs['glyph sets']
+
+        if not self.selectedGlyphSetsFile:
+            tab.glyphSets.set([])
+            tab.glyphNames.set('')
+            return
+
+        assert os.path.exists(self.selectedGlyphSetsFilePath)
+
+        with open(self.selectedGlyphSetsFilePath, mode='rb') as f:
+            xml = f.read()
+            glyphSetsData = plistlib.loads(xml)
+
+        # load glyph sets data into dict
+        self._glyphSets = {}
+        for group in glyphSetsData:
+            groupName = group['smartSetName']
+            for gs in group['group']:
+                glyphSetName  = gs['smartSetName']
+                self._glyphSets[glyphSetName] = gs['glyphNames']
+
+        tab.glyphSets.set(self._glyphSets.keys())
+
+    def selectGlyphSetCallback(self, sender):
+        tab = self._tabs['glyph sets']
+
+        if not self.selectedGlyphSet:
+            tab.glyphNames.set([])
+            return
+
+        glyphNames = self._glyphSets[self.selectedGlyphSet]
+        tab.glyphNames.set(' '.join(glyphNames))
+
     # attributes
 
     def updateAttributesCallback(self, sender):
@@ -234,7 +321,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
             return
 
         tab = self._tabs['attributes']
-        glyphNames = self._tabs['glyphs set'].glyphNames.get().split(' ')
+        glyphNames = self._tabs['glyph sets'].glyphNames.get().split(' ')
 
         # collect glyph values into dict
         self._glyphAttrs = {}
@@ -271,7 +358,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
                             value = len(g.components)
                         self._glyphAttrs[sourceFileName][glyphName][attr] = value
 
-            # f.close()
+            f.close()
 
         tab.glyphs.set(glyphNames)
         tab.glyphs.setSelection([0])
@@ -303,7 +390,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
             return
 
         tab = self._tabs['compatibility']
-        glyphNames = self._tabs['glyphs set'].glyphNames.get().split(' ')
+        glyphNames = self._tabs['glyph sets'].glyphNames.get().split(' ')
 
         # collect glyph compatibility data into dict
         self._glyphCompatibility = {}
@@ -358,8 +445,8 @@ class VarGlyphAssistant(DesignSpaceSelector):
             listItems.append(listItem)
             segmentsGlyphs.append(segmentsGlyph)
 
-        for S in segmentsGlyphs:
-            print(S)
+        # for S in segmentsGlyphs:
+        #     print(S)
 
         segmentsDescriptions  = [{'title': 'file name', 'minWidth': self._colFontName, 'width': self._colFontName*1.5}]
         segmentsDescriptions += [{'title': str(i), 'width': 20} for i in range(sMax)]

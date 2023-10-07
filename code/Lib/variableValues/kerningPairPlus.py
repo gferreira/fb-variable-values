@@ -57,7 +57,7 @@ class KerningPairPlus:
 
     @property
     def glyphName2(self):
-        if self.gName2.startswith('public.kern') and self.gName1 in self.font.groups:
+        if self.gName2.startswith('public.kern') and self.gName2 in self.font.groups:
             return self.font.groups[self.gName2][0] 
         else:
             return self.gName2

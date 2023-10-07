@@ -1,7 +1,7 @@
 ---
 title     : VarFont Assistant
 layout    : default
-permalink : /reference/dialogs/varfont-assistant/
+permalink : /reference/varfont-assistant/
 ---
 
 <nav aria-label="breadcrumb">
@@ -24,7 +24,7 @@ Designspace
 
 Define which designspaces and font sources to look into.
 
-![]({{ site.url }}/images/VarFontAssistant-1.png){: .img-fluid}
+![]({{ site.url }}/images/VarFontAssistant-designspace.png){: .img-fluid}
 
 designspaces
 : Drag one or more `.designspace` files into the list.
@@ -32,23 +32,25 @@ designspaces
 axes
 : ^
   A list of axes in the selected designspace.  
+  Drag the items to change the sorting order of the list of sources.
+
 
 sources
 : ^
   A list of all sources in the selected designspace.  
-  Select which sources to collect values from.
-  Click on the column headers to change the sorting order.
+  Select which sources to collect values from in the next tabs.  
+  Double-click a source to open the font in the UI.
 
 
-Font values
------------
+Font info
+---------
 
 Visualize and edit font values in selected sources.
 
-![]({{ site.url }}/images/VarFontAssistant-2.png){: .img-fluid}
+![]({{ site.url }}/images/VarFontAssistant-fontinfo.png){: .img-fluid}
 
 load
-: Click the button to collect values from the fonts and display them in the UI.
+: Click on the button to collect values from the fonts and display them in the UI.
 
 attributes
 : A list of font attributes for which to display collected values.
@@ -62,40 +64,15 @@ save
 : Click the button to save the edited values back into the fonts.
 
 
-Glyph values
-------------
-
-Visualize and edit glyph-level values.
-
-![]({{ site.url }}/images/VarFontAssistant-3.png){: .img-fluid}
-
-load
-: Click the button to collect values from the fonts and display them in the UI.
-
-glyphs
-: A list of all glyphs in all selected sources.
-
-attributes
-: A list of glyph attributes to collect values from.
-
-values
-: ^
-  Values and visualization of the selected glyph attribute across all selected sources.  
-  Double-click individual values to edit.
-
-save
-: Click the button to save the edited values back into the fonts.
-
-
-kerning
+Kerning
 -------
 
 Visualize and edit kerning values in selected sources.
 
-![]({{ site.url }}/images/VarFontAssistant-4.png){: .img-fluid}
+![]({{ site.url }}/images/VarFontAssistant-kerning.png){: .img-fluid}
 
 load
-: Click the button to collect values from the fonts and display them in the UI.
+: Click on the button to collect values from the fonts and display them in the UI.
 
 pairs
 : A list of all kerning pairs in all selected sources.
@@ -112,27 +89,29 @@ save
 : Click the button to save the edited values back into the fonts.
 
 
-
-measurements
+Measurements
 ------------
 
 Collect custom measurements from the selected sources.
 
-![]({{ site.url }}/images/VarFontAssistant-5.png){: .img-fluid}
+![]({{ site.url }}/images/VarFontAssistant-measurements.png){: .img-fluid}
 
 measurement files
 : Drag one or more `.json` files containing [measurement definitions] into the list.
 
 load
-: Click the button to collect values from the fonts and display them in the UI.
+: Click on the button to collect values from the fonts and display them in the UI.
 
 measurements
 : ^
   A list of measurement definitions contained in the selected file.  
   Select one measurement to display its values.
 
-values
-: ^
-  Values and visualization of the selected measurement across all selected sources.  
+value
+: Value of the selected measurement across all selected sources in font units.  
 
-[measurement definitions]: ../../measurements-format/
+permill
+: Value of the selected measurement across all selected sources in permill units (thousands of em).
+
+
+[measurement definitions]: ../measurements-format/

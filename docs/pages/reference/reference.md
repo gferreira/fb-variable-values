@@ -9,15 +9,15 @@ permalink : /reference/
 Dialogs
 -------
 
-- [VarFont Assistant](dialogs/varfont-assistant)
-- [VarGlyph Assistant](dialogs/varglyph-assistant)
-- [Measurements](dialogs/measurements)
-- [Font Validator](dialogs/font-validator)
+- [VarFont Assistant](varfont-assistant)
+- [VarGlyph Assistant](varglyph-assistant)
+- [Measurements](measurements)
+- [Font Validator](font-validator)
 </div>
 <div class='col' markdown='1'>
 Formats
 -------
 
-- [Measurements format](formats/measurements-format)
+- [Measurements format](measurements-format)
 </div>
 </div>

@@ -106,11 +106,12 @@ class DesignSpaceSelector:
                 [],
                 drawFocusRing=False,
                 editCallback=self.editAxesCallback,
-                # selfDropSettings=dict(type="genericListPboardType",
-                #         operation=AppKit.NSDragOperationMove,
-                #         callback=self.genericDropSelfCallback),
-                # dragSettings=dict(type="genericListPboardType",
-                #         callback=self.genericDragCallback),
+                allowsSorting=False,
+                selfDropSettings=dict(type="genericListPboardType",
+                        operation=AppKit.NSDragOperationMove,
+                        callback=self.genericDropSelfCallback),
+                dragSettings=dict(type="genericListPboardType",
+                        callback=self.genericDragCallback),
                 columnDescriptions=axesDescriptions,
             )
 
@@ -253,7 +254,7 @@ class DesignSpaceSelector:
             sourcesListPosSize, sourcesItems,
             columnDescriptions=sourcesDescriptions,
             allowsMultipleSelection=True,
-            allowsSorting=True, ### either this, or sortable axes -- both produce a bug
+            allowsSorting=False, ### this breaks list item selection :(
             enableDelete=False,
             selectionCallback=self.selectedSourcesCallback,
             doubleClickCallback=self.openSourceCallback)
@@ -280,7 +281,7 @@ class DesignSpaceSelector:
         if not isProposal:
             tab = self._tabs['designspace']
             for path in paths:
-                label = os.path.splitext(os.path.split(path)[-1])[0]
+                label = os.path.split(path)[-1]
                 self._designspaces[label] = path
                 tab.designspaces.append(label)
                 tab.designspaces.setSelection([0])

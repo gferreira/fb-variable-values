@@ -18,10 +18,13 @@ class FontValidator:
     padding      = 10
     lineHeight   = 22
     buttonWidth  = 100
+    width        = 123*5
+    height       = 640
     _tabsTitles  = ['fonts', 'glyphs']
     _checks      = ['width', 'points', 'components', 'anchors', 'unicodes']
     _colLeft     = 123
-    _colValue    = 20
+    _colValue    = 70
+    _colFontName = 160
     colorTrue    = 0, 1, 0
     colorFalse   = 1, 0, 0
     _sources     = {}
@@ -31,13 +34,21 @@ class FontValidator:
     verbose      = True
 
     def __init__(self):
-        self.w = FloatingWindow((800, 600), minSize=(580, 400), title=self.title)
+        self.w = Window(
+                (self.width, self.height), title=self.title,
+                minSize=(self.width, 360))
 
         x = y = p = self.padding
-        self.w.tabs = Tabs((x, y, -p, -p), self._tabsTitles)
+        self.w.tabs = Tabs((x, y, -p, -(self.lineHeight + p*2)), self._tabsTitles)
 
         self.initializeSetupTab()
         self.initializeResultTab()
+
+        y = -(self.lineHeight + p)
+        self.w.validateButton = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'validate',
+                callback=self.batchValidateFontsCallback)
 
         self.w.bind("close", self.closeCallback)
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
@@ -63,15 +74,15 @@ class FontValidator:
 
         x = p = self.padding
         y = p/2
-        x2 = x + self._colLeft + p
+        x2 = -(self._colLeft + p)
 
         tab.previewLabel = TextBox(
-                (x, y, self._colLeft, self.lineHeight),
+                (x2 + p*2, y, -p, self.lineHeight),
                 'preview')
 
         y += self.lineHeight #+ p/2
         tab.markFont = CheckBox(
-                (x, y, self._colLeft, self.lineHeight),
+                (x2 + p*1.5, y, -p, self.lineHeight),
                 'font',
                 value=False,
                 # callback=self.updateFontViewCallback
@@ -79,32 +90,32 @@ class FontValidator:
 
         y += self.lineHeight
         tab.markGlyph = CheckBox(
-                (x, y, self._colLeft, self.lineHeight),
+                (x2 + p*1.5, y, -p, self.lineHeight),
                 'glyph',
                 value=False,
                 callback=self.updateGlyphViewCallback)
 
         y += self.lineHeight + p
         tab.checksLabel = TextBox(
-                (x, y, self._colLeft, self.lineHeight),
+                (x2 + p*1.5, y, -p, self.lineHeight),
                 'marks')
 
         y += self.lineHeight #+ p/2
         for check in self._checks:
             checkbox = CheckBox(
-                (x, y, self._colLeft, self.lineHeight),
+                (x2 + p*1.5, y, -p, self.lineHeight),
                 check, value=True)
             setattr(tab, check, checkbox)
             y += self.lineHeight
 
         y = p/2
         tab.sourcesLabel = TextBox(
-                (x2, y, -p, self.lineHeight),
+                (x, y, x2, self.lineHeight),
                 'reference font')
 
         y += self.lineHeight + p/2
         tab.sources = List(
-                (x2, y, -p, self.lineHeight*3),
+                (x, y, x2, self.lineHeight*3),
                 [],
                 allowsMultipleSelection=False,
                 allowsEmptySelection=False,
@@ -117,12 +128,12 @@ class FontValidator:
 
         y += self.lineHeight*3 + p
         tab.targetsLabel = TextBox(
-                (x2, y, -p, self.lineHeight),
+                (x, y, x2, self.lineHeight),
                 'other fonts')
 
         y += self.lineHeight + p/2
         tab.targets = List(
-                (x2, y, -p, -(self.lineHeight + p*2)),
+                (x, y, x2, -(self.lineHeight + p*2)),
                 [],
                 allowsMultipleSelection=True,
                 allowsEmptySelection=False,
@@ -132,13 +143,6 @@ class FontValidator:
                     operation=AppKit.NSDragOperationCopy,
                     callback=self.dropTargetsCallback),
                 )
-
-        y = -(self.lineHeight + p)
-        tab.validateButton = Button(
-                (x2, y, self.buttonWidth, self.lineHeight),
-                'validate',
-                callback=self.batchValidateFontsCallback,
-                sizeStyle='small')
 
     def initializeResultTab(self):
 
@@ -159,9 +163,9 @@ class FontValidator:
                 selectionCallback=self.selectGlyphCallback,
             )
 
-        columnDescriptions = [{ "title": "source", "width": self._colValue*8, "maxWidth": self._colValue*12  }]
+        columnDescriptions = [{ "title": "source", 'width': self._colFontName*1.5, 'minWidth': self._colFontName  }]
         for check in self._checks:
-            columnDescriptions.append({ "title": check[0].upper(), "width": self._colValue })
+            columnDescriptions.append({ "title": check, "width": self._colValue })
 
         y = p/2
         tab.resultsLabel = TextBox(
@@ -192,6 +196,8 @@ class FontValidator:
 
     @property
     def sourceFontPath(self):
+        if not self.sourceFontName:
+            return
         return self._sources[self.sourceFontName]
 
     @property
@@ -349,17 +355,17 @@ class FontValidator:
             item['source'] = fontName
             glyphData = data.get(self.selectedGlyph)
             if glyphData is None:
-                item['W'] = '✖️'
-                item['P'] = '✖️'
-                item['C'] = '✖️'
-                item['A'] = '✖️'
-                item['U'] = '✖️'
+                item['width'] = '⚪'
+                item['points'] = '⚪'
+                item['components'] = '⚪'
+                item['anchors'] = '⚪'
+                item['unicodes'] = '⚪'
             else:
-                item['W'] = '🟢' if glyphData['width']      else '🔴'
-                item['P'] = '🟢' if glyphData['points']     else '🔴'
-                item['C'] = '🟢' if glyphData['components'] else '🔴'
-                item['A'] = '🟢' if glyphData['anchors']    else '🔴'
-                item['U'] = '🟢' if glyphData['unicodes']   else '🔴'
+                item['width'] = '🟢' if glyphData['width']      else '🔴'
+                item['points'] = '🟢' if glyphData['points']     else '🔴'
+                item['components'] = '🟢' if glyphData['components'] else '🔴'
+                item['anchors'] = '🟢' if glyphData['anchors']    else '🔴'
+                item['unicodes'] = '🟢' if glyphData['unicodes']   else '🔴'
 
             items.append(item)
 

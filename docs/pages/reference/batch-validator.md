@@ -1,7 +1,7 @@
 ---
 title     : BatchValidator
 layout    : default
-permalink : /reference/dialogs/batch-validator/
+permalink : /reference/batch-validator/
 ---
 
 <nav aria-label="breadcrumb">

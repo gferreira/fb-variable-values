@@ -3,10 +3,12 @@ import variableValues.measurements
 reload(variableValues.measurements)
 import variableValues.dialogs.DesignSpaceSelector
 reload(variableValues.dialogs.DesignSpaceSelector)
+import variableValues.kerningPreview
+reload(variableValues.kerningPreview)
 
 import AppKit
 import os
-from vanilla import Window, TextBox, List, Button, Tabs, LevelIndicatorListCell
+from vanilla import Window, TextBox, List, Button, Tabs, LevelIndicatorListCell, Group, CheckBox, SplitView
 from fontParts.world import OpenFont, RGlyph
 from fontTools.pens.transformPen import TransformPointPen
 from defcon.objects.component import _defaultTransformation
@@ -26,8 +28,8 @@ class VarFontAssistant(DesignSpaceSelector):
 
     _tabsTitles = ['designspace', 'font info', 'kerning', 'measurements']
 
-    _measurementFiles    = {}
-    _measurements        = {}
+    _measurementFiles = {}
+    _measurements = {}
     _measurementsPermill = {}
 
     _fontAttrs = {
@@ -52,7 +54,6 @@ class VarFontAssistant(DesignSpaceSelector):
         'openTypeHheaLineGap'          : 'hhea line gap',
     }
     _fontValues = {}
-
 
     _kerningPairsAll  = []
     _kerning          = {}
@@ -228,20 +229,6 @@ class VarFontAssistant(DesignSpaceSelector):
                 callback=self.loadFontValuesCallback,
             )
 
-        # x += self.buttonWidth + p
-        # tab.visualizeValues = Button(
-        #         (x, y, self.buttonWidth, self.lineHeight),
-        #         'visualize',
-        #         callback=self.visualizeFontValuesCallback,
-        #     )
-
-        # x += self.buttonWidth + p
-        # tab.exportValues = Button(
-        #         (x, y, self.buttonWidth, self.lineHeight),
-        #         'export',
-        #         # callback=self.exportFontValuesCallback,
-        #     )
-
         x = -(p + self.buttonWidth)
         tab.saveFontValues = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
@@ -358,20 +345,6 @@ class VarFontAssistant(DesignSpaceSelector):
                 callback=self.loadKerningPairsCallback,
             )
 
-        # x += self.buttonWidth + p
-        # tab.visualizeValues = Button(
-        #         (x, y, self.buttonWidth, self.lineHeight),
-        #         'visualize',
-        #         callback=self.visualizeKerningCallback,
-        #     )
-
-        # x += self.buttonWidth + p
-        # tab.exportValues = Button(
-        #         (x, y, self.buttonWidth, self.lineHeight),
-        #         'export',
-        #         callback=self.exportKerningCallback,
-        #     )
-
         x = -(p + self.buttonWidth)
         tab.saveValues = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
@@ -394,28 +367,6 @@ class VarFontAssistant(DesignSpaceSelector):
         if not len(selectedFontAttrs):
             return
         return selectedFontAttrs[0]
-
-    # measurements
-
-    @property
-    def selectedMeasurementFile(self):
-        tab = self._tabs['measurements']
-        selection = tab.measurementFiles.getSelection()
-        measurementFiles = tab.measurementFiles.get()
-        selectedMeasurementFiles = [measurementFile for i, measurementFile in enumerate(measurementFiles) if i in selection]
-        if not len(selectedMeasurementFiles):
-            return
-        return selectedMeasurementFiles[0]
-
-    @property
-    def selectedMeasurement(self):
-        tab = self._tabs['measurements']
-        selection = tab.measurements.getSelection()
-        measurements = tab.measurements.get()
-        selectedMeasurements = [m for i, m in enumerate(measurements) if i in selection]
-        if not len(selectedMeasurements):
-            return
-        return selectedMeasurements[0]
 
     # kerning
 
@@ -448,11 +399,33 @@ class VarFontAssistant(DesignSpaceSelector):
         group = tab._splitDescriptors[0]['view']
         return group.showKerning.get()
 
+    # measurements
+
+    @property
+    def selectedMeasurementFile(self):
+        tab = self._tabs['measurements']
+        selection = tab.measurementFiles.getSelection()
+        measurementFiles = tab.measurementFiles.get()
+        selectedMeasurementFiles = [measurementFile for i, measurementFile in enumerate(measurementFiles) if i in selection]
+        if not len(selectedMeasurementFiles):
+            return
+        return selectedMeasurementFiles[0]
+
+    @property
+    def selectedMeasurement(self):
+        tab = self._tabs['measurements']
+        selection = tab.measurements.getSelection()
+        measurements = tab.measurements.get()
+        selectedMeasurements = [m for i, m in enumerate(measurements) if i in selection]
+        if not len(selectedMeasurements):
+            return
+        return selectedMeasurements[0]
+
     # ---------
     # callbacks
     # ---------
 
-    # font info values
+    # font info
 
     def loadFontValuesCallback(self, sender):
 
@@ -625,6 +598,216 @@ class VarFontAssistant(DesignSpaceSelector):
         if self.verbose:
             print('...done.\n')
 
+    # kerning
+
+    def loadKerningPairsCallback(self, sender):
+        '''
+        Load kerning pairs and values from selected sources into the UI.
+
+        '''
+        if not self.selectedSources:
+            return
+
+        tab = self._tabs['kerning']
+        
+        # collect pairs and kerning values in selected sources
+        allPairs = []
+        self._kerning = {}
+        for source in self.selectedSources:
+            sourceFileName = source['file name']
+            sourcePath = self._sources[sourceFileName]
+            f = OpenFont(sourcePath, showInterface=False)
+            allPairs += f.kerning.keys()
+            self._kerning[sourceFileName] = {}
+            for pair, value in f.kerning.items():
+                g1, g2 = pair
+                if g1 not in f and g1 not in f.groups:
+                    continue
+                if g2 not in f and g2 not in f.groups:
+                    continue
+                self._kerning[sourceFileName][pair] = value
+        self._kerningPairsAll = list(set(allPairs))
+        self._kerningPairsAll.sort()
+
+        # update pairs column
+        pairListItems = []
+        for g1, g2 in sorted(self._kerningPairsAll):
+            pairItem = {'1st': g1, '2nd': g2}
+            pairListItems.append(pairItem)
+        tab.pairs.set(pairListItems)
+
+    def updateKerningValuesCallback(self, sender):
+        '''
+        Update table with sources and kerning values based on the currently selected kerning pair.
+
+        '''
+        tab = self._tabs['kerning']
+        group = tab._splitDescriptors[1]['view']
+
+        if not self.selectedSources:
+            group.list.set([])
+            return
+
+        pair, pairIndex = self.selectedKerningPair
+
+        if self.verbose:
+            print(f'updating kerning values for pair {pair} ({pairIndex})...\n')
+
+        # create list items
+        values = []
+        for fontName in self._kerning.keys():
+            value = self._kerning[fontName][pair] if pair in self._kerning[fontName] else 0
+            values.append(value)
+        valuesMax = max(values) - min(values)
+
+        kerningListItems = []
+        for i, fontName in enumerate(self._kerning.keys()):
+            value = values[i]
+            listItem = {
+                "file name" : fontName,
+                "value"     : value,
+                "level"     : value-min(values),
+            }
+            kerningListItems.append(listItem)
+
+        # set kerning values in table
+        kerningValuesPosSize = group.list.getPosSize()
+        del group.list
+
+        columnDescriptions = [
+            {
+                'title'    : 'file name',
+                'width'    : self._colFontName*1.5,
+                'minWidth' : self._colFontName,
+                'maxWidth' : self._colFontName*3,
+                'editable' : False,
+            },
+            {
+                'title'    : 'value',
+                'width'    : self._colValue,
+            },
+            {
+                'title'    : 'level',
+                'width'    : self._colValue*1.5,
+                'cell'     : LevelIndicatorListCell(style="continuous", minValue=0, maxValue=valuesMax),
+            },
+        ]
+        group.list = List(
+                kerningValuesPosSize,
+                kerningListItems,
+                allowsMultipleSelection=False,
+                allowsEmptySelection=False,
+                columnDescriptions=columnDescriptions,
+                allowsSorting=True,
+                editCallback=self.editKerningCallback,
+                enableDelete=False)
+
+        # update kerning pair counter (current/total)
+        tab.pairsCounter.set(f'{pairIndex+1} / {len(self._kerningPairsAll)}')
+
+        self.updateKerningPreviewCallback(None)
+
+    def updateKerningPreviewCallback(self, sender):
+        tab = self._tabs['kerning']
+
+        # groupValues  = tab._splitDescriptors[0]['view']
+
+        sampleWidth  = self.settings['kerningSampleWidth']
+        sampleHeight = self.settings['kerningSampleHeight']
+
+        pair, pairIndex = self.selectedKerningPair
+
+        DB.newDrawing()
+
+        # draw kerning preview
+
+        V = VariableKerningPreview(self.selectedDesignspacePath)
+        V.selectedSources = [self._sources[fontName] for fontName in self._kerning.keys()] # proofs[proofLevel][proofGroup]
+        V._kerning = self._kerning
+        V._allPairs = [pair] # self._kerningPairsAll
+        V.draw()
+
+        # refresh PDF preview
+        groupPreview = tab._splitDescriptors[0]['view']
+        pdfData = DB.pdfImage()
+        groupPreview.canvas.setPDFDocument(pdfData)
+
+    def editKerningCallback(self, sender):
+        '''
+        Save the edited kerning pair back to the dict, so we can load values for another pair.
+
+        '''
+        tab = self._tabs['kerning']
+        item = self.selectedKerningValue
+
+        if not item:
+            return
+
+        # save change to internal dict
+        pair, pairIndex = self.selectedKerningPair
+        fontName = item['file name']
+        newValue = item['value']
+        oldValue = self._kerning[fontName].get(pair)
+        if oldValue != newValue:
+            if self.verbose:
+                print(f'changed kerning pair {pair} in {fontName}: {oldValue} → {newValue}\n')
+            self._kerning[fontName][pair] = int(newValue)
+
+        # update level indicator
+        ### this will crash RF3!!
+        # kerningListItems = []
+        # for fontName in self._kerning.keys():
+        #     value = self._kerning[fontName][pair] if pair in self._kerning[fontName] else 0
+        #     listItem = {
+        #         "file name" : fontName,
+        #         "value"     : value,
+        #         "level"     : abs(value),
+        #     }
+        #     kerningListItems.append(listItem)
+        # tab.kerningValues.set(kerningListItems)
+
+        self.updateKerningPreviewCallback(None)
+
+    def saveKerningCallback(self, sender):
+        '''
+        Save the edited kerning values back into their source fonts.
+
+        '''
+        tab = self._tabs['kerning']
+
+        if self.verbose:
+            print('saving edited kerning values to sources...')
+
+        for fontName in self._kerning.keys():
+            sourcePath = self._sources[fontName]
+            f = OpenFont(sourcePath, showInterface=False)
+            fontChanged = False
+            for pair, newValue in self._kerning[fontName].items():
+                if type(newValue) not in [int, float]:
+                    if not len(newValue.strip()):
+                        continue
+                newValue = int(newValue)
+                oldValue = f.kerning.get(pair)
+                if newValue != oldValue:
+                    if newValue == 0 and pair in f.kerning:
+                        if self.verbose:
+                            print(f"\tdeleting {pair} in '{fontName}'...")
+                        del f.kerning[pair]
+                    else:
+                        if self.verbose:
+                            print(f"\twriting new value for {pair} in '{fontName}': {oldValue} → {newValue}")
+                        f.kerning[pair] = newValue
+                    if not fontChanged:
+                        fontChanged = True
+            if fontChanged:
+                # if self.verbose:
+                #     print(f'\tsaving {fontName}...')
+                f.save()
+            f.close()
+
+        if self.verbose:
+            print('...done.\n')
+
     # measurements
 
     def dropMeasurementFileCallback(self, sender, dropInfo):
@@ -786,217 +969,6 @@ class VarFontAssistant(DesignSpaceSelector):
                 columnDescriptions=columnDescriptions,
                 allowsSorting=True,
                 enableDelete=False)
-
-    # kerning
-
-    def loadKerningPairsCallback(self, sender):
-        '''
-        Load kerning pairs and values from selected sources into the UI.
-
-        '''
-        if not self.selectedSources:
-            return
-
-        tab = self._tabs['kerning']
-        
-        # collect pairs and kerning values in selected sources
-        allPairs = []
-        self._kerning = {}
-        for source in self.selectedSources:
-            sourceFileName = source['file name']
-            sourcePath = self._sources[sourceFileName]
-            f = OpenFont(sourcePath, showInterface=False)
-            allPairs += f.kerning.keys()
-            self._kerning[sourceFileName] = {}
-            for pair, value in f.kerning.items():
-                g1, g2 = pair
-                if g1 not in f and g1 not in f.groups:
-                    continue
-                if g2 not in f and g2 not in f.groups:
-                    continue
-                self._kerning[sourceFileName][pair] = value
-        self._kerningPairsAll = list(set(allPairs))
-        self._kerningPairsAll.sort()
-
-        # update pairs column
-        pairListItems = []
-        for g1, g2 in sorted(self._kerningPairsAll):
-            pairItem = {'1st': g1, '2nd': g2}
-            pairListItems.append(pairItem)
-        tab.pairs.set(pairListItems)
-
-    def updateKerningValuesCallback(self, sender):
-        '''
-        Update table with sources and kerning values based on the currently selected kerning pair.
-
-        '''
-        tab = self._tabs['kerning']
-        group = tab._splitDescriptors[1]['view']
-
-        if not self.selectedSources:
-            group.list.set([])
-            return
-
-        pair, pairIndex = self.selectedKerningPair
-
-        if self.verbose:
-            print(f'updating kerning values for pair {pair} ({pairIndex})...\n')
-
-        # create list items
-        values = []
-        for fontName in self._kerning.keys():
-            value = self._kerning[fontName][pair] if pair in self._kerning[fontName] else 0
-            values.append(value)
-        valuesMax = max(values) - min(values)
-
-        kerningListItems = []
-        for i, fontName in enumerate(self._kerning.keys()):
-            value = values[i]
-            listItem = {
-                "file name" : fontName,
-                "value"     : value,
-                "level"     : value-min(values),
-            }
-            kerningListItems.append(listItem)
-
-        # set kerning values in table
-        kerningValuesPosSize = group.list.getPosSize()
-        del group.list
-
-        columnDescriptions = [
-            {
-                'title'    : 'file name',
-                'width'    : self._colFontName*1.5,
-                'minWidth' : self._colFontName,
-                'maxWidth' : self._colFontName*3,
-                'editable' : False,
-            },
-            {
-                'title'    : 'value',
-                'width'    : self._colValue,
-            },
-            {
-                'title'    : 'level',
-                'width'    : self._colValue*1.5,
-                'cell'     : LevelIndicatorListCell(style="continuous", minValue=0, maxValue=valuesMax),
-            },
-        ]
-        group.list = List(
-                kerningValuesPosSize,
-                kerningListItems,
-                allowsMultipleSelection=False,
-                allowsEmptySelection=False,
-                columnDescriptions=columnDescriptions,
-                allowsSorting=True,
-                editCallback=self.editKerningCallback,
-                enableDelete=False)
-
-        # update kerning pair counter (current/total)
-        tab.pairsCounter.set(f'{pairIndex+1} / {len(self._kerningPairsAll)}')
-
-        self.updateKerningPreviewCallback(None)
-
-    def updateKerningPreviewCallback(self, sender):
-        tab = self._tabs['kerning']
-
-        # groupValues  = tab._splitDescriptors[0]['view']
-
-        sampleWidth  = self.settings['kerningSampleWidth']
-        sampleHeight = self.settings['kerningSampleHeight']
-
-        pair, pairIndex = self.selectedKerningPair
-
-        DB.newDrawing()
-
-        # draw kerning preview
-
-        # print(fontName)
-        # print(self._sources.keys())
-        # print(self._kerning.keys())
-
-        V = VariableKerningPreview(self.selectedDesignspacePath)
-        V.selectedSources = [self._sources[fontName] for fontName in self._kerning.keys()] # proofs[proofLevel][proofGroup]
-        V._kerning = self._kerning
-        V._allPairs = [pair] # self._kerningPairsAll
-        V.draw()
-
-        # refresh PDF preview
-        groupPreview = tab._splitDescriptors[0]['view']
-        pdfData = DB.pdfImage()
-        groupPreview.canvas.setPDFDocument(pdfData)
-
-    def editKerningCallback(self, sender):
-        '''
-        Save the edited kerning pair back to the dict, so we can load values for another pair.
-
-        '''
-        tab = self._tabs['kerning']
-        item = self.selectedKerningValue
-
-        # save change to internal dict
-        pair, pairIndex = self.selectedKerningPair
-        fontName = item['file name']
-        newValue = item['value']
-        oldValue = self._kerning[fontName].get(pair)
-        if oldValue != newValue:
-            if self.verbose:
-                print(f'changed kerning pair {pair} in {fontName}: {oldValue} → {newValue}\n')
-            self._kerning[fontName][pair] = int(newValue)
-
-        # update level indicator
-        ### this will crash RF3!!
-        # kerningListItems = []
-        # for fontName in self._kerning.keys():
-        #     value = self._kerning[fontName][pair] if pair in self._kerning[fontName] else 0
-        #     listItem = {
-        #         "file name" : fontName,
-        #         "value"     : value,
-        #         "level"     : abs(value),
-        #     }
-        #     kerningListItems.append(listItem)
-        # tab.kerningValues.set(kerningListItems)
-
-        self.updateKerningPreviewCallback(None)
-
-    def saveKerningCallback(self, sender):
-        '''
-        Save the edited kerning values back into their source fonts.
-
-        '''
-        tab = self._tabs['kerning']
-
-        if self.verbose:
-            print('saving edited kerning values to sources...')
-
-        for fontName in self._kerning.keys():
-            sourcePath = self._sources[fontName]
-            f = OpenFont(sourcePath, showInterface=False)
-            fontChanged = False
-            for pair, newValue in self._kerning[fontName].items():
-                if type(newValue) not in [int, float]:
-                    if not len(newValue.strip()):
-                        continue
-                newValue = int(newValue)
-                oldValue = f.kerning.get(pair)
-                if newValue != oldValue:
-                    if newValue == 0 and pair in f.kerning:
-                        if self.verbose:
-                            print(f"\tdeleting {pair} in '{fontName}'...")
-                        del f.kerning[pair]
-                    else:
-                        if self.verbose:
-                            print(f"\twriting new value for {pair} in '{fontName}': {oldValue} → {newValue}")
-                        f.kerning[pair] = newValue
-                    if not fontChanged:
-                        fontChanged = True
-            if fontChanged:
-                # if self.verbose:
-                #     print(f'\tsaving {fontName}...')
-                f.save()
-            f.close()
-
-        if self.verbose:
-            print('...done.\n')
 
 
 # ----
