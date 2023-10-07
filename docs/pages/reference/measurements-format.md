@@ -32,15 +32,16 @@ The order of the points determine if the measurement is positive or negative.
 - Font measurement names must be unique.
 - The order of the measurements matters.
 
-| attribute | description                                            |
-|-----------|--------------------------------------------------------|
-| name      | name of the measurement                                |
-| glyph 1   | name of the glyph containing the 1st measurement point |
-| point 1   | index of the 1st measurement point                     |
-| glyph 2   | name of the glyph containing the 2nd measurement point |
-| point 2   | index of the 2nd measurement point                     |
-| direction | direction of measurement                               |
-| parent    | parent measurement (optional)                          |
+| attribute   | description                                            |
+|-------------|--------------------------------------------------------|
+| name        | name of the measurement                                |
+| glyph 1     | name of the glyph containing the 1st measurement point |
+| point 1     | index of the 1st measurement point                     |
+| glyph 2     | name of the glyph containing the 2nd measurement point |
+| point 2     | index of the 2nd measurement point                     |
+| direction   | direction of measurement                               |
+| parent      | parent measurement (optional)                          |
+| description | description of this measurement (optional)              |
 {: .table .table-hover }
 
 ### Glyph-level measurements
@@ -57,21 +58,20 @@ The order of the points determine if the measurement is positive or negative.
 | point 1   | index of the 1st measurement point                     |
 | point 2   | index of the 2nd measurement point                     |
 | direction | direction of measurement                               |
-| parent    | parent measurement (optional)                          |
 {: .table .table-hover }
 
 ### Reference points
 
 Point index columns support special reference points assigned to the following characters:
 
-| character | description | x           | y                    |
-|-----------|-------------|-------------|----------------------|
-| A         | ascender    | 0           | font.info.ascender   |
-| B         | baseline    | 0           | 0                    |
-| C         | cap height  | 0           | font.info.capHeight  |
-| D         | descender   | 0           | font.info.descender  |
-| X         | x-height    | 0           | font.info.xHeight    |
-| W         | width       | glyph.width | 0                    |
+| character | description | x             | y                     |
+|-----------|-------------|---------------|-----------------------|
+| A         | ascender    | `0`           | `font.info.ascender`  |
+| B         | baseline    | `0`           | `0`                   |
+| C         | cap height  | `0`           | `font.info.capHeight` |
+| D         | descender   | `0`           | `font.info.descender` |
+| X         | x-height    | `0`           | `font.info.xHeight`   |
+| W         | width       | `glyph.width` | `0`                   |
 {: .table .table-hover }
 
 

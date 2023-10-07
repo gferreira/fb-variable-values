@@ -40,8 +40,7 @@ types of changes:
 
 - <span class='badge'>Added</span> Merging GlyphValidator and BatchValidator into [FontValidator].
 - <span class='badge'>Added</span> Adding [VarGlyph Assistant] to edit glyph-level data in a designspace.
-- <span class='badge'>Changed</span> Removing the “glyphs” tab from VarFont Assistant.
-- <span class='badge'>Changed</span> Enabling sorting sources by axis values, disabling sort by axes order in DesignSpaceSelector.
+- <span class='badge'>Changed</span> Removing the “glyphs” tab from VarFont Assistant (use VarGlyph Assistant instead).
 - <span class='badge'>Changed</span> Reorganising documentation around [Documentation System] structure.
 
 0.1.5

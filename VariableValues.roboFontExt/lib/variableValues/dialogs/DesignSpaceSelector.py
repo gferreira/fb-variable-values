@@ -25,14 +25,12 @@ class DesignSpaceSelector:
 
     _colLeft      = 160
     _colFontName  = 160
-    _colValue     = 60
+    _colValue     = 50
 
     _tabsTitles   = ['designspace'] # expand in subclass
 
     #: A dictionary of designspace names (keys) and their .designspace paths (values).
     _designspaces = {}
-
-    # _axesOrder    = []
 
     _axisColumns  = ['name', 'tag', 'default', 'minimum', 'maximum']
     
@@ -108,6 +106,7 @@ class DesignSpaceSelector:
                 [],
                 drawFocusRing=False,
                 editCallback=self.editAxesCallback,
+                allowsSorting=False,
                 selfDropSettings=dict(type="genericListPboardType",
                         operation=AppKit.NSDragOperationMove,
                         callback=self.genericDropSelfCallback),
@@ -233,7 +232,7 @@ class DesignSpaceSelector:
 
         # make list items
         sourcesDescriptions  = [{'title': 'n', 'width': 20}]
-        sourcesDescriptions += [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName, 'maxWidth': self._colFontName*3}]
+        sourcesDescriptions += [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName}] # , 'maxWidth': self._colFontName*3
         sourcesDescriptions += [{'title': axis.tag, 'width': self._colValue} for axis in self.selectedDesignspacePlus.document.axes]
         sourcesItems = []
         for source in self.sources:
@@ -255,13 +254,14 @@ class DesignSpaceSelector:
             sourcesListPosSize, sourcesItems,
             columnDescriptions=sourcesDescriptions,
             allowsMultipleSelection=True,
-            allowsSorting=False, ### BUG: sort by columns leads to empty selection error
+            allowsSorting=False, ### this breaks list item selection :(
             enableDelete=False,
             selectionCallback=self.selectedSourcesCallback,
             doubleClickCallback=self.openSourceCallback)
 
     def selectedSourcesCallback(self, sender):
-        print(self.selectedSources) # list items
+        # print(self.selectedSources) # list items
+        pass
 
     # ---------
     # callbacks
@@ -281,7 +281,7 @@ class DesignSpaceSelector:
         if not isProposal:
             tab = self._tabs['designspace']
             for path in paths:
-                label = os.path.splitext(os.path.split(path)[-1])[0]
+                label = os.path.split(path)[-1]
                 self._designspaces[label] = path
                 tab.designspaces.append(label)
                 tab.designspaces.setSelection([0])

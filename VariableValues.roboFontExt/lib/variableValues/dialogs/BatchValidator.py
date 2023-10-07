@@ -10,6 +10,9 @@ from mojo.roboFont import OpenFont, OpenWindow
 from variableValues.validation import validateFonts
 
 
+### DEPRECATED : use FontValidator ###
+
+
 class BatchValidator:
 
     # TO-DO: add validation of font-level data

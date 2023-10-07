@@ -48,10 +48,10 @@ new
 : Select two points and click on the button to add a new empty glyph-level measurement to the list.
 
 color
-: The color of measurement lines and captions in the Glyph View display.
+: Choose a color for the measurement lines and captions in the Glyph Editor preview.
 
 flip
-: Flip point indexes in the selected measurements to invert measurement direction.
+: Invert the direction of selected measurements by swapping point indexes 1 and 2.
 
 <div class="alert alert-primary" role="alert" markdown='1'>
 For more information about each column see [Measurements format > Glyph-level measurements](../../measurements-format/#glyph-level-measurements).

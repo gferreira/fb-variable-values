@@ -68,8 +68,8 @@ glyphs
 
 check results
 : ^
-  A list of color-coded check results for each selected source.  
+  A list of color-coded check results for the current glyph in each selected source.  
 
-  🟢 match  
-  🔴 does not match  
+  🟢 matching  
+  🔴 not matching  
   ⚪ missing  

@@ -54,9 +54,14 @@ VariableValues can be used directly from the source code if you download the rep
 
 This mode allows developers to make changes to the code while using and testing the tools in RoboFont.
 
-1. Clone the repository using `git clone` (recommended) or download the source code.
+1. Clone the repository using `git clone` (recommended\*) or download the source code.
 2. In the RoboFont Preferences window, go to [Extensions > Start Up Scripts].
 3. Add the file `VariableValues/code/Lib/start.py` to the list of start-up scripts.
 4. Save the settings and restart RoboFont; VariableValues will now appear under the *Extensions* menu.
 
 [Extensions > Start Up Scripts]: http://robofont.com/documentation/reference/workspace/preferences-window/extensions/#start-up-scripts
+
+<div class="alert alert-primary" role="alert" markdown='1'>
+\* If you clone the repository using Git, you can get updates more easily later with `git pull`.
+{: .card-text }
+</div>

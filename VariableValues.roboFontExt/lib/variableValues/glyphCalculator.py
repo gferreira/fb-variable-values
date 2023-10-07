@@ -3,6 +3,7 @@ from fontTools.designspaceLib import DesignSpaceDocument
 from fontMath.mathGlyph import MathGlyph
 from mutatorMath.objects.mutator import Mutator, buildMutator
 
+
 class GlyphCalculator:
     
     def __init__(self, font, designspacePath):

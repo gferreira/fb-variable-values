@@ -91,7 +91,7 @@ def validateUnicodes(g1, g2):
     '''
     return g1.unicodes == g2.unicodes
 
-def validateGlyph(g1, g2):
+def validateGlyph(g1, g2, width=True, points=True, components=True, anchors=True, unicodes=True):
     '''
     Check if two glyphs match.
 
@@ -99,19 +99,24 @@ def validateGlyph(g1, g2):
         A dictionary of glyph attribute names and `True` or `False` results.
 
     '''
-    return {
-        'width'      : validateWidth(g1, g2),
-        'points'     : validateContours(g1, g2),
-        'components' : validateComponents(g1, g2),
-        'anchors'    : validateAnchors(g1, g2),
-        'unicodes'   : validateUnicodes(g1, g2),
-    }
+    results = {}
+    if width:
+        results['width'] = validateWidth(g1, g2)
+    if points:
+        results['points'] = validateContours(g1, g2)
+    if components:
+        results['components'] = validateComponents(g1, g2)
+    if anchors:
+        results['anchors'] = validateAnchors(g1, g2)
+    if unicodes:
+        results['unicodes'] = validateUnicodes(g1, g2)
+    return results
 
 # ---------------------
 # font-level validation
 # ---------------------
 
-def validateFont(f1, f2):
+def validateFont(f1, f2, width=True, points=True, components=True, anchors=True, unicodes=True):
     '''
     Check if the *glyphs* in two fonts match.
 
@@ -126,9 +131,14 @@ def validateFont(f1, f2):
         A string with a report of all differences found.
 
     '''
-    txt = f"validating font '{f1.info.familyName} {f1.info.styleName}'...\n\n"
+    txt = f"validating font '{f1.info.familyName} {f1.info.styleName} ({f1.path})'...\n\n"
     for gName in f1.glyphOrder:
-        checks = validateGlyph(f1[gName], f2[gName])
+        if gName not in f2:
+            txt += f'\t{gName}:\n'
+            txt += f"\t- glyph not in font\n"
+            txt += '\n'
+            continue
+        checks = validateGlyph(f1[gName], f2[gName], width=width, points=points, components=components, anchors=anchors, unicodes=unicodes)
         if not all(checks.values()):
             txt += f'\t{gName}:\n'
             for check, result in checks.items():
@@ -138,7 +148,7 @@ def validateFont(f1, f2):
 
     return txt
 
-def validateFonts(targetFonts, sourceFont):
+def validateFonts(targetFonts, sourceFont, width=True, points=True, components=True, anchors=True, unicodes=True):
     '''
     Batch check if all fonts in `targetFonts` match the ones in sourceFont.
 
@@ -148,8 +158,40 @@ def validateFonts(targetFonts, sourceFont):
     '''
     txt = ''
     for targetFont in targetFonts:
-        txt += validateFont(targetFont, sourceFont)
+        txt += validateFont(targetFont, sourceFont, width=width, points=points, components=components, anchors=anchors, unicodes=unicodes)
     return txt
+
+def validateFont2(f1, f2, width=True, points=True, components=True, anchors=True, unicodes=True):
+    '''
+    Check if the *glyphs* in two fonts match.
+
+    Returns:
+        A dict with check results for each glyph in the target font.
+
+    '''
+    results = {}
+    for gName in f1.glyphOrder:
+        if gName not in f2:
+            continue
+        checks = validateGlyph(f1[gName], f2[gName])
+        results[gName] = {}
+        for check, result in checks.items():
+            results[gName][check] = result
+    return results
+
+def validateFonts2(targetFonts, sourceFont, width=True, points=True, components=True, anchors=True, unicodes=True):
+    '''
+    Check if the *glyphs* in target fonts match with glyphs in a reference font.
+
+    Returns:
+        A dict with check results for each glyph in each target font.
+
+    '''
+    results = {}
+    for targetFont in targetFonts:
+        fileName = os.path.splitext(os.path.split(targetFont.path)[-1])[0]
+        results[fileName] = validateFont2(targetFont, sourceFont, width=width, points=points, components=components, anchors=anchors, unicodes=unicodes)
+    return results
 
 # ----------------------
 # designspace validation
