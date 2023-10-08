@@ -5,16 +5,30 @@ reload(variableValues.validation)
 import os
 import AppKit
 from vanilla import *
+from random import random
 from mojo import drawingTools as ctx
 from mojo.UI import UpdateCurrentGlyphView, GetFile, OutputWindow
 from mojo.events import addObserver, removeObserver
-from mojo.roboFont import OpenFont, OpenWindow, CurrentFont
+from mojo.roboFont import OpenFont, OpenWindow, CurrentFont, RGlyph
 from variableValues.validation import *
+from defcon import Glyph, registerRepresentationFactory, unregisterRepresentationFactory
+
+
+def glyphChecksFactory(glyph, referenceGlyph):
+    glyph = RGlyph(glyph)
+    return {
+        'width'      : validateWidth(glyph, referenceGlyph),
+        'points'     : validateContours(glyph, referenceGlyph),
+        'components' : validateComponents(glyph, referenceGlyph),
+        'anchors'    : validateAnchors(glyph, referenceGlyph),
+        'unicodes'   : validateUnicodes(glyph, referenceGlyph),
+    }
 
 
 class FontValidator:
 
     title        = 'FontValidator'
+    key          = 'com.fontBureau.variableValues.fontValidator'
     padding      = 10
     lineHeight   = 22
     buttonWidth  = 100
@@ -30,7 +44,6 @@ class FontValidator:
     _sources     = {}
     _targets     = {}
     results      = {}
-    resultsGlyph = {}
     verbose      = True
 
     def __init__(self):
@@ -53,8 +66,8 @@ class FontValidator:
         self.w.bind("close", self.closeCallback)
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
         self.w.open()
-
-        addObserver(self, "updateGlyphChecks", "currentGlyphChanged")
+        registerRepresentationFactory(Glyph, f"{self.key}.preview", glyphChecksFactory)
+        # addObserver(self, "updateGlyphChecks", "currentGlyphChanged")
         addObserver(self, "drawLabelsCell",    "glyphCellDrawBackground")
         addObserver(self, "drawLabelsGlyph",   "drawBackground")
 
@@ -85,8 +98,7 @@ class FontValidator:
                 (x2 + p*1.5, y, -p, self.lineHeight),
                 'font',
                 value=False,
-                # callback=self.updateFontViewCallback
-                )
+                callback=self.updateFontViewCallback)
 
         y += self.lineHeight
         tab.markGlyph = CheckBox(
@@ -387,72 +399,85 @@ class FontValidator:
             return
         removeObserver(self, "glyphCellDrawBackground")
         removeObserver(self, "drawBackground")
-        removeObserver(self, "currentGlyphChanged")
+        # removeObserver(self, "currentGlyphChanged")
+        unregisterRepresentationFactory(Glyph, f"{self.key}.preview")
         self.updateGlyphViewCallback(sender)
-        # self.updateFontViewCallback(sender)
+        self.updateFontViewCallback(sender)
 
     # ---------
     # observers
     # ---------
 
-    def updateGlyphChecks(self, notification):
-        glyph = notification['glyph']
-        if not glyph:
-            return
-        self.checkGlyph(glyph)
-
     def drawLabelsCell(self, notification):
 
-        if not self.sourceFont:
+        if self.sourceFont is None:
             return
 
         if not self.markFont:
             return
 
-        glyph = notification['glyph']
+        g1 = notification['glyph']
         
-        self.checkGlyph(glyph)
+        if g1 is None:
+            return
 
-        # if not len(self.checks):
-        #     return
+        if g1.name not in self.sourceFont:
+            return
+
+        g2 = self.sourceFont[g1.name]
+
+        # get result
+        resultsGlyph = g1.getRepresentation(f"{self.key}.preview", referenceGlyph=g2)
+
+        if not len(resultsGlyph):
+            return
 
         ctx.save()
         ctx.font('Menlo-Bold')
-        ctx.fontSize(10)
+        ctx.fontSize(11)
         ctx.translate(3, 3)
-        for check in self.resultsGlyph.keys():
+        for check in resultsGlyph.keys():
             if check not in self.showMarks:
                 continue
-            if self.resultsGlyph[check]:
+            if resultsGlyph[check]:
                 ctx.fill(*self.colorTrue)
             else:
                 ctx.fill(*self.colorFalse)
             label = check[0].upper()
-            ctx.text(label, (0, -3))
             w, h = ctx.textSize(label)
+            ctx.text(label, (0, -4))
             ctx.translate(w + 2, 0)
         ctx.restore()
 
     def drawLabelsGlyph(self, notification):
 
-        if not self.sourceFont:
+        if self.sourceFont is None:
             return
 
         if not self.markGlyph:
             return
 
-        glyph = notification['glyph']
+        g1 = notification['glyph']
         scale = notification['scale']
+        
+        if g1 is None:
+            return
 
-        self.checkGlyph(glyph)
+        if g1.name not in self.sourceFont:
+            return
+
+        g2 = self.sourceFont[g1.name]
+
+        # get result
+        resultsGlyph = g1.getRepresentation(f"{self.key}.preview", referenceGlyph=g2)
 
         ctx.save()
         ctx.font('Menlo-Bold')
         ctx.fontSize(12 * scale)
-        for check in self.resultsGlyph.keys():
+        for check in resultsGlyph.keys():
             if check not in self.showMarks:
                 continue
-            if self.resultsGlyph[check]:
+            if resultsGlyph[check]:
                 ctx.fill(*self.colorTrue)
             else:
                 ctx.fill(*self.colorFalse)
@@ -461,34 +486,6 @@ class FontValidator:
             w, h = ctx.textSize(label)
             ctx.translate(w + 2 * scale, 0)
         ctx.restore()
-
-    # -------
-    # methods
-    # -------
-
-    def checkGlyph(self, g1):
-        if g1 is None:
-            return
-
-        if self.sourceFont is None:
-            if self.verbose:
-                print('no reference font selected.')
-            return
-
-        if g1.name not in self.sourceFont:
-            if self.verbose:
-                print(f"glyph '{g1.name}' not in reference font.")
-            return
-
-        g2 = self.sourceFont[g1.name]
-
-        self.resultsGlyph = {
-            'width'      : validateWidth(g1, g2),
-            'points'     : validateContours(g1, g2),
-            'components' : validateComponents(g1, g2),
-            'anchors'    : validateAnchors(g1, g2),
-            'unicodes'   : validateUnicodes(g1, g2),
-        }
 
 
 # ----
