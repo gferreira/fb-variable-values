@@ -15,20 +15,19 @@ def getSegmentTypes(glyph):
     for ci, c in enumerate(glyph.contours):
         for si, s in enumerate(c.segments):
             if s.type == 'curve':
-                segmentType = 'C'
+                segmentType = 'C' # △ 
             elif s.type == 'qcurve':
-                segmentType = 'Q'
+                segmentType = 'Q' # □
             else:
-                segmentType = 'L'
+                segmentType = 'L' # ◯ 
             segments.append(segmentType)
-        # segments.append(' ')
     return segments
 
 
 class VarGlyphAssistant(DesignSpaceSelector):
     
     title = 'VarGlyph Assistant'
-    key   = 'com.hipertipo.varGlyphAssistant'
+    key   = 'com.fontBureau.varGlyphAssistant'
 
     _tabsTitles = ['designspace', 'glyph sets', 'attributes', 'compatibility']
 
