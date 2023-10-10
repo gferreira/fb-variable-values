@@ -7,13 +7,15 @@ import variableValues.kerningPreview
 reload(variableValues.kerningPreview)
 
 import AppKit
-import os
+import os, csv
 from vanilla import Window, TextBox, List, Button, Tabs, LevelIndicatorListCell, Group, CheckBox, SplitView
-from fontParts.world import OpenFont, RGlyph
-from fontTools.pens.transformPen import TransformPointPen
-from defcon.objects.component import _defaultTransformation
-import drawBot as DB
-from drawBot.ui.drawView import DrawView
+from fontParts.world import OpenFont
+try:
+    import drawBot as DB
+    from drawBot.ui.drawView import DrawView
+except:
+    print('DrawBot extension not installed.')
+from mojo.UI import PutFile
 from mojo.roboFont import OpenWindow
 from variableValues.dialogs.DesignSpaceSelector import DesignSpaceSelector
 from variableValues.kerningPreview import VariableKerningPreview
@@ -162,10 +164,17 @@ class VarFontAssistant(DesignSpaceSelector):
                 enableDelete=False)
 
         y = -(self.lineHeight + p)
-        tab.updateValues = Button(
+        tab.updateMeasurements = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
                 'load',
                 callback=self.loadMeasurementsCallback,
+            )
+
+        x = -(p + self.buttonWidth)
+        tab.exportMeasurements = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'export',
+                callback=self.exportMeasurementsCallback,
             )
 
     def initializeFontValuesTab(self):
@@ -548,13 +557,6 @@ class VarFontAssistant(DesignSpaceSelector):
                 print(f'changed font value {fontAttr} in {fontName}: {oldValue} → {newValue}\n')
             self._fontValues[fontName][fontAttr] = int(newValue)
 
-    def exportFontValuesCallback(self, sender):
-        '''
-        Export current font info as a CSV file.
-
-        '''
-        pass
-
     def saveFontValuesCallback(self, sender):
         '''
         Save the edited font info back into their source fonts.
@@ -843,6 +845,11 @@ class VarFontAssistant(DesignSpaceSelector):
             tab.fontMeasurements.set([])
             return
 
+        # no measurements file
+        if not self.selectedMeasurementFile:
+            print('please select a JSON file with measurement definitions.\n')
+            return
+
         # collect measurements into dict
         measurementFilePath = self._measurementFiles[self.selectedMeasurementFile]
         measurements = readMeasurements(measurementFilePath)
@@ -883,8 +890,7 @@ class VarFontAssistant(DesignSpaceSelector):
                     glyphName1, index1,
                     glyphName2, index2
                 )
-                # M.absolute = True
-                distance = M.measure(f, verbose=False)
+                distance = M.measure(f, roundToInt=True, absolute=False, verbose=False)
 
                 if distance and f.info.unitsPerEm:
                     permill = round(float(distance) * 1000 / f.info.unitsPerEm)
@@ -969,6 +975,48 @@ class VarFontAssistant(DesignSpaceSelector):
                 columnDescriptions=columnDescriptions,
                 allowsSorting=True,
                 enableDelete=False)
+
+    def exportMeasurementsCallback(self, sender):
+        tab = self._tabs['measurements']
+
+        # get CSV file path
+
+        csvFileName = 'measurements.csv'
+        csvPath = PutFile(message='Save measurements to CSV file:', fileName=csvFileName)
+
+        if csvPath is None:
+            if self.verbose:
+                print('[cancelled]\n')
+            return
+
+        if os.path.exists(csvPath):
+            os.remove(csvPath)
+
+        if self.verbose:
+            print(f'saving measurements to {csvPath}...', end=' ')
+
+        items = tab.fontMeasurements.get()
+        measurementNames = tab.measurements.get()
+
+        with open(csvPath, 'w', newline='') as f:
+            fieldnames  = ['font name']
+            for measurementName in measurementNames:
+                fieldnames.append(f'{measurementName} (units)')
+                fieldnames.append(f'{measurementName} (permill)')
+
+            csvWriter = csv.DictWriter(f, fieldnames=fieldnames)
+            # write header row
+            csvWriter.writeheader()
+            # write data rows
+            for fontName in self._measurements.keys():
+                row = { 'font name' : fontName }
+                for measurementName in measurementNames:
+                    row[f'{measurementName} (units)']   = self._measurements[fontName][measurementName]
+                    row[f'{measurementName} (permill)'] = self._measurementsPermill[fontName][measurementName]
+                csvWriter.writerow(row)
+
+        if self.verbose:
+            print('done.\n')
 
 
 # ----

@@ -63,11 +63,15 @@ class FontValidator:
                 'validate',
                 callback=self.batchValidateFontsCallback)
 
+        x += self.buttonWidth + p
+        self.w.report = CheckBox(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'report')
+
         self.w.bind("close", self.closeCallback)
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
         self.w.open()
         registerRepresentationFactory(Glyph, f"{self.key}.preview", glyphChecksFactory)
-        # addObserver(self, "updateGlyphChecks", "currentGlyphChanged")
         addObserver(self, "drawLabelsCell",    "glyphCellDrawBackground")
         addObserver(self, "drawLabelsGlyph",   "drawBackground")
 
@@ -93,7 +97,7 @@ class FontValidator:
                 (x2 + p*2, y, -p, self.lineHeight),
                 'preview')
 
-        y += self.lineHeight #+ p/2
+        y += self.lineHeight
         tab.markFont = CheckBox(
                 (x2 + p*1.5, y, -p, self.lineHeight),
                 'font',
@@ -112,7 +116,7 @@ class FontValidator:
                 (x2 + p*1.5, y, -p, self.lineHeight),
                 'marks')
 
-        y += self.lineHeight #+ p/2
+        y += self.lineHeight
         for check in self._checks:
             checkbox = CheckBox(
                 (x2 + p*1.5, y, -p, self.lineHeight),
@@ -307,6 +311,7 @@ class FontValidator:
     def batchValidateFontsCallback(self, sender):
 
         options = { check: check in self.showMarks for check in self._checks }
+        report  = self.w.report.get()
 
         #-------------------
         # assert conditions
@@ -326,15 +331,16 @@ class FontValidator:
         # batch validate
         #---------------
 
-        print('batch validating fonts...\n')
-
-        # for check, value in self.checks.items():
-        #     print(f'- {check}: {value}')
-        # print()
+        if report:
+            txt = 'batch validating fonts...\n\n'
+            for check in self.showMarks:
+                txt += f'\t- {check}\n'
+            txt += '\n'
 
         # get source font
         sourceFont = self.sourceFont # OpenFont(self.sourceFontPath, showInterface=False)
-        print(f'\tsource font: {self.sourceFontName}\n')
+        if report:
+            txt += f'\tsource font: {self.sourceFontName}\n'
 
         # get target fonts
         targetFonts = [OpenFont(targetFontPath, showInterface=False) for targetFontPath in self.targetFontPaths]
@@ -345,15 +351,14 @@ class FontValidator:
 
         self.results = validateFonts2(targetFonts, sourceFont, width=options['width'], points=options['points'], components=options['components'], anchors=options['anchors'], unicodes=options['unicodes'])
 
-        # print report to the console
-        # report = validateFonts(targetFonts, sourceFont, width=options['width'], points=options['points'], components=options['components'], anchors=options['anchors'], unicodes=options['unicodes'])
-        # O = OutputWindow()
-        # O.clear()
-        # O.write(report)
-        # O.show()
+        if report:
+            txt += validateFonts(targetFonts, sourceFont, width=options['width'], points=options['points'], components=options['components'], anchors=options['anchors'], unicodes=options['unicodes'])
+            txt += '...done.\n'
 
-        # done
-        print('...done.\n')
+            O = OutputWindow()
+            O.clear()
+            O.write(txt)
+            O.show()
 
     def selectGlyphCallback(self, sender):
         if not self.selectedGlyph:
