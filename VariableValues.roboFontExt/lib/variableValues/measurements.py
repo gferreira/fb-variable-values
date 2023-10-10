@@ -18,8 +18,6 @@ class FontMeasurements:
 
     '''
 
-    absolute = False
-
     def __init__(self, definitions=[]):
         self.definitions = definitions
         self.values = {}
@@ -38,11 +36,11 @@ class FontMeasurements:
                 pt2 = attrs['point 2']
             self.definitions.append((name, attrs['direction'], attrs['glyph 1'], pt1, attrs['glyph 2'], pt2, attrs.get('parent')))
 
-    def measure(self, font):
+    def measure(self, font, roundToInt=True, absolute=False):
         for d in self.definitions:
             M = Measurement(*d)
             M.absolute = self.absolute
-            self.values[M.name] = M.measure(font)
+            self.values[M.name] = M.measure(font, roundToInt=True, absolute=False)
 
     def print(self):
         for k, v in self.values.items():
@@ -57,7 +55,8 @@ class Measurement:
 
     '''
 
-    font = None
+    font     = None
+    round    = True
     absolute = False
 
     def __init__(self, name, direction, glyphName1, pointIndex1, glyphName2, pointIndex2, parent=None):
@@ -97,7 +96,7 @@ class Measurement:
             else:
                 return getAnchorPoint(self.font, self.pointIndex2)
 
-    def measure(self, font, verbose=False):
+    def measure(self, font, roundToInt=True, absolute=False, verbose=False):
         self.font = font
 
         if verbose:
@@ -123,8 +122,11 @@ class Measurement:
         else:
             d = sqrt((self.point2.x - self.point1.x)**2 + (self.point2.y - self.point1.y)**2)
 
-        if self.absolute:
+        if absolute:
             d = abs(d)
+
+        if roundToInt:
+            d = round(d)
 
         if verbose:
             print(f'\tdistance : {d}')
