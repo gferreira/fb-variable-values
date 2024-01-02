@@ -96,4 +96,8 @@ glyphs
 segments
 : ^
   A list of segments in the selected glyphs across all selected sources.  
-  The letter codes mean: **L** line segment / **C** cubic segment / **Q** quadratic segment
+  The letter codes mean:
+
+  - **L** line segment
+  - **C** cubic segment
+  - **Q** quadratic segment

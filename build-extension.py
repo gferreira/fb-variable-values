@@ -8,16 +8,16 @@ from hTools3.modules.sys import pycClear, pyCacheClear, removeGitFiles
 # settings
 # --------
 
-version          = '0.1.6'
+version          = '0.1.7'
 baseFolder       = os.path.dirname(__file__)
 libFolder        = os.path.join(baseFolder, 'code', 'Lib')
 licensePath      = os.path.join(baseFolder, 'LICENSE')
-resourcesFolder  = None # os.path.join(baseFolder, 'Resources')
-imagePath        = None # os.path.join(resourcesFolder, 'punch.png')
+resourcesFolder  = None
+imagePath        = None
 
 outputFolder     = baseFolder 
 extensionPath    = os.path.join(outputFolder, 'VariableValues.roboFontExt')
-docsFolder       = None # os.path.join(outputFolder, 'docs', '_site')
+docsFolder       = None
 
 # ---------------
 # build extension
@@ -25,7 +25,7 @@ docsFolder       = None # os.path.join(outputFolder, 'docs', '_site')
 
 def buildExtension():
 
-    pycOnly = False # [ "3.6", "3.7" ]
+    pycOnly = False
 
     B = ExtensionBundle()
     B.name                 = "VariableValues"
@@ -33,7 +33,7 @@ def buildExtension():
     B.developerURL         = 'http://hipertipo.com/'
     B.icon                 = imagePath
     B.version              = version
-    B.expireDate           = '' # '2020-12-31'
+    B.expireDate           = ''
     B.launchAtStartUp      = True
     B.html                 = False
     B.mainScript           = 'start.py'
@@ -47,18 +47,23 @@ def buildExtension():
             'shortKey'      : '',
         },
         {
-            'path'          : 'variableValues/dialogs/Measurements2.py',
+            'path'          : 'variableValues/dialogs/VarGlyphAssistant.py',
+            'preferredName' : 'VarGlyph Assistant',
+            'shortKey'      : '',
+        },
+        {
+            'path'          : 'variableValues/dialogs/Measurements.py',
             'preferredName' : 'Measurements',
             'shortKey'      : '',
         },
         {
-            'path'          : 'variableValues/dialogs/GlyphValidator.py',
-            'preferredName' : 'GlyphValidator',
+            'path'          : 'variableValues/dialogs/SourceValidator.py',
+            'preferredName' : 'SourceValidator',
             'shortKey'      : '',
         },
         {
-            'path'          : 'variableValues/dialogs/BatchValidator.py',
-            'preferredName' : 'BatchValidator',
+            'path'          : 'variableValues/dialogs/TempEdit.py',
+            'preferredName' : 'TempEdit',
             'shortKey'      : '',
         },
     ]
@@ -72,9 +77,7 @@ def buildExtension():
     print('\tbuilding .roboFontExt package...')
     B.save(extensionPath,
         libPath=libFolder,
-        # htmlPath=None, # docsFolder,
         resourcesPath=resourcesFolder,
-        # pycExclude=pycExcludeFiles,
         pycOnly=pycOnly)
 
     errors = B.validationErrors()

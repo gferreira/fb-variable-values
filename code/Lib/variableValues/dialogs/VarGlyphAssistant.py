@@ -7,6 +7,7 @@ import os, sys
 import plistlib
 from vanilla import  Window, EditText, TextBox, Box, List, Button, Tabs, LevelIndicatorListCell
 from mojo.roboFont import OpenWindow, OpenFont
+from mojo.smartSet import readSmartSets
 from variableValues.dialogs.DesignSpaceSelector import DesignSpaceSelector
 
 
@@ -29,7 +30,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
     title = 'VarGlyph Assistant'
     key   = 'com.fontBureau.varGlyphAssistant'
 
-    _tabsTitles = ['designspace', 'glyph sets', 'attributes', 'compatibility']
+    _tabsTitles = ['designspace', 'glyph sets', 'attributes', 'segments']
 
     _glyphAttrs = {}
     _glyphAttrsLabels = [
@@ -164,7 +165,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     def initializeCompatibilityTab(self):
 
-        tab = self._tabs['compatibility']
+        tab = self._tabs['segments']
 
         x = p = self.padding
         y = p/2
@@ -221,14 +222,14 @@ class VarGlyphAssistant(DesignSpaceSelector):
         return self._glyphSetsFiles[self.selectedGlyphSetsFile]
 
     @property
-    def selectedGlyphSet(self):
+    def selectedGlyphSets(self):
         tab = self._tabs['glyph sets']
         selection = tab.glyphSets.getSelection()
         glyphSets = tab.glyphSets.get()
         selectedGlyphSets = [gs for i, gs in enumerate(glyphSets) if i in selection]
         if not len(selectedGlyphSets):
             return
-        return selectedGlyphSets[0]
+        return selectedGlyphSets
 
     @property
     def selectedGlyphAttributes(self):
@@ -242,7 +243,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     @property
     def selectedGlyphCompatibility(self):
-        tab = self._tabs['compatibility']
+        tab = self._tabs['segments']
         selection = tab.glyphs.getSelection()
         glyphs = tab.glyphs.get()
         selectedGlyphs = [a for i, a in enumerate(glyphs) if i in selection]
@@ -288,28 +289,28 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
         assert os.path.exists(self.selectedGlyphSetsFilePath)
 
-        with open(self.selectedGlyphSetsFilePath, mode='rb') as f:
-            xml = f.read()
-            glyphSetsData = plistlib.loads(xml)
+        # load smart sets data into dict
+        smartSets = readSmartSets(self.selectedGlyphSetsFilePath, useAsDefault=False, font=None)
 
-        # load glyph sets data into dict
         self._glyphSets = {}
-        for group in glyphSetsData:
-            groupName = group['smartSetName']
-            for gs in group['group']:
-                glyphSetName  = gs['smartSetName']
-                self._glyphSets[glyphSetName] = gs['glyphNames']
+
+        for smartSet in smartSets:
+            for group in smartSet.groups:
+                self._glyphSets[group.name] = group.glyphNames
 
         tab.glyphSets.set(self._glyphSets.keys())
 
     def selectGlyphSetCallback(self, sender):
         tab = self._tabs['glyph sets']
 
-        if not self.selectedGlyphSet:
+        if not self.selectedGlyphSets:
             tab.glyphNames.set([])
             return
 
-        glyphNames = self._glyphSets[self.selectedGlyphSet]
+        glyphNames = []
+        for glyphSet in self.selectedGlyphSets:
+            glyphNames += self._glyphSets[glyphSet]
+
         tab.glyphNames.set(' '.join(glyphNames))
 
     # attributes
@@ -388,7 +389,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
         if not self.selectedSources:
             return
 
-        tab = self._tabs['compatibility']
+        tab = self._tabs['segments']
         glyphNames = self._tabs['glyph sets'].glyphNames.get().split(' ')
 
         # collect glyph compatibility data into dict
@@ -415,7 +416,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     def selectGlyphCompatibilityCallback(self, sender):
 
-        tab = self._tabs['compatibility']
+        tab = self._tabs['segments']
         glyphName = self.selectedGlyphCompatibility
 
         segmentsPosSize = tab.segments.getPosSize()

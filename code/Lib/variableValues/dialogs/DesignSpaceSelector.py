@@ -6,7 +6,6 @@ import AppKit
 import os
 from operator import itemgetter
 from vanilla import Window, TextBox, CheckBox, List, Tabs
-from fontTools.designspaceLib import DesignSpaceDocument
 from mojo.roboFont import OpenFont, OpenWindow
 from variableValues.designspacePlus import DesignSpacePlus, getVarDistance
 
@@ -14,7 +13,7 @@ from variableValues.designspacePlus import DesignSpacePlus, getVarDistance
 # - turn off axis == hide sources which are not in the default location for that axis
 
 class DesignSpaceSelector:
-    
+
     title         = 'DesignSpaceSelector'
     width         = 123*5
     height        = 640
@@ -33,7 +32,7 @@ class DesignSpaceSelector:
     _designspaces = {}
 
     _axisColumns  = ['name', 'tag', 'default', 'minimum', 'maximum']
-    
+
     #: A dictionary of source font names (keys) and their UFO paths (values).
     _sources      = {}
 
@@ -62,7 +61,7 @@ class DesignSpaceSelector:
     def initializeDesignspacesTab(self):
 
         tab = self._tabs['designspace']
-        
+
         x = p = self.padding
         y = p/2
         tab.designspacesLabel = TextBox(
@@ -310,7 +309,7 @@ class DesignSpaceSelector:
     def editAxesCallback(self, sender):
         tab = self._tabs['designspace']
         self.axesOrder = [a['tag'] for a in tab.axes.get()]
-        
+
         if not hasattr(tab, 'sources'):
             return
 

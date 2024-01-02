@@ -39,8 +39,7 @@ class FontMeasurements:
     def measure(self, font, roundToInt=True, absolute=False):
         for d in self.definitions:
             M = Measurement(*d)
-            M.absolute = self.absolute
-            self.values[M.name] = M.measure(font, roundToInt=True, absolute=False)
+            self.values[M.name] = M.measure(font, roundToInt=roundToInt, absolute=absolute)
 
     def print(self):
         for k, v in self.values.items():
@@ -56,8 +55,6 @@ class Measurement:
     '''
 
     font     = None
-    round    = True
-    absolute = False
 
     def __init__(self, name, direction, glyphName1, pointIndex1, glyphName2, pointIndex2, parent=None):
         self.name        = name

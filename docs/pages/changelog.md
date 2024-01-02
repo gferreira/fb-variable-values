@@ -34,6 +34,13 @@ types of changes:
 
 -->
 
+0.1.7
+-----
+
+- <span class='badge'>Changed</span> Removing FontValidator check result marks from Font Overview and Glyph View (too slow).
+- <span class='badge'>Changed</span> Making FontValidator tabs independent, glyphs tab now loads data for each selected glyph.
+- <span class='badge'>Changed</span> Renaming FontValidator to SourceValidator.
+
 
 0.1.6
 -----

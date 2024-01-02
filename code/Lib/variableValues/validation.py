@@ -1,5 +1,6 @@
 import os
-from fontParts.world import OpenFont
+from mojo.roboFont import OpenFont #, RGlyph
+from fontParts.world import RGlyph
 
 # ----------------------
 # glyph-level validation
@@ -14,7 +15,7 @@ def getSegmentTypes(glyph):
 
     '''
     segments = []
-    for ci, c in enumerate(glyph.contours):
+    for ci, c in enumerate(glyph):
         for si, s in enumerate(c.segments):
             if s.type == 'curve':
                 segmentType = 'C' # cubic
@@ -131,7 +132,7 @@ def validateFont(f1, f2, width=True, points=True, components=True, anchors=True,
         A string with a report of all differences found.
 
     '''
-    txt = f"validating font '{f1.info.familyName} {f1.info.styleName} ({f1.path})'...\n\n"
+    txt = f"validating font {f1.info.familyName} {f1.info.styleName}...\n\n" # {f1.path}
     for gName in f1.glyphOrder:
         if gName not in f2:
             txt += f'\t{gName}:\n'

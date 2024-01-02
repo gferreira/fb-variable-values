@@ -60,9 +60,22 @@ The order of the points determine if the measurement is positive or negative.
 | direction | direction of measurement                               |
 {: .table .table-hover }
 
-### Reference points
+### Direction keys
 
-Point index columns support special reference points assigned to the following characters:
+The direction of measurement must be one of the following characters:
+
+| characters | description            |
+|------------|------------------------|
+| x          | horizontal measurement |
+| y          | vertical measurement   |
+| a          | angled measurement     |
+{: .table .table-hover }
+
+### Point indexes and keys
+
+Point indexes are expressed as integers.
+
+Special reference points are also acessible using the following characters:
 
 | character | description | x             | y                     |
 |-----------|-------------|---------------|-----------------------|
@@ -73,6 +86,12 @@ Point index columns support special reference points assigned to the following c
 | X         | x-height    | `0`           | `font.info.xHeight`   |
 | W         | width       | `glyph.width` | `0`                   |
 {: .table .table-hover }
+
+### Sign of the measured values
+
+**The sign of the measured values matters.** While most measurements are usually positive, some are by definition *negative* – for example the descender value or a bottom overshoot.
+
+If a font-level value is positive, and the measured glyph value is negative, we can suspect an issue with the contours (shapes turning inside out).
 
 
 Python example
@@ -147,7 +166,7 @@ The same set of measurement definitions can be used to measure all sources in a 
       /* more glyph-level measurements here ... */
     },
     /* more glyphs here ... */
-  },    
+  },
 }
 ```
 

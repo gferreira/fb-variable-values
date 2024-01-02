@@ -12,7 +12,8 @@ Dialogs
 - [VarFont Assistant](varfont-assistant)
 - [VarGlyph Assistant](varglyph-assistant)
 - [Measurements](measurements)
-- [Font Validator](font-validator)
+- [SourceValidator](source-validator)
+- [TempEdit]
 </div>
 <div class='col' markdown='1'>
 Formats
@@ -21,3 +22,6 @@ Formats
 - [Measurements format](measurements-format)
 </div>
 </div>
+
+
+[TempEdit]: http://hipertipo.github.io/tempEdit/

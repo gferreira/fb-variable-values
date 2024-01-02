@@ -25,7 +25,7 @@ class MeasurementsSubscriber(Subscriber):
 class MeasurementsController(ezui.WindowController):
     
     title        = 'Measurements'
-    key          = 'com.fontBureau.measurements3'
+    key          = 'com.fontBureau.measurements'
     buttonWidth  = 70
     colWidth     = 55
     verbose      = True

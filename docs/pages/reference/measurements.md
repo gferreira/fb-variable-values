@@ -28,7 +28,7 @@ Use the **font** tab to create and edit font-level measurements.
 ![]({{ site.url }}/images/Measurements-1.png){: .img-fluid}
 
 new
-: Click on the button to add a new empty font-level measurement to the list.  
+: Click to add a new empty font-level measurement to the list.  
   Double-click the new item's cells to edit its content.
 
 <div class="alert alert-primary" role="alert" markdown='1'>
