@@ -14,7 +14,15 @@
 		</dict>
 		<dict>
 			<key>path</key>
-			<string>variableValues/dialogs/Measurements2.py</string>
+			<string>variableValues/dialogs/VarGlyphAssistant.py</string>
+			<key>preferredName</key>
+			<string>VarGlyph Assistant</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>path</key>
+			<string>variableValues/dialogs/Measurements.py</string>
 			<key>preferredName</key>
 			<string>Measurements</string>
 			<key>shortKey</key>
@@ -22,17 +30,17 @@
 		</dict>
 		<dict>
 			<key>path</key>
-			<string>variableValues/dialogs/GlyphValidator.py</string>
+			<string>variableValues/dialogs/SourceValidator.py</string>
 			<key>preferredName</key>
-			<string>GlyphValidator</string>
+			<string>SourceValidator</string>
 			<key>shortKey</key>
 			<string></string>
 		</dict>
 		<dict>
 			<key>path</key>
-			<string>variableValues/dialogs/BatchValidator.py</string>
+			<string>variableValues/dialogs/TempEdit.py</string>
 			<key>preferredName</key>
-			<string>BatchValidator</string>
+			<string>TempEdit</string>
 			<key>shortKey</key>
 			<string></string>
 		</dict>
@@ -56,8 +64,8 @@
 	<key>requiresVersionMinor</key>
 	<string>4</string>
 	<key>timeStamp</key>
-	<real>1696919045.2772291</real>
+	<real>1704198370.226444</real>
 	<key>version</key>
-	<string>0.1.6</string>
+	<string>0.1.7</string>
 </dict>
 </plist>

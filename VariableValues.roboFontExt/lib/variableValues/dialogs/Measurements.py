@@ -1,7 +1,7 @@
 from importlib import reload
 import variableValues.linkPoints
 reload(variableValues.linkPoints)
-import variableValues.measurements 
+import variableValues.measurements
 reload(variableValues.measurements )
 
 import os
@@ -84,7 +84,7 @@ def nscolor2rgb(nsColor):
 
 
 class Measurements2(BaseWindowController):
-    
+
     title        = 'Measurements'
     key          = 'com.fontBureau.measurements2'
 
@@ -372,7 +372,7 @@ class Measurements2(BaseWindowController):
             print('...done.\n')
 
     def saveMeasurementsCallback(self, sender):
-        
+
         fontItems  = self._tabs['font'].measurements
 
         fontMeasurements = {
@@ -600,7 +600,7 @@ class Measurements2(BaseWindowController):
         for name in self.fontMeasurements.keys():
             listItem = {
                 'name'        : name,
-                'direction'   : self.fontMeasurements[name].get('direction'), 
+                'direction'   : self.fontMeasurements[name].get('direction'),
                 'glyph 1'     : self.fontMeasurements[name].get('glyph 1'),
                 'point 1'     : self.fontMeasurements[name].get('point 1'),
                 'glyph 2'     : self.fontMeasurements[name].get('glyph 2'),
@@ -751,7 +751,7 @@ class Measurements2(BaseWindowController):
 
         # newItems = []
         # for item in items:
-        #     newItem = item.copy() 
+        #     newItem = item.copy()
         #     if newItem['name'] in fontMeasurements:
         #         newItem['parent'] = fontMeasurements[name]
         #         newItem['description'] = descriptions[name]
@@ -762,7 +762,7 @@ class Measurements2(BaseWindowController):
         #         except:
         #             pass
         #     newItems.append(newItem)
-        # 
+        #
         # tab.measurements.set(newItems)
 
     def loadGlyphMeasurements(self):
@@ -795,15 +795,15 @@ class Measurements2(BaseWindowController):
                 continue
             listItem = {
                 'name'      : measurements[key].get('name'),
-                'direction' : measurements[key].get('direction'), 
+                'direction' : measurements[key].get('direction'),
                 'point 1'   : index1,
-                'point 2'   : index2, 
+                'point 2'   : index2,
                 'units'     : None,
                 'permill'   : None,
                 'parent'    : measurements[key].get('parent'),
                 'scale'     : None,
 
-            }   
+            }
             listItems.append(listItem)
 
         # rebuild list using the font measurements order
@@ -831,10 +831,6 @@ class Measurements2(BaseWindowController):
         Draw the current glyph's measurements in the background of the Glyph View.
 
         '''
-        # links = getLinks(glyph)
-        # if not len(links):
-        #     return
-
 
         tab = self._tabs['glyph']
 
@@ -879,7 +875,7 @@ class Measurements2(BaseWindowController):
                 P2 = pt2.x, pt1.y
             elif direction == 'y':
                 P1 = pt2.x, pt1.y
-                P2 = pt2.x, pt2.y 
+                P2 = pt2.x, pt2.y
             else: # angled
                 P1 = pt1.x, pt1.y
                 P2 = pt2.x, pt2.y
@@ -888,8 +884,8 @@ class Measurements2(BaseWindowController):
 
             # draw link
             ctx.stroke(*self.measurementsColor)
-            ctx.strokeWidth(self.settings['strokeWidth1']*previewScale)
-            ctx.lineDash(3*previewScale, 3*previewScale)
+            ctx.strokeWidth(self.settings['strokeWidth1'] * previewScale)
+            ctx.lineDash(3*previewScale, 3 * previewScale)
             ctx.line((pt1.x, pt1.y), (pt2.x, pt2.y))
 
             linkID = f'{index1} {index2}'
@@ -900,8 +896,14 @@ class Measurements2(BaseWindowController):
                     ctx.fill(None)
                     ctx.lineDash(None)
                     ctx.stroke(*self.measurementsColorDim)
-                    ctx.strokeWidth(self.settings['strokeWidth2']*previewScale)
+                    ctx.strokeWidth(self.settings['strokeWidth2'] * previewScale)
                     ctx.line(P1, P2)
+                    # draw points
+                    r = 8 * previewScale # get size from `glyphViewOnCurvePointsSize` ?
+                    ctx.stroke(*self.measurementsColor)
+                    ctx.strokeWidth(self.settings['strokeWidth1'] * 2 * previewScale)
+                    ctx.oval(pt1.x-r, pt1.y-r, r*2, r*2)
+                    ctx.oval(pt2.x-r, pt2.y-r, r*2, r*2)
                     # draw caption
                     ctx.stroke(None)
                     ctx.fill(*self.measurementsColor)

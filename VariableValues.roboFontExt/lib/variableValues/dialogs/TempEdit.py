@@ -174,9 +174,8 @@ class TempEdit:
         designSpace.read(designSpacePath)
 
         # get column descriptions
-        titles  = ['name']
-        titles += [axis.name for axis in designSpace.axes]
-        descriptions = [{"title": D} for D in titles]
+        descriptions  = [{"title": 'name', "width": 210, "minWidth": 180 }]
+        descriptions += [{"title": axis.name, "width": 40} for axis in designSpace.axes]
 
         # make list items
         self._sources = {}
@@ -266,7 +265,7 @@ class TempEdit:
                     print()
 
         # mode 1 : fonts → glyphs
-        
+
         if self.importMode == 1:
             tmpFont = CurrentFont()
             if tmpFont is None:
@@ -278,7 +277,7 @@ class TempEdit:
                     if self.verbose:
                         print(f'source file does not exist: {ufoPath}')
                     continue
-                
+
                 srcFont = OpenFont(ufoPath, showInterface=False)
                 glyphsFolder = os.path.join(ufoPath, 'glyphs')
                 ufoName = splitall(glyphsFolder)[-2]
@@ -323,7 +322,7 @@ class TempEdit:
         # mode 2 : fonts → layers
 
         else:
-            
+
             tmpFont = CurrentFont()
             if tmpFont is None:
                 tmpFont = NewFont(familyName='tempEdit')
@@ -334,7 +333,7 @@ class TempEdit:
                     if self.verbose:
                         print(f'source file does not exist: {ufoPath}')
                     continue
-                
+
                 srcFont = OpenFont(ufoPath, showInterface=False)
                 glyphsFolder = os.path.join(ufoPath, 'glyphs')
                 ufoName = splitall(glyphsFolder)[-2]
