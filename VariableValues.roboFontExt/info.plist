@@ -30,6 +30,14 @@
 		</dict>
 		<dict>
 			<key>path</key>
+			<string>variableValues/dialogs/GlyphValidator.py</string>
+			<key>preferredName</key>
+			<string>GlyphValidator</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>path</key>
 			<string>variableValues/dialogs/SourceValidator.py</string>
 			<key>preferredName</key>
 			<string>SourceValidator</string>
@@ -41,6 +49,14 @@
 			<string>variableValues/dialogs/TempEdit.py</string>
 			<key>preferredName</key>
 			<string>TempEdit</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>path</key>
+			<string>variableValues/dialogs/TempGlyphs.py</string>
+			<key>preferredName</key>
+			<string>TempGlyphs</string>
 			<key>shortKey</key>
 			<string></string>
 		</dict>
@@ -64,7 +80,7 @@
 	<key>requiresVersionMinor</key>
 	<string>4</string>
 	<key>timeStamp</key>
-	<real>1706002678.7966459</real>
+	<real>1706002867.1830359</real>
 	<key>version</key>
 	<string>0.1.8</string>
 </dict>

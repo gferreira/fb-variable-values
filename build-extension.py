@@ -57,6 +57,11 @@ def buildExtension():
             'shortKey'      : '',
         },
         {
+            'path'          : 'variableValues/dialogs/GlyphValidator.py',
+            'preferredName' : 'GlyphValidator',
+            'shortKey'      : '',
+        },
+        {
             'path'          : 'variableValues/dialogs/SourceValidator.py',
             'preferredName' : 'SourceValidator',
             'shortKey'      : '',
@@ -64,6 +69,11 @@ def buildExtension():
         {
             'path'          : 'variableValues/dialogs/TempEdit.py',
             'preferredName' : 'TempEdit',
+            'shortKey'      : '',
+        },
+        {
+            'path'          : 'variableValues/dialogs/TempGlyphs.py',
+            'preferredName' : 'TempGlyphs',
             'shortKey'      : '',
         },
     ]
