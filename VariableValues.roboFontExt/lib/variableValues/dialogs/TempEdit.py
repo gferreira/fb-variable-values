@@ -229,11 +229,11 @@ class TempEdit:
         if self.importMode == 0:
 
             for master in self.selectedMasters:
-                ufoPath = self._sources[master['name']]
-                srcFont = OpenFont(ufoPath, showInterface=False)
+                srcPath = self._sources[master['name']]
+                srcFont = OpenFont(srcPath, showInterface=False)
                 tmpFont = NewFont(familyName=srcFont.info.familyName, styleName=srcFont.info.styleName, showInterface=False)
 
-                glyphsFolder = os.path.join(ufoPath, 'glyphs')
+                glyphsFolder = os.path.join(srcPath, 'glyphs')
                 ufoName = splitall(glyphsFolder)[-2]
 
                 if self.verbose:
@@ -259,6 +259,7 @@ class TempEdit:
                     tmpFont[glyphName] = srcGlyph
                     tmpFont[glyphName].lib[self.glyphSetPathKey] = glyphsFolder
 
+                srcFont.close()
                 tmpFont.openInterface()
 
                 if self.verbose:
@@ -266,7 +267,7 @@ class TempEdit:
 
         # mode 1 : fonts → glyphs
 
-        if self.importMode == 1:
+        elif self.importMode == 1:
             tmpFont = CurrentFont()
             if tmpFont is None:
                 tmpFont = NewFont(familyName='tempEdit')

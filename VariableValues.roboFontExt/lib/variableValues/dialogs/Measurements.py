@@ -21,7 +21,7 @@ from variableValues.measurements import Measurement
 '''
 M E A S U R E M E N T S v2
 
-A tool to measure distances in glyphs and store them in the font.
+A tool to measure distances in glyphs and store them in an external file.
 
 # FONT MEASUREMENTS
 
@@ -644,8 +644,8 @@ class Measurements2(BaseWindowController):
                 M = Measurement(
                     item['name'],
                     item['direction'],
-                    item['glyph 1'], int(item['point 1']),
-                    item['glyph 2'], int(item['point 2'])
+                    item['glyph 1'], item['point 1'],
+                    item['glyph 2'], item['point 2'],
                 )
                 # M.absolute = True
                 distance = M.measure(self.font)
@@ -831,7 +831,6 @@ class Measurements2(BaseWindowController):
         Draw the current glyph's measurements in the background of the Glyph View.
 
         '''
-
         tab = self._tabs['glyph']
 
         def _drawLinkMeasurement(p1, p2, name, direction):
@@ -913,7 +912,6 @@ class Measurements2(BaseWindowController):
             ctx.restore()
 
         ctx.restore()
-
 
 
 if __name__ == '__main__':

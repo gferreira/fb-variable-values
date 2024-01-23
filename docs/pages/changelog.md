@@ -34,6 +34,17 @@ types of changes:
 
 -->
 
+0.1.8
+-----
+
+- <span class='badge'>Added</span> Adding new TempGlyphs tool to import default glyphs into a sparse source.
+- <span class='badge'>Added</span> Bringing back GlyphValidator tool to display validation results in font and glyph windows.
+- <span class='badge'>Added</span> Adding documentation for TempGlyphs and TempEdit.
+- <span class='badge'>Added</span> Adding check for equal contours in glyph validation tools.
+- <span class='badge'>Changed</span> Adding support for named points in font-level measurements.
+- <span class='badge'>Changed</span> Various edits and improvements to the documentation.
+
+
 0.1.7
 -----
 
@@ -45,15 +56,18 @@ types of changes:
 0.1.6
 -----
 
-- <span class='badge'>Added</span> Merging GlyphValidator and BatchValidator into [FontValidator].
-- <span class='badge'>Added</span> Adding [VarGlyph Assistant] to edit glyph-level data in a designspace.
+- <span class='badge'>Added</span> Merging GlyphValidator and BatchValidator into FontValidator.
+- <span class='badge'>Added</span> Adding VarGlyph Assistant to edit glyph-level data in a designspace.
 - <span class='badge'>Changed</span> Removing the “glyphs” tab from VarFont Assistant (use VarGlyph Assistant instead).
 - <span class='badge'>Changed</span> Reorganising documentation around [Documentation System] structure.
+
+[Documentation System]: http://documentation.divio.com/
+
 
 0.1.5
 -----
 
-- <span class='badge'>Added</span> Adding reference points and description to [Measurements] tool.
+- <span class='badge'>Added</span> Adding reference points and description to Measurements tool.
 - <span class='badge'>Added</span> Making Measurements tool remember choice of preview color.
 - <span class='badge'>Changed</span> Improving visualisation of small measurements with larger color bands.
 
@@ -61,8 +75,8 @@ types of changes:
 0.1.4
 -----
 
-- <span class='badge'>Changed</span> Rewriting [Measurements] tool around external JSON files with measurement data.
-- <span class='badge'>Changed</span> Rewriting [VarFont Assistant > Measurements] around the new measurement files.
+- <span class='badge'>Changed</span> Rewriting Measurements tool around external JSON files with measurement data.
+- <span class='badge'>Changed</span> Rewriting VarFont Assistant > Measurements around the new measurement files.
 - <span class='badge'>Changed</span> Updating documentation and screenshots.
 
 
@@ -73,13 +87,13 @@ types of changes:
 - <span class='badge'>Added</span> Adding kerning preview to VarFont Assistant.
 - <span class='badge'>Added</span> Adding `kerningPairPlus` and `kerningPreview` as separate modules for command-line use.
 - <span class='badge'>Added</span> Adding `variableValues.validation` with functions to compare glyph and font data.
-- <span class='badge'>Added</span> Adding [GlyphValidator] and [BatchValidator] dialogs.
+- <span class='badge'>Added</span> Adding GlyphValidator and BatchValidator dialogs.
 
 
 0.1.2
 -----
 
-- <span class='badge'>Added</span> Adding [Measurements] tool to create and visualize measurements at the font and glyph levels.
+- <span class='badge'>Added</span> Adding Measurements tool to create and visualize measurements at the font and glyph levels.
 - <span class='badge'>Added</span> Adding example font (Roboto) with font- and glyph-level measurements included.
 
 
@@ -90,6 +104,8 @@ types of changes:
 - <span class='badge'>Added</span> Adding extension package and `.mechanic` file for easy installation in RoboFont.
 - <span class='badge'>Changed</span> Updating documentation content and stylesheet.
 
+[ParamaRoundup]: http://github.com/FontBureau/Parama-roundup
+
 
 0.1.0
 -----
@@ -97,13 +113,3 @@ types of changes:
 Initial public release.
 
 - <span class='badge'>Added</span> Rebuilding documentation with Jekyll and GitHub Pages.
-
-
-[Measurements]: ../dialogs/measurements
-[GlyphValidator]: ../dialogs/glyph-validator
-[BatchValidator]: ../dialogs/batch-validator
-[FontValidator]: #
-[VarFont Assistant > Measurements]: ../dialogs/varfont-assistant/#measurements
-[ParamaRoundup]: http://github.com/FontBureau/Parama-roundup
-[Documentation System]: http://documentation.divio.com/
-[VarGlyph Assistant]: #

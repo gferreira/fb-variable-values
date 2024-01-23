@@ -1,12 +1,13 @@
+from importlib import reload
+import variableValues.validation
+reload(variableValues.validation)
+
 from vanilla import FloatingWindow, Button, TextBox, CheckBox
 from mojo import drawingTools as ctx
 from mojo.UI import UpdateCurrentGlyphView, GetFile
 from mojo.events import addObserver, removeObserver
 from mojo.roboFont import OpenWindow, CurrentFont
 from variableValues.validation import *
-
-
-### DEPRECATED : use FontValidator ###
 
 
 class GlyphValidator:
@@ -18,8 +19,9 @@ class GlyphValidator:
     verbose     = False
     defaultFont = None
 
-    colorTrue   = 0, 1, 0
-    colorFalse  = 1, 0, 0
+    colorTrue   = 0.00, 0.85, 0.00
+    colorFalse  = 1.00, 0.00, 0.00
+    colorEqual  = 0.00, 0.45, 1.00
 
     checks = [
         'width',
@@ -109,11 +111,12 @@ class GlyphValidator:
         g2 = self.defaultFont[g1.name]
 
         self.checkResults = {
-            'width'      : validateWidth(g1, g2),
-            'points'     : validateContours(g1, g2),
-            'components' : validateComponents(g1, g2),
-            'anchors'    : validateAnchors(g1, g2),
-            'unicodes'   : validateUnicodes(g1, g2),
+            'width'          : validateWidth(g1, g2),
+            'points'         : validateContours(g1, g2),
+            'pointPositions' : equalContours(g1, g2),
+            'components'     : validateComponents(g1, g2),
+            'anchors'        : validateAnchors(g1, g2),
+            'unicodes'       : validateUnicodes(g1, g2),
         }
 
     # callbacks
@@ -155,7 +158,7 @@ class GlyphValidator:
             return
 
         glyph = notification['glyph']
-        
+
         self.checkGlyph(glyph)
 
         if not len(self.checks):
@@ -166,11 +169,15 @@ class GlyphValidator:
         ctx.fontSize(10)
         ctx.translate(3, 3)
         for check in self.checkResults.keys():
+            if check == 'pointPositions':
+                continue
             checkbox = getattr(self.w, check)
             if not checkbox.get():
                 continue
             if self.checkResults[check]:
                 ctx.fill(*self.colorTrue)
+                if check == 'points' and self.checkResults['pointPositions']:
+                    ctx.fill(*self.colorEqual)
             else:
                 ctx.fill(*self.colorFalse)
             label = check[0].upper()
@@ -192,11 +199,15 @@ class GlyphValidator:
         ctx.font('Menlo-Bold')
         ctx.fontSize(12 * scale)
         for check in self.checkResults.keys():
+            if check == 'pointPositions':
+                continue
             checkbox = getattr(self.w, check)
             if not checkbox.get():
                 continue
             if self.checkResults[check]:
                 ctx.fill(*self.colorTrue)
+                if check == 'points' and self.checkResults['pointPositions']:
+                    ctx.fill(*self.colorEqual)
             else:
                 ctx.fill(*self.colorFalse)
             label = check[0].upper()

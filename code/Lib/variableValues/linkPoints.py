@@ -65,7 +65,7 @@ def getAnchorPoint(font, anchor):
     elif anchor == 'A':
         P.y = font.info.ascender
     else: # baseline
-        P.y = 0 
+        P.y = 0
     return P
 
 def getIndexForPoint(glyph, pt):
@@ -109,7 +109,6 @@ def getSelectedIDs(glyph):
 
     Args:
         glyph (RGlyph): A glyph object.
-        key (str): The key to the lib where the links are stored.
 
     Returns:
         A list of identifiers of selected points.
@@ -389,7 +388,6 @@ def exportMeasurements(font, jsonPath, verbose=True, key=KEY):
     Export measurement data from the current font as an external JSON file.
 
     '''
-
     # get font measurements
     fontMeasurements = getLinks_font(font, key=key)
 
@@ -426,6 +424,7 @@ def readMeasurements(jsonPath):
     '''
     with open(jsonPath, 'r', encoding='utf-8') as f:
         measurementsDict = json.load(f)
+
     return measurementsDict
 
 def importMeasurements(font, jsonPath, verbose=True, key=KEY):

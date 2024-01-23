@@ -25,7 +25,7 @@ Font measurements
 
 Use the **font** tab to create and edit font-level measurements.
 
-![]({{ site.url }}/images/Measurements-1.png){: .img-fluid}
+![]({{ site.url }}/images/Measurements_font.png){: .img-fluid}
 
 new
 : Click to add a new empty font-level measurement to the list.  
@@ -42,7 +42,7 @@ Glyph measurements
 
 Use the **glyph** tab to create and edit glyph-level measurements.
 
-![]({{ site.url }}/images/Measurements-2.png){: .img-fluid}
+![]({{ site.url }}/images/Measurements_glyph.png){: .img-fluid}
 
 new
 : Select two points and click on the button to add a new empty glyph-level measurement to the list.
@@ -62,9 +62,9 @@ For more information about each column see [Measurements format > Glyph-level me
 Glyph measurements preview
 --------------------------
 
-![]({{ site.url }}/images/Measurements-2-preview.png){: .img-fluid}
+The Glyph View displays a visualization of the measurements in the current glyph:
 
-The Glyph View displays a visualization of the measurements in the current glyph.
+![]({{ site.url }}/images/Measurements_preview.png){: .img-fluid}
 
 - Dotted lines indicate a measurement between pairs of points.
 - Select one or more measurements in the dialog to highlight and show their name, direction and distance.

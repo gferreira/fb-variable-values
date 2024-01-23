@@ -43,8 +43,8 @@ class SourceValidator:
         x = y = p = self.padding
         self.w.tabs = Tabs((x, y, -p, -p), self._tabsTitles)
 
-        self.initializeSetupTab()
-        self.initializeResultTab()
+        self.initializeFontsTab()
+        self.initializeGlyphsTab()
 
         self.w.bind("close", self.closeCallback)
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
@@ -64,7 +64,7 @@ class SourceValidator:
             tabsDict[tabTitle] = self.w.tabs[tabIndex]
         return tabsDict
 
-    def initializeSetupTab(self):
+    def initializeFontsTab(self):
 
         tab = self._tabs['fonts']
 
@@ -100,7 +100,7 @@ class SourceValidator:
                     type=AppKit.NSFilenamesPboardType,
                     operation=AppKit.NSDragOperationCopy,
                     callback=self.dropSourcesCallback),
-                )
+                doubleClickCallback=self.openFontCallback)
 
         y += self.lineHeight*3 + p
         tab.targetsLabel = TextBox(
@@ -118,7 +118,7 @@ class SourceValidator:
                     type=AppKit.NSFilenamesPboardType,
                     operation=AppKit.NSDragOperationCopy,
                     callback=self.dropTargetsCallback),
-                )
+                doubleClickCallback=self.openFontCallback)
 
         y = -(self.lineHeight + p)
         tab.validateButton = Button(
@@ -126,7 +126,7 @@ class SourceValidator:
                 'validate',
                 callback=self.batchValidateFontsCallback)
 
-    def initializeResultTab(self):
+    def initializeGlyphsTab(self):
 
         tab = self._tabs['glyphs']
 
@@ -301,13 +301,32 @@ class SourceValidator:
 
         return True
 
+    def openFontCallback(self, sender):
+        selection = sender.getSelection()
+
+        if not selection:
+            return
+
+        selection = selection[0]
+        items = sender.get()
+        item  = items[selection]
+
+        if item == self.sourceFontName:
+            ufoPath = self.sourceFontPath
+        else:
+            ufoPath = self._targets.get(item)
+            if ufoPath is None:
+                return
+
+        OpenFont(ufoPath, showInterface=True)
+
     def batchValidateFontsCallback(self, sender):
 
         options = { check: check in self.showMarks for check in self._checks }
 
-        #-------------------
+        # -----------------
         # assert conditions
-        #-------------------
+        # -----------------
 
         # no source font
         if not self.sourceFontName:
@@ -319,9 +338,9 @@ class SourceValidator:
         if not len(targetFontNames):
             print('no target fonts selected.\n')
 
-        #---------------
+        # --------------
         # batch validate
-        #---------------
+        # --------------
 
         txt = 'batch validating fonts...\n\n'
         for check in self.showMarks:
@@ -336,7 +355,7 @@ class SourceValidator:
         targetFonts = [OpenFont(targetFontPath, showInterface=False) for targetFontPath in self.targetFontPaths]
 
         txt += validateFonts(targetFonts, sourceFont, width=options['width'], points=options['points'], components=options['components'], anchors=options['anchors'], unicodes=options['unicodes'])
-        txt += '...done.\n'
+        txt += '...done.\n\n'
 
         O = OutputWindow()
         O.clear()

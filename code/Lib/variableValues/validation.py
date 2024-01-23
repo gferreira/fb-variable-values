@@ -1,6 +1,7 @@
 import os
-from mojo.roboFont import OpenFont #, RGlyph
+from mojo.roboFont import OpenFont # RGlyph
 from fontParts.world import RGlyph
+from fontPens.digestPointPen import DigestPointPen
 
 # ----------------------
 # glyph-level validation
@@ -92,6 +93,26 @@ def validateUnicodes(g1, g2):
     '''
     return g1.unicodes == g2.unicodes
 
+
+def equalContours(g1, g2):
+    '''
+    Check if the contours in two glyphs are equal.
+
+    - same point positions
+
+    Returns: `True` or `False`.
+
+    '''
+    pen1 = DigestPointPen()
+    g1.drawPoints(pen1)
+    pts1 = pen1.getDigest()
+
+    pen2 = DigestPointPen()
+    g2.drawPoints(pen2)
+    pts2 = pen2.getDigest()
+
+    return pts1 == pts2
+
 def validateGlyph(g1, g2, width=True, points=True, components=True, anchors=True, unicodes=True):
     '''
     Check if two glyphs match.
@@ -102,15 +123,16 @@ def validateGlyph(g1, g2, width=True, points=True, components=True, anchors=True
     '''
     results = {}
     if width:
-        results['width'] = validateWidth(g1, g2)
+        results['width']          = validateWidth(g1, g2)
     if points:
-        results['points'] = validateContours(g1, g2)
+        results['points']         = validateContours(g1, g2)
+        results['pointPositions'] = equalContours(g1, g2)
     if components:
-        results['components'] = validateComponents(g1, g2)
+        results['components']     = validateComponents(g1, g2)
     if anchors:
-        results['anchors'] = validateAnchors(g1, g2)
+        results['anchors']        = validateAnchors(g1, g2)
     if unicodes:
-        results['unicodes'] = validateUnicodes(g1, g2)
+        results['unicodes']       = validateUnicodes(g1, g2)
     return results
 
 # ---------------------

@@ -3,8 +3,12 @@ from fontTools.agl import UV2AGL
 from variableValues.linkPoints import *
 
 
-class FontMeasurements:
+def permille(value, unitsPerEm):
+    '''Converts a value in font units to a permille value (thousands of em).'''
+    return round(value * 1000 / unitsPerEm)
 
+
+class FontMeasurements:
     '''
     M = FontMeasurements()
     M.read(jsonPath)
@@ -30,7 +34,7 @@ class FontMeasurements:
                 pt1 = int(attrs['point 1'])
             except:
                 pt1 = attrs['point 1']
-            try:            
+            try:
                 pt2 = int(attrs['point 2'])
             except:
                 pt2 = attrs['point 2']
@@ -80,17 +84,19 @@ class Measurement:
     @property
     def point1(self):
         if self.glyph1 is not None:
-            if isinstance(self.pointIndex1, int):
-                return getPointAtIndex(self.glyph1, self.pointIndex1)
-            else:
+            try:
+                # if isinstance(self.pointIndex1, int):
+                return getPointAtIndex(self.glyph1, int(self.pointIndex1))
+            except:
                 return getAnchorPoint(self.font, self.pointIndex1)
 
     @property
     def point2(self):
         if self.glyph2 is not None:
-            if isinstance(self.pointIndex2, int):
-                return getPointAtIndex(self.glyph2, self.pointIndex2)
-            else:
+            try:
+                # if isinstance(self.pointIndex2, int):
+                return getPointAtIndex(self.glyph2, int(self.pointIndex2))
+            except:
                 return getAnchorPoint(self.font, self.pointIndex2)
 
     def measure(self, font, roundToInt=True, absolute=False, verbose=False):

@@ -1,4 +1,4 @@
-title: VariableValues docs
+title: VariableValues
 email: gustavo@hipertipo.com
 description: VariableValues documentation
 baseurl: ""
@@ -6,7 +6,7 @@ url: https://gferreira.github.io/fb-variable-values/
 
 markdown: kramdown
 
-version: 0.1.7
+version: 0.1.8
 
 exclude:
   - .sass-cache/

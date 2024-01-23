@@ -4,4 +4,4 @@ layout    : default
 permalink : /explanations/
 ---
 
-- [Overview of VariableValues](overview)
+- [Introduction to VariableValues](introduction)
