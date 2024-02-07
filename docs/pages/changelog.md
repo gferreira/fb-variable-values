@@ -34,6 +34,14 @@ types of changes:
 
 -->
 
+0.1.9
+-----
+
+- <span class='badge'>Changed</span> Adding option to turn off preview of glyph-level measurements in Measurements tool.
+- <span class='badge'>Changed</span> Adding option to use italic angle when previewing glyph-level measurements (buggy).
+- <span class='badge'>Changed</span> Changing position of glyph cell labels for glyph-level measurements.
+
+
 0.1.8
 -----
 

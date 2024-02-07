@@ -1,5 +1,5 @@
 import json
-from math import sqrt
+from math import sqrt, tan, pi
 from fontParts.fontshell.point import RPoint
 
 '''
@@ -48,14 +48,19 @@ def getPointAtIndex(glyph, ptIndex):
 
 def getAnchorPoint(font, anchor):
     '''
-    X -> xheight
     A -> ascender
     B -> baseline
     C -> capheight
     D -> descender
+    X -> xheight
     '''
     P = RPoint()
+
+    # if font.info.italicAngle:
+    #     P.x = tan(font.info.italicAngle * pi / 180)
+    # else:
     P.x = 0
+
     if anchor == 'X':
         P.y = font.info.xHeight
     elif anchor == 'C':
@@ -66,6 +71,7 @@ def getAnchorPoint(font, anchor):
         P.y = font.info.ascender
     else: # baseline
         P.y = 0
+
     return P
 
 def getIndexForPoint(glyph, pt):

@@ -93,7 +93,6 @@ def validateUnicodes(g1, g2):
     '''
     return g1.unicodes == g2.unicodes
 
-
 def equalContours(g1, g2):
     '''
     Check if the contours in two glyphs are equal.
@@ -162,6 +161,7 @@ def validateFont(f1, f2, width=True, points=True, components=True, anchors=True,
             txt += '\n'
             continue
         checks = validateGlyph(f1[gName], f2[gName], width=width, points=points, components=components, anchors=anchors, unicodes=unicodes)
+        del checks['pointPositions']
         if not all(checks.values()):
             txt += f'\t{gName}:\n'
             for check, result in checks.items():

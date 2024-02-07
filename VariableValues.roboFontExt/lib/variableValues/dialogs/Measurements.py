@@ -2,14 +2,14 @@ from importlib import reload
 import variableValues.linkPoints
 reload(variableValues.linkPoints)
 import variableValues.measurements
-reload(variableValues.measurements )
+reload(variableValues.measurements)
 
 import os
 import AppKit
-from math import sqrt
+import math
 from defconAppKit.windows.baseWindow import BaseWindowController
 from vanilla import *
-from mojo.UI import UpdateCurrentGlyphView, PutFile, GetFile
+from mojo.UI import UpdateCurrentGlyphView, CurrentFontWindow, PutFile, GetFile
 from mojo import drawingTools as ctx
 from mojo.roboFont import *
 from mojo.events import addObserver, removeObserver
@@ -241,6 +241,23 @@ class Measurements2(BaseWindowController):
                 color=rgb2nscolor(self.measurementsColor)
             )
 
+        sx = 1.2
+        x += self.buttonWidth + p
+        tab.showPreview = CheckBox(
+                (x, y, self.buttonWidth*sx, self.lineHeight),
+                'show preview',
+                value=True,
+                callback=self.updatePreviewCallback
+            )
+
+        x += self.buttonWidth*sx + p
+        tab.useItalicAngle = CheckBox(
+                (x, y, self.buttonWidth*sx, self.lineHeight),
+                'use italic angle',
+                value=False,
+                callback=self.updatePreviewCallback
+            )
+
         x = -(self.buttonWidth + p)
         tab.flipMeasurement = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
@@ -289,6 +306,14 @@ class Measurements2(BaseWindowController):
                 ID = f"{m['point 1']}"
             IDs.append(ID)
         return IDs
+
+    @property
+    def showPreview(self):
+        return self._tabs['glyph'].showPreview.get()
+
+    @property
+    def useItalicAngle(self):
+        return self._tabs['glyph'].useItalicAngle.get()
 
     # options
 
@@ -552,10 +577,13 @@ class Measurements2(BaseWindowController):
         if not measurements:
             return
 
+        w = CurrentFontWindow()
+        cellSize = w.fontOverview.views.sizeSlider.get()
+
         ctx.save()
         ctx.font('Menlo-Bold')
         ctx.fontSize(10)
-        ctx.translate(3, 3)
+        ctx.translate(3, cellSize-27)
         ctx.fill(0, 0, 1)
         ctx.text('M', (0, -3))
         ctx.restore()
@@ -831,6 +859,9 @@ class Measurements2(BaseWindowController):
         Draw the current glyph's measurements in the background of the Glyph View.
 
         '''
+        if not self.showPreview:
+            return
+
         tab = self._tabs['glyph']
 
         def _drawLinkMeasurement(p1, p2, name, direction):
@@ -889,23 +920,40 @@ class Measurements2(BaseWindowController):
 
             linkID = f'{index1} {index2}'
 
+            ctx.lineDash(None)
+
             if self.selectedGlyphMeasurementIDs is not None:
                 if linkID in self.selectedGlyphMeasurementIDs:
+
                     # draw measurement
                     ctx.fill(None)
-                    ctx.lineDash(None)
                     ctx.stroke(*self.measurementsColorDim)
                     ctx.strokeWidth(self.settings['strokeWidth2'] * previewScale)
-                    ctx.line(P1, P2)
+                    italicAngle = self.font.info.italicAngle
+                    if italicAngle and self.useItalicAngle:
+                        ctx.save()
+                        ctx.translate(*P1)
+                        italicSlantOffsetX = math.tan(italicAngle * math.pi / 180)
+                        ctx.translate(italicSlantOffsetX, 0)
+                        ctx.skew(-italicAngle)
+                        _P2_x = P2[0] - P1[0]
+                        _P2_y = P2[1] - P1[1]
+                        ctx.line((0, 0), (_P2_x, _P2_y))
+                        ctx.restore()
+                    else:
+                        ctx.line(P1, P2)
+
                     # draw points
                     r = 8 * previewScale # get size from `glyphViewOnCurvePointsSize` ?
+                    ctx.fill(None)
                     ctx.stroke(*self.measurementsColor)
                     ctx.strokeWidth(self.settings['strokeWidth1'] * 2 * previewScale)
                     ctx.oval(pt1.x-r, pt1.y-r, r*2, r*2)
                     ctx.oval(pt2.x-r, pt2.y-r, r*2, r*2)
+
                     # draw caption
-                    ctx.stroke(None)
                     ctx.fill(*self.measurementsColor)
+                    ctx.stroke(None)
                     ctx.fontSize(9*previewScale)
                     _drawLinkMeasurement(P1, P2, name, direction)
 
