@@ -238,7 +238,7 @@ class Measurements2(BaseWindowController):
         tab.measurementsColor = ColorWell(
                 (x, y, self.buttonWidth, self.lineHeight),
                 callback=self.measurementsColorCallback,
-                color=rgb2nscolor(self.measurementsColor)
+                color=rgb2nscolor(self.measurementsColor),
             )
 
         sx = 1.2
@@ -247,7 +247,7 @@ class Measurements2(BaseWindowController):
                 (x, y, self.buttonWidth*sx, self.lineHeight),
                 'show preview',
                 value=True,
-                callback=self.updatePreviewCallback
+                callback=self.updatePreviewCallback,
             )
 
         x += self.buttonWidth*sx + p
@@ -255,7 +255,7 @@ class Measurements2(BaseWindowController):
                 (x, y, self.buttonWidth*sx, self.lineHeight),
                 'use italic angle',
                 value=False,
-                callback=self.updatePreviewCallback
+                callback=self.updatePreviewCallback,
             )
 
         x = -(self.buttonWidth + p)

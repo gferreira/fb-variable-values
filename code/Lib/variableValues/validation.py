@@ -1,6 +1,5 @@
 import os
-from mojo.roboFont import OpenFont # RGlyph
-from fontParts.world import RGlyph
+from fontParts.world import OpenFont, RGlyph
 from fontPens.digestPointPen import DigestPointPen
 
 # ----------------------
@@ -102,6 +101,9 @@ def equalContours(g1, g2):
     Returns: `True` or `False`.
 
     '''
+    # if len(g1.contours) == 0 or len(g2.contours) == 0:
+    #     return False
+
     pen1 = DigestPointPen()
     g1.drawPoints(pen1)
     pts1 = pen1.getDigest()
@@ -194,7 +196,7 @@ def validateFont2(f1, f2, width=True, points=True, components=True, anchors=True
     '''
     results = {}
     for gName in f1.glyphOrder:
-        if gName not in f2:
+        if gName not in g1 or gName not in f2:
             continue
         checks = validateGlyph(f1[gName], f2[gName])
         results[gName] = {}

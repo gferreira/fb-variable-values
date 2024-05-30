@@ -6,10 +6,8 @@ import os
 import AppKit
 from vanilla import *
 from fontTools.ufoLib.glifLib import GlyphSet
-from mojo import drawingTools as ctx
-from mojo.UI import UpdateCurrentGlyphView, GetFile, OutputWindow
-from mojo.events import addObserver, removeObserver
-from mojo.roboFont import OpenFont, OpenWindow, CurrentFont, RGlyph
+from mojo.UI import OutputWindow
+from mojo.roboFont import OpenFont, OpenWindow, CurrentFont
 from variableValues.validation import validateGlyph, validateFonts
 from defcon import Glyph
 
@@ -50,10 +48,6 @@ class SourceValidator:
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
         self.w.open()
 
-        # registerRepresentationFactory(Glyph, f"{self.key}.preview", glyphChecksFactory)
-        # addObserver(self, "drawLabelsCell",    "glyphCellDrawBackground")
-        # addObserver(self, "drawLabelsGlyph",   "drawBackground")
-
     # initialize UI
 
     @property
@@ -77,10 +71,11 @@ class SourceValidator:
                 'checks')
 
         y += self.lineHeight
-        for check in self._checks:
+        for i, check in enumerate(self._checks):
+            value = False if i == 0 else True
             checkbox = CheckBox(
                 (x2 + p*1.5, y, -p, self.lineHeight),
-                check, value=True)
+                check, value=value)
             setattr(tab, check, checkbox)
             y += self.lineHeight
 
@@ -375,7 +370,6 @@ class SourceValidator:
         sourceGlyphsFolder = os.path.join(self.sourceFontPath, 'glyphs')
         sourceGlyphSet = GlyphSet(sourceGlyphsFolder)
         sourceGlyph = Glyph()
-        # sourceGlyph.lib = {}
         sourceGlyphSet.readGlyph(self.selectedGlyph, glyphObject=sourceGlyph)
 
         items = []
@@ -395,10 +389,7 @@ class SourceValidator:
                 item['unicodes']   = '⚪'
             else:
                 targetGlyph = Glyph()
-                # targetGlyph.lib = {}
                 targetGlyphSet.readGlyph(self.selectedGlyph, glyphObject=targetGlyph)
-                # sourceGlyph = RGlyph(sourceGlyph)
-                # targetGlyph = RGlyph(targetGlyph)
                 results = validateGlyph(sourceGlyph, targetGlyph)
                 item['width']      = '🟢' if results['width']      else '🔴'
                 item['points']     = '🟢' if results['points']     else '🔴'
@@ -417,12 +408,6 @@ class SourceValidator:
         font = CurrentFont()
         if font is None:
             return
-        # removeObserver(self, "glyphCellDrawBackground")
-        # removeObserver(self, "drawBackground")
-        # removeObserver(self, "currentGlyphChanged")
-        # unregisterRepresentationFactory(Glyph, f"{self.key}.preview")
-        # self.updateGlyphViewCallback(sender)
-        # self.updateFontViewCallback(sender)
 
 # ----
 # test
