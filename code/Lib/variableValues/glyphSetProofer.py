@@ -53,7 +53,8 @@ class GlyphSetProofer:
     stepsY = 26
 
     colorContours   = 0,
-    colorComponents = 0.65,
+    colorComponents = 1, 0.35, 0
+    colorDefault    = 0, 0.65, 1
 
     headerFont     = 'Menlo'
     headerFontSize = 8
@@ -69,6 +70,8 @@ class GlyphSetProofer:
     cellLabelEqual        = 0, 0, 1
     cellLabelCompatible   = 0, 1, 0
     cellLabelIncompatible = 1, 0, 0
+
+    cellMarginsColor = 0.93,
 
     def __init__(self, familyName, defaultFontPath, sourcePaths):
         self.familyName = familyName
@@ -120,15 +123,18 @@ class GlyphSetProofer:
                     glyphName = glyphNames[n]
                     defaultGlyph = defaultFont[glyphName]
 
-                    # draw empty cell
+                    # glyph not in font / draw empty cell
                     if glyphName not in currentFont:
-                        DB.rect(x, y, stepX, stepY)
-                        DB.line((x, y), (x + stepX, y + stepY))
-                        DB.line((x, y + stepY), (x + stepX, y))
+                        with DB.savedState():
+                            DB.fill(*self.cellMarginsColor)
+                            DB.rect(x, y, stepX, stepY)
+                            DB.line((x, y), (x + stepX, y + stepY))
+                            DB.line((x, y + stepY), (x + stepX, y))
                         n += 1
                         continue
 
                     currentGlyph = currentFont[glyphName]
+                    results = checkGlyph(defaultGlyph, currentGlyph)
 
                     # decompose glyphs with components
                     if currentGlyph.components:
@@ -142,60 +148,92 @@ class GlyphSetProofer:
                     else:
                         g = currentGlyph
 
-                    results = checkGlyph(defaultGlyph, currentGlyph)
-
                     _x = x + (stepX - currentGlyph.width * s) / 2
                     _y = y + stepY * self.glyphBaseline
 
-                    if currentGlyph.bounds:
+                    # draw margins
+                    with DB.savedState():
+                        _margin = (stepX - currentGlyph.width * s) / 2
+                        DB.stroke(None)
+                        DB.fill(*self.cellMarginsColor)
+                        DB.rect(x, y, _margin, stepY)
+                        DB.rect(x + stepX, y, -_margin, stepY)
 
-                        # draw contours / components
+                    # draw check labels & special cell colors
+                    if currentFont is not defaultFont:
                         with DB.savedState():
                             DB.stroke(None)
-                            if currentGlyph.components and not currentGlyph.contours:
-                                c = colorComponents
+                            DB.translate(x, y)
+
+                            _results = results.copy()
+                            del _results['pointPositions']
+                            # equal to default glyph, no checks shown
+                            if all(results.values()) or (not currentGlyph.contours and not currentGlyph.components and all(_results.values())):
+                                c = self.colorDefault
+                                c += (0.2,)
+                                with DB.savedState():
+                                    DB.fill(*c)
+                                    DB.rect(0, 0, stepX, stepY)
                             else:
-                                c = colorContours
+                                # all components
+                                if currentGlyph.components and not currentGlyph.contours:
+                                    c = self.colorComponents
+                                    c += (0.2,)
+                                    with DB.savedState():
+                                        DB.fill(*c)
+                                        DB.rect(0, 0, stepX, stepY)
+
+                                # draw check results
+                                DB.font(self.cellLabelFont)
+                                DB.fontSize(self.cellLabelSize)
+                                for check in results.keys():
+                                    if check == 'pointPositions':
+                                        continue
+                                    if results[check]:
+                                        if check == 'points' and results['pointPositions']:
+                                            DB.fill(*self.cellLabelEqual)
+                                            drawCheck = True
+                                        else:
+                                            DB.fill(*self.cellLabelCompatible)
+                                            drawCheck = False
+                                    else:
+                                        DB.fill(*self.cellLabelIncompatible)
+                                        drawCheck = True
+    
+                                    if drawCheck:
+                                        label = check[0].upper()
+                                        DB.text(label, (1, 1))
+                                        w, h = DB.textSize(label)
+                                        DB.translate(w + 0.5, 0)
+
+                    # draw contours / components
+                    if currentGlyph.bounds:
+                        with DB.savedState():
+                            DB.stroke(None)
+                            if all(results.values()):
+                                if currentFont is not defaultFont:
+                                    c = self.colorDefault
+                                else:
+                                    c = 0,
+                            else:
+                                if currentGlyph.components and not currentGlyph.contours:
+                                    if currentFont is not defaultFont:
+                                        c = self.colorComponents
+                                    else:
+                                        c = 0.5,
+                                else:
+                                    c = self.colorContours
                             DB.fill(*c)
                             DB.translate(_x, _y)
                             DB.scale(s)
                             drawGlyph(g)
 
-                        # draw margins
-                        with DB.savedState():
-                            _margin = (stepX - currentGlyph.width * s) / 2
-                            DB.stroke(None)
-                            DB.fill(0.93)
-                            DB.rect(x, y, _margin, stepY)
-                            DB.rect(x + stepX, y, -_margin, stepY)
-
-                    # draw cell
+                    # draw cell border
                     DB.rect(x, y, stepX, stepY)
 
-                    # draw check labels
-                    if currentFont is not defaultFont:
-                        with DB.savedState():
-                            DB.stroke(None)
-                            DB.translate(x, y)
-                            DB.font(self.cellLabelFont)
-                            DB.fontSize(self.cellLabelSize)
-                            for check in results.keys():
-                                if check == 'pointPositions':
-                                    continue
-                                if results[check]:
-                                    if check == 'points' and results['pointPositions']:
-                                        DB.fill(*self.cellLabelEqual)
-                                    else:
-                                        DB.fill(*self.cellLabelCompatible)
-                                else:
-                                    DB.fill(*self.cellLabelIncompatible)
-                                label = check[0].upper()
-                                DB.text(label, (1, 1))
-                                w, h = DB.textSize(label)
-                                DB.translate(w + 0.5, 0)
-                        
                     n += 1
 
         if savePDF:
-            pdfPath = os.path.join(os.getcwd(), f'glyphset_{self.familyName}.pdf')
+            pdfPath = os.path.join(os.getcwd(), f"glyphset_{self.familyName.replace(' ', '-')}.pdf")
             DB.saveImage(pdfPath)
+
