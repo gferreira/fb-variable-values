@@ -579,13 +579,13 @@ class Measurements2(BaseWindowController):
 
         w = CurrentFontWindow()
         cellSize = w.fontOverview.views.sizeSlider.get()
+        x, y = 3, cellSize-30
 
         ctx.save()
         ctx.font('Menlo-Bold')
         ctx.fontSize(10)
-        ctx.translate(3, cellSize-27)
         ctx.fill(0, 0, 1)
-        ctx.text('M', (0, -3))
+        ctx.text('M', (x, y))
         ctx.restore()
 
     # font

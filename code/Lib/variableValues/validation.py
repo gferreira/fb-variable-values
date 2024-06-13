@@ -1,6 +1,9 @@
 import os
 from fontParts.world import OpenFont, RGlyph
 from fontPens.digestPointPen import DigestPointPen
+from defcon.pens.transformPointPen import TransformPointPen
+from defcon.objects.component import _defaultTransformation
+from variableValues.decomposePointPen import DecomposePointPen
 
 # ----------------------
 # glyph-level validation
@@ -26,16 +29,21 @@ def getSegmentTypes(glyph):
             segments.append(segmentType)
     return segments
 
-def validateWidth(g1, g2):
-    '''
-    Check if the width of two glyphs match.
+def getNestingLevels(g, levels=0, verbose=True):
+    if g.components:
+        levels += 1
+        for c in g.components:
+            if c.baseGlyph not in g.font:
+                if verbose:
+                    print(f'ERROR in "{g.name}": glyph {c.baseGlyph} not in font')
+                continue
+            baseGlyph = g.font[c.baseGlyph]
+            levels = getNestingLevels(baseGlyph, levels)
+    return levels
 
-    Returns: `True` or `False`.
+# compatibility
 
-    '''
-    return g1.width == g2.width
-
-def validateAnchors(g1, g2):
+def checkAnchorsCompatible(g1, g2):
     '''
     Check if the anchors in two glyphs match.
 
@@ -50,7 +58,7 @@ def validateAnchors(g1, g2):
     anchors2 = [a.name for a in g2.anchors]
     return anchors1 == anchors2
 
-def validateComponents(g1, g2):
+def checkComponentsCompatible(g1, g2):
     '''
     Check if the components in two glyphs match.
 
@@ -61,11 +69,13 @@ def validateComponents(g1, g2):
     Returns: `True` or `False`.
 
     '''
+    if not len(g1.components) or not len(g2.components):
+        return True
     components1 = [c.baseGlyph for c in g1.components]
     components2 = [c.baseGlyph for c in g2.components]
     return components1 == components2
 
-def validateContours(g1, g2):
+def checkContoursCompatible(g1, g2):
     '''
     Check if the contours in two glyphs match.
 
@@ -76,6 +86,9 @@ def validateContours(g1, g2):
 
     Returns: `True` or `False`.
 
+    TO-DO: rewrite with DigestPointStructurePen
+    http://doc.robofont.com/documentation/tutorials/using-pens/#digestpointstructurepen
+
     '''
     if len(g1) != len(g2):
         return False
@@ -83,26 +96,20 @@ def validateContours(g1, g2):
     segments2 = getSegmentTypes(g2)
     return segments1 == segments2
 
-def validateUnicodes(g1, g2):
-    '''
-    Check if the unicodes of two glyphs match.
+# equality
 
-    Returns: `True` or `False`.
-
-    '''
-    return g1.unicodes == g2.unicodes
-
-def equalContours(g1, g2):
+def checkEqualContours(g1, g2):
     '''
     Check if the contours in two glyphs are equal.
 
+    - compatible points AND
     - same point positions
 
     Returns: `True` or `False`.
 
     '''
-    # if len(g1.contours) == 0 or len(g2.contours) == 0:
-    #     return False
+    if not len(g1.contours) or not len(g2.contours):
+        return False
 
     pen1 = DigestPointPen()
     g1.drawPoints(pen1)
@@ -114,27 +121,147 @@ def equalContours(g1, g2):
 
     return pts1 == pts2
 
-def validateGlyph(g1, g2, width=True, points=True, components=True, anchors=True, unicodes=True):
-    '''
-    Check if two glyphs match.
+def checkEqualComponents(g1, g2):
+    if not len(g1.components) or not len(g2.components):
+        return False
 
-    Returns:
-        A dictionary of glyph attribute names and `True` or `False` results.
+    # decompose glyphs
+    _g1 = RGlyph()
+    pointPen = _g1.getPointPen()
+    decomposePen = DecomposePointPen(g1.font, pointPen)
+    g1.drawPoints(decomposePen)
+    _g1.width   = g1.width
+
+    _g2 = RGlyph()
+    pointPen = _g2.getPointPen()
+    decomposePen = DecomposePointPen(g2.font, pointPen)
+    g2.drawPoints(decomposePen)
+    _g2.width   = g2.width
+
+    return checkEqualContours(_g1, _g2)
+
+def checkEqualAnchors(g1, g2):
+    '''
+    Check if the anchors in two glyphs are equal.
+
+    - compatible anchors AND
+    - same anchor positions
+
+    Returns: `True` or `False`.
 
     '''
-    results = {}
-    if width:
-        results['width']          = validateWidth(g1, g2)
-    if points:
-        results['points']         = validateContours(g1, g2)
-        results['pointPositions'] = equalContours(g1, g2)
-    if components:
-        results['components']     = validateComponents(g1, g2)
-    if anchors:
-        results['anchors']        = validateAnchors(g1, g2)
-    if unicodes:
-        results['unicodes']       = validateUnicodes(g1, g2)
-    return results
+    if not len(g1.anchors) or not len(g2.anchors):
+        return False
+
+    anchors1 = [(a.name, (a.x, a.y)) for a in g1.anchors]
+    anchors2 = [(a.name, (a.x, a.y)) for a in g2.anchors]
+
+    return anchors1 == anchors2
+
+def checkEqualWidth(g1, g2):
+    '''
+    Check if the width of two glyphs are equal.
+
+    Returns: `True` or `False`.
+
+    '''
+    return g1.width == g2.width
+
+def checkEqualMarginLeft(g1, g2, roundToInt=True):
+    '''
+    Check if the left margin of two glyphs are equal.
+
+    Returns: `True` or `False`.
+
+    '''
+    if not g1.bounds and not g2.bounds:
+        return True
+    elif not g1.bounds or not g2.bounds:
+        return False
+    if roundToInt:
+        return round(g1.leftMargin) == round(g2.leftMargin)
+    else:
+        return g1.leftMargin == g2.leftMargin
+
+def checkEqualMarginRight(g1, g2, roundToInt=True):
+    '''
+    Check if the right margin of two glyphs are equal.
+
+    Returns: `True` or `False`.
+
+    '''
+    if not g1.bounds and not g2.bounds:
+        return True
+    elif not g1.bounds or not g2.bounds:
+        return False
+    if roundToInt:
+        return round(g1.rightMargin) == round(g2.rightMargin)
+    else:
+        return g1.rightMargin == g2.rightMargin
+
+def checkEqualUnicodes(g1, g2):
+    '''
+    Check if the unicode(s) of two glyphs are equal.
+
+    Returns: `True` or `False`.
+
+    '''
+    return g1.unicodes == g2.unicodes
+
+# checkers
+
+# def validateGlyph(g1, g2, width=True, points=True, components=True, anchors=True, unicodes=True):
+#     '''
+#     Check if two glyphs match.
+
+#     Returns:
+#         A dictionary of glyph attribute names and `True` or `False` results.
+
+#     DEPRECATED: use checkCompatibility and/or checkEquality instead.
+
+#     '''
+#     results = {}
+#     if width:
+#         results['width']          = validateWidth(g1, g2)
+#     if points:
+#         results['points']         = checkContoursCompatible(g1, g2)
+#         results['pointPositions'] = checkEqualContours(g1, g2)
+#     if components:
+#         results['components']     = checkComponentsCompatible(g1, g2)
+#     if anchors:
+#         results['anchors']        = checkAnchorsCompatible(g1, g2)
+#     if unicodes:
+#         results['unicodes']       = validateUnicodes(g1, g2)
+#     return results
+
+# def checkGlyph(g1, g2):
+#     # DEPRECATED: use checkCompatibility and/or checkEquality instead.
+#     return {
+#         'width'          : validateWidth(g1, g2),
+#         'points'         : checkContoursCompatible(g1, g2),
+#         'pointPositions' : checkEqualContours(g1, g2),
+#         'components'     : checkComponentsCompatible(g1, g2),
+#         'anchors'        : checkAnchorsCompatible(g1, g2),
+#         'unicodes'       : validateUnicodes(g1, g2),
+#     }
+
+def checkCompatibility(g1, g2):
+    return {
+        'points'     : checkContoursCompatible(g1, g2),
+        'components' : checkComponentsCompatible(g1, g2),
+        'anchors'    : checkAnchorsCompatible(g1, g2),
+    }
+
+def checkEquality(g1, g2):
+    return {
+        'width'      : checkEqualWidth(g1, g2),
+        'left'       : checkEqualMarginLeft(g1, g2),
+        'right'      : checkEqualMarginRight(g1, g2),
+        'points'     : checkEqualContours(g1, g2),
+        'components' : checkEqualComponents(g1, g2),
+        'anchors'    : checkEqualAnchors(g1, g2),
+        'unicodes'   : checkEqualUnicodes(g1, g2),
+    }
 
 # ---------------------
 # font-level validation
@@ -218,6 +345,49 @@ def validateFonts2(targetFonts, sourceFont, width=True, points=True, components=
         results[fileName] = validateFont2(targetFont, sourceFont, width=width, points=points, components=components, anchors=anchors, unicodes=unicodes)
     return results
 
+def applyValidationColors(font, defaultFont, colors, glyphNames=None):
+
+    if glyphNames is None:
+        glyphNames = font.glyphOrder
+
+    for glyphName in glyphNames:
+        currentGlyph = font[glyphName]
+        currentGlyph.markColor = None
+
+        if glyphName not in defaultFont:
+            continue
+
+        defaultGlyph = defaultFont[glyphName]
+
+        results = {
+            'compatibility' : checkCompatibility(currentGlyph, defaultGlyph),
+            'equality'      : checkEquality(currentGlyph, defaultGlyph),
+        }
+
+        if currentGlyph.components:
+            levels = getNestingLevels(currentGlyph)
+            # warning: nested components of mixed contour/components
+            if levels > 1 or len(currentGlyph.contours):
+                currentGlyph.markColor = colors['warning']
+            else:
+                # components equal to default
+                if all(results['compatibility']) and results['equality']['components']:
+                    currentGlyph.markColor = colors['componentsEqual']
+                # components different from default
+                else:
+                    currentGlyph.markColor = colors['components']
+        else:
+            if results['compatibility']['points'] and results['equality']['points']:
+                # contours equal to default
+                if font.path != defaultFont.path:
+                    currentGlyph.markColor = colors['default']
+                # contours different from default
+                else:
+                    currentGlyph.markColor = None
+
+    font.changed()
+
+
 # ----------------------
 # designspace validation
 # ----------------------
@@ -247,4 +417,3 @@ def validateDesignspace(designspace):
         srcFont.close()
     txt += '...done.\n\n'
     return txt
-
