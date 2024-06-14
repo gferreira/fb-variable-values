@@ -417,3 +417,4 @@ def validateDesignspace(designspace):
         srcFont.close()
     txt += '...done.\n\n'
     return txt
+

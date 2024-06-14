@@ -72,8 +72,10 @@ class GlyphSetProofer:
         self.defaultFontPath = defaultFontPath
         self.sourcePaths = sourcePaths
 
-    def _drawHeader(self, fontName, now):
+    def _drawHeader(self, fontName, now, isDefault=False):
         m = self.margins
+        if isDefault:
+            fontName += ' (default)'
         DB.font(self.headerFont)
         DB.fontSize(self.headerFontSize)
         DB.text(f'{self.familyName}', (m[3], DB.height() - m[0] * 0.66), align='left')
@@ -81,6 +83,8 @@ class GlyphSetProofer:
         DB.text(now, (DB.width() - m[1], DB.height() - m[0] * 0.66), align='right')
 
     def _drawGlyphCell(self, glyphName, font, defaultFont, pos, cellSize):
+
+        s = self.glyphScale
 
         x, y = pos
         stepX, stepY = cellSize
@@ -132,7 +136,7 @@ class GlyphSetProofer:
         else:
             if results['compatibility']['points'] and results['equality']['points']:
                 # contours equal to default
-                if currentFont.path != defaultFont.path:
+                if font.path != defaultFont.path:
                     bgColor    = self.colorContoursEqual + (self.colorAlpha,)
                     glyphColor = self.colorContoursEqual
 
@@ -212,7 +216,6 @@ class GlyphSetProofer:
     def _makePage(self, font, defaultFont, now):
 
         m = self.margins
-        s = self.glyphScale
 
         glyphNames = defaultFont.glyphOrder
 
@@ -221,7 +224,7 @@ class GlyphSetProofer:
         stepX = (DB.width()  - m[1] - m[3]) / self.stepsX
         stepY = (DB.height() - m[0] - m[2]) / self.stepsY
 
-        self._drawHeader(font.info.styleName, now)
+        self._drawHeader(font.info.styleName, now, isDefault=(font.path == defaultFont.path))
 
         # draw cells
         DB.fill(None)
@@ -230,8 +233,8 @@ class GlyphSetProofer:
         DB.fontSize(self.cellLabelSize)
 
         n = 0
-        for i in range(stepsY):
-            for j in range(stepsX):
+        for i in range(self.stepsY):
+            for j in range(self.stepsX):
                 x = m[3] + j * stepX
                 y = DB.height() - m[0] - (i + 1) * stepY
 
@@ -259,11 +262,5 @@ class GlyphSetProofer:
         if savePDF:
             pdfPath = os.path.join(os.getcwd(), f"glyphset_{self.familyName.replace(' ', '-')}.pdf")
             DB.saveImage(pdfPath)
-
-
-class DesignspaceGlyphSetProofer:
-    pass
-
-
 
 

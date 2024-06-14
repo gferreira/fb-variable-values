@@ -1,10 +1,37 @@
+import AppKit
 from vanilla import *
 from mojo.UI import AccordionView
 
 
+class VarProjectController:
+    
+    def __init__(self, folder):
+        self.folder = folder   
+
+    @property
+    def sourcesFolder(self):
+        pass
+
+    @property
+    def instancesFolder(self):
+        pass
+
+    @property
+    def fontsFolder(self):
+        pass
+
+    @property
+    def proofsFolder(self):
+        pass
+
+    @property
+    def docsFolder(self):
+        pass
+
+
 class VarProjectControllerWindow:
 
-    title      = 'batch project'
+    title      = 'controller'
     width      = 123*2
     height     = 640
     padding    = 10
@@ -12,15 +39,17 @@ class VarProjectControllerWindow:
     verbose    = True
 
     _designspaces = {}
-    _sources = {}
-
-    _fontActions = [
+    _sources      = {}
+    _fontActions  = [
         'set names from measurements',
         'set validation mark colors',
         'copy default glyph order',
         'copy default features',
         'copy default unicodes',
+        'cleanup before commit',
     ]
+
+    projectController = None
 
     def __init__(self):
         self.w = FloatingWindow(
@@ -36,12 +65,12 @@ class VarProjectControllerWindow:
                 allowsMultipleSelection=False,
                 allowsEmptySelection=False,
                 # editCallback=self.selectDesignspaceCallback,
-                # selectionCallback=self.selectDesignspaceCallback,
-                # enableDelete=True,
-                # otherApplicationDropSettings=dict(
-                #     type=NSFilenamesPboardType,
-                #     operation=NSDragOperationCopy,
-                #     callback=self.dropCallback),
+                selectionCallback=self.selectDesignspaceCallback,
+                enableDelete=True,
+                otherApplicationDropSettings=dict(
+                    type=AppKit.NSFilenamesPboardType,
+                    operation=AppKit.NSDragOperationCopy,
+                    callback=self.dropDesignspaceCallback),
                 )
 
         self.sources = Group((0, 0, -0, -0))
@@ -54,10 +83,9 @@ class VarProjectControllerWindow:
                 (x, y, -p, self.lineHeight),
                 'validate locations',
                 sizeStyle='small',
-                # callback=self.importButtonCallback
-            )
+                callback=self.validateLocationsCallback)
         
-        y = -(p + self.lineHeight)
+        y += p
 
         # font actions
 
@@ -74,8 +102,7 @@ class VarProjectControllerWindow:
                 (x, y, -p, self.lineHeight),
                 'apply actions to sources',
                 sizeStyle='small',
-                # callback=self.importButtonCallback
-            )
+                callback=self.applyFontActionsCallback)
 
         # glyph actions
 
@@ -92,7 +119,7 @@ class VarProjectControllerWindow:
                 (x, y, -p, self.lineHeight),
                 'copy default glyphs to sources',
                 sizeStyle='small',
-                # callback=self.importButtonCallback
+                callback=self.copyGlyphsCallback
             )
 
         self.glyphsBuild = Group((0, 0, -0, -0))
@@ -144,7 +171,7 @@ class VarProjectControllerWindow:
                 canResize=True),
            dict(label="font actions",
                 view=self.fontActions,
-                size=self.lineHeight*7,
+                size=self.lineHeight*8,
                 minSize=self.lineHeight*12,
                 collapsed=True,
                 canResize=False),
@@ -170,8 +197,70 @@ class VarProjectControllerWindow:
         self.w.accordionView = AccordionView((0, 0, -0, -0), descriptions)
 
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
-
         self.w.open()
 
+    # callbacks
 
-VarProjectControllerWindow()
+    def dropDesignspaceCallback(self, sender, dropInfo):
+        # isProposal = dropInfo["isProposal"]
+        # existingPaths = sender.get()
+
+        # paths = dropInfo["data"]
+        # paths = [path for path in paths if path not in existingPaths]
+        # paths = [path for path in paths if os.path.splitext(path)[-1].lower() == '.designspace']
+
+        # if not paths:
+        #     return False
+
+        # if not isProposal:
+        #     tab = self._tabs['designspace']
+        #     for path in paths:
+        #         label = os.path.split(path)[-1]
+        #         self._designspaces[label] = path
+        #         tab.designspaces.append(label)
+        #         tab.designspaces.setSelection([0])
+
+        # return True
+        pass
+
+    def selectDesignspaceCallback(self, sender):
+        # tab = self._tabs['designspace']
+
+        # if not self.selectedDesignspace:
+        #     tab.axes.set([])
+        #     tab.sources.set([])
+        #     return
+
+        # # update axes list
+        # axesItems = []
+        # for axis in self.selectedDesignspacePlus.document.axes:
+        #     axisItem = { attr : getattr(axis, attr) for attr in self._axisColumns }
+        #     axesItems.append(axisItem)
+        # tab.axes.set(axesItems)
+
+        # self.collectAllSources()
+        # self.updateSourcesListCallback(None)
+        pass
+        
+    def validateLocationsCallback(self, sender):
+        pass
+        
+    def applyFontActionsCallback(self, sender):
+        pass
+
+    def copyGlyphsCallback(self, sender):
+        pass
+
+    def buildGlyphsCallback(self, sender):
+        pass
+
+    def deleteGlyphsCallback(self, sender):
+        pass
+        
+        
+        
+if __name__ == '__main__':
+    
+        
+
+    VarProjectControllerWindow()
