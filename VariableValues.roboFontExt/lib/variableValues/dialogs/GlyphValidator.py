@@ -12,28 +12,36 @@ from variableValues.validation import *
 
 class GlyphValidator:
 
-    title       = "validate"
+    title       = "validator"
     width       = 123
     padding     = 10
     lineHeight  = 20
     verbose     = False
     defaultFont = None
 
-    colorTrue   = 0.00, 0.85, 0.00
-    colorFalse  = 1.00, 0.00, 0.00
-    colorEqual  = 0.00, 0.45, 1.00
+    colorCheckTrue                 = 0.00, 0.85, 0.00
+    colorCheckFalse                = 1.00, 0.00, 0.00
+    colorCheckEqual                = 0.00, 0.33, 1.00
+    colorBackgroundComponents      = 1.00, 0.30, 0.00, 0.35
+    colorBackgroundComponentsEqual = 1.00, 0.65, 0.00, 0.35
+    colorBackgroundDefault         = 0.00, 0.65, 1.00, 0.35
+    colorBackgroundWarning         = 1.00, 0.00, 0.00, 0.65
 
-    checks = [
-        'width',
-        'points',
-        'components',
-        'anchors',
-        'unicodes',
-    ]
+    checks = {
+        'width'      : False,
+        'left'       : False,
+        'right'      : False,
+        'points'     : True,
+        'components' : True,
+        'anchors'    : True,
+        'unicodes'   : True,
+    }
     checkResults = {}
 
     def __init__(self):
-        self.height = (len(self.checks) + 5) * self.lineHeight + self.padding * 4
+        self.height  = len(self.checks) * self.lineHeight
+        self.height += self.lineHeight * 7
+        self.height += self.padding * 6
         self.w = FloatingWindow((self.width, self.height), self.title)
 
         x = y = p = self.padding
@@ -45,30 +53,38 @@ class GlyphValidator:
             )
 
         y += self.lineHeight + p
+        self.w.reloadDefaultButton = Button(
+                (x, y, -p, self.lineHeight),
+                'reload ↺',
+                callback=self.reloadDefaultCallback,
+                sizeStyle='small',
+            )
+
+        y += self.lineHeight + p
         self.w.checksLabel = TextBox(
                 (x, y, -p, self.lineHeight),
-                "glyph checks",
-                sizeStyle='small')
-
-        y += self.lineHeight # + p
-        for check in self.checks:
-            checkbox = CheckBox(
-                (x, y, -p, self.lineHeight),
-                check,
-                value=True,
-                callback=self.updateFontViewCallback,
-                sizeStyle='small')
-            setattr(self.w, check, checkbox)
-            y += self.lineHeight
-
-        y += p
-        self.w.markLabel = TextBox(
-                (x, y, -p, self.lineHeight),
-                "show marks",
+                "checks",
                 sizeStyle='small')
 
         y += self.lineHeight
-        self.w.markCells = CheckBox(
+        for checkName, checkValue in self.checks.items():
+            checkbox = CheckBox(
+                (x, y, -p, self.lineHeight),
+                checkName,
+                value=checkValue,
+                callback=self.updateFontViewCallback,
+                sizeStyle='small')
+            setattr(self.w, checkName, checkbox)
+            y += self.lineHeight
+
+        y += p
+        self.w.displayLabel = TextBox(
+                (x, y, -p, self.lineHeight),
+                "display",
+                sizeStyle='small')
+
+        y += self.lineHeight
+        self.w.labelsCells = CheckBox(
                 (x, y, -p, self.lineHeight),
                 "font window",
                 value=True,
@@ -76,12 +92,20 @@ class GlyphValidator:
                 sizeStyle='small')
 
         y += self.lineHeight
-        self.w.markGlyphs = CheckBox(
+        self.w.labelsGlyphs = CheckBox(
                 (x, y, -p, self.lineHeight),
                 "glyph window",
                 value=True,
                 callback=self.updateGlyphViewCallback,
                 sizeStyle='small')
+
+        y += self.lineHeight + p
+        self.w.markGlyphs = Button(
+                (x, y, -p, self.lineHeight),
+                'mark colors',
+                callback=self.markColorsCallback,
+                sizeStyle='small',
+            )
 
 
         self.w.bind("close", self.closeCallback)
@@ -95,6 +119,12 @@ class GlyphValidator:
     # methods
 
     def checkGlyph(self, g1):
+
+        self.checkResults = {
+            'compatibility' : {},
+            'equality'      : {},
+        }
+
         if g1 is None:
             return
 
@@ -109,15 +139,8 @@ class GlyphValidator:
             return
 
         g2 = self.defaultFont[g1.name]
-
-        self.checkResults = {
-            'width'          : validateWidth(g1, g2),
-            'points'         : validateContours(g1, g2),
-            'pointPositions' : equalContours(g1, g2),
-            'components'     : validateComponents(g1, g2),
-            'anchors'        : validateAnchors(g1, g2),
-            'unicodes'       : validateUnicodes(g1, g2),
-        }
+        self.checkResults['compatibility'] = checkCompatibility(g1, g2)
+        self.checkResults['equality']      = checkEquality(g1, g2)
 
     # callbacks
 
@@ -126,6 +149,12 @@ class GlyphValidator:
         self.defaultFont = OpenFont(defaultPath, showInterface=False)
         self.updateGlyphViewCallback(sender)
         self.updateFontViewCallback(sender)
+
+    def reloadDefaultCallback(self, sender):
+        if self.defaultFont is None:
+            return
+        defaultPath = self.defaultFont.path
+        self.defaultFont = OpenFont(defaultPath, showInterface=False)
 
     def updateGlyphViewCallback(self, sender):
         UpdateCurrentGlyphView()
@@ -154,40 +183,42 @@ class GlyphValidator:
         self.checkGlyph(glyph)
 
     def drawLabelsCell(self, notification):
-        if not self.w.markCells.get():
+        if not self.w.labelsCells.get():
             return
 
         glyph = notification['glyph']
 
         self.checkGlyph(glyph)
 
-        if not len(self.checks):
+        if not len(self.checks) or not self.checkResults['compatibility'] or not self.checkResults['equality']:
             return
 
         ctx.save()
         ctx.font('Menlo-Bold')
         ctx.fontSize(10)
         ctx.translate(3, 3)
-        for check in self.checkResults.keys():
-            if check == 'pointPositions':
-                continue
-            checkbox = getattr(self.w, check)
+        for checkName in self.checks.keys():
+            checkbox = getattr(self.w, checkName)
+            # check is hidden
             if not checkbox.get():
                 continue
-            if self.checkResults[check]:
-                ctx.fill(*self.colorTrue)
-                if check == 'points' and self.checkResults['pointPositions']:
-                    ctx.fill(*self.colorEqual)
+            isCompatible = self.checkResults['compatibility'].get(checkName)
+            isEqual      = self.checkResults['equality'].get(checkName)
+            if isCompatible and isEqual:
+                ctx.fill(*self.colorCheckEqual)
+            elif isCompatible or isEqual:
+                ctx.fill(*self.colorCheckTrue)
             else:
-                ctx.fill(*self.colorFalse)
-            label = check[0].upper()
+                ctx.fill(*self.colorCheckFalse)
+            # draw check label
+            label = checkName[0].upper()
             ctx.text(label, (0, -3))
             w, h = ctx.textSize(label)
             ctx.translate(w + 2, 0)
         ctx.restore()
 
     def drawLabelsGlyph(self, notification):
-        if not self.w.markGlyphs.get():
+        if not self.w.labelsGlyphs.get():
             return
 
         glyph = notification['glyph']
@@ -195,26 +226,55 @@ class GlyphValidator:
 
         self.checkGlyph(glyph)
 
+        x, y = 4, 4
+
         ctx.save()
         ctx.font('Menlo-Bold')
         ctx.fontSize(12 * scale)
-        for check in self.checkResults.keys():
-            if check == 'pointPositions':
-                continue
-            checkbox = getattr(self.w, check)
+
+        ctx.save()
+        for checkName in self.checks.keys():
+            checkbox = getattr(self.w, checkName)
+            # check is hidden
             if not checkbox.get():
                 continue
-            if self.checkResults[check]:
-                ctx.fill(*self.colorTrue)
-                if check == 'points' and self.checkResults['pointPositions']:
-                    ctx.fill(*self.colorEqual)
+            isCompatible = self.checkResults['compatibility'].get(checkName)
+            isEqual      = self.checkResults['equality'].get(checkName)
+            if isCompatible and isEqual:
+                ctx.fill(*self.colorCheckEqual)
+            elif isCompatible or isEqual:
+                ctx.fill(*self.colorCheckTrue)
             else:
-                ctx.fill(*self.colorFalse)
-            label = check[0].upper()
-            ctx.text(label, (4, 4))
+                ctx.fill(*self.colorCheckFalse)
+            # draw check label
+            label = checkName[0].upper()
+            ctx.text(label, (x, y))
             w, h = ctx.textSize(label)
             ctx.translate(w + 2 * scale, 0)
         ctx.restore()
+        
+        ctx.save()
+        ctx.text('hello world', (x + glyph.width, glyph.font.info.xHeight))
+        ctx.restore()
+
+        ctx.restore()
+
+    def markColorsCallback(self, sender):
+
+        currentFont = CurrentFont()
+        defaultFont = self.defaultFont
+
+        if currentFont is None or defaultFont is None:
+            return
+
+        colors = {
+            'components'      : self.colorBackgroundComponents,
+            'componentsEqual' : self.colorBackgroundComponentsEqual,
+            'default'         : self.colorBackgroundDefault,
+            'warning'         : self.colorBackgroundWarning,
+        }
+
+        applyValidationColors(currentFont, defaultFont, colors)
 
 
 if __name__ == '__main__':

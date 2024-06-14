@@ -46,6 +46,14 @@
 		</dict>
 		<dict>
 			<key>path</key>
+			<string>variableValues/dialogs/GlyphSetProofer.py</string>
+			<key>preferredName</key>
+			<string>GlyphSetProofer</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>path</key>
 			<string>variableValues/dialogs/TempEdit.py</string>
 			<key>preferredName</key>
 			<string>TempEdit</string>
@@ -80,8 +88,8 @@
 	<key>requiresVersionMinor</key>
 	<string>4</string>
 	<key>timeStamp</key>
-	<real>1707306971.630965</real>
+	<real>1718357539.3049312</real>
 	<key>version</key>
-	<string>0.1.9</string>
+	<string>0.2.0</string>
 </dict>
 </plist>

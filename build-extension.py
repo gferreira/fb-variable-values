@@ -8,7 +8,7 @@ from hTools3.modules.sys import pycClear, pyCacheClear, removeGitFiles
 # settings
 # --------
 
-version          = '0.1.9'
+version          = '0.2.0'
 baseFolder       = os.path.dirname(__file__)
 libFolder        = os.path.join(baseFolder, 'code', 'Lib')
 licensePath      = os.path.join(baseFolder, 'LICENSE')
@@ -64,6 +64,11 @@ def buildExtension():
         {
             'path'          : 'variableValues/dialogs/SourceValidator.py',
             'preferredName' : 'SourceValidator',
+            'shortKey'      : '',
+        },
+        {
+            'path'          : 'variableValues/dialogs/GlyphSetProofer.py',
+            'preferredName' : 'GlyphSetProofer',
             'shortKey'      : '',
         },
         {
