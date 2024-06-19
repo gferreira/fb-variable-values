@@ -6,7 +6,7 @@ url: https://gferreira.github.io/fb-variable-values/
 
 markdown: kramdown
 
-version: 0.1.9
+version: 0.2.0
 
 exclude:
   - .sass-cache/

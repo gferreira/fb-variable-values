@@ -14,6 +14,7 @@ Dialogs
 - [Measurements](measurements)
 - [GlyphValidator](glyph-validator)
 - [SourceValidator](source-validator)
+- [GlyphSetProofer](glyphset-proofer)
 - [TempEdit](temp-edit)
 - [TempGlyphs](temp-glyphs)
 </div>

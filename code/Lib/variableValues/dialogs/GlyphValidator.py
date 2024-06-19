@@ -22,13 +22,13 @@ class GlyphValidator:
     colorCheckTrue                 = 0.00, 0.85, 0.00
     colorCheckFalse                = 1.00, 0.00, 0.00
     colorCheckEqual                = 0.00, 0.33, 1.00
-    colorBackgroundComponents      = 1.00, 0.30, 0.00, 0.35
-    colorBackgroundComponentsEqual = 1.00, 0.65, 0.00, 0.35
-    colorBackgroundDefault         = 0.00, 0.65, 1.00, 0.35
-    colorBackgroundWarning         = 1.00, 0.00, 0.00, 0.65
+    # colorBackgroundComponents      = 1.00, 0.30, 0.00, 0.35
+    # colorBackgroundComponentsEqual = 1.00, 0.65, 0.00, 0.35
+    # colorBackgroundDefault         = 0.00, 0.65, 1.00, 0.35
+    # colorBackgroundWarning         = 1.00, 0.00, 0.00, 0.65
 
     checks = {
-        'width'      : False,
+        'width'      : True,
         'left'       : False,
         'right'      : False,
         'points'     : True,
@@ -41,7 +41,7 @@ class GlyphValidator:
     def __init__(self):
         self.height  = len(self.checks) * self.lineHeight
         self.height += self.lineHeight * 7
-        self.height += self.padding * 6
+        self.height += self.padding * 5.5
         self.w = FloatingWindow((self.width, self.height), self.title)
 
         x = y = p = self.padding
@@ -52,7 +52,7 @@ class GlyphValidator:
                 sizeStyle='small',
             )
 
-        y += self.lineHeight + p
+        y += self.lineHeight + p/2
         self.w.reloadDefaultButton = Button(
                 (x, y, -p, self.lineHeight),
                 'reload ↺',
@@ -102,7 +102,7 @@ class GlyphValidator:
         y += self.lineHeight + p
         self.w.markGlyphs = Button(
                 (x, y, -p, self.lineHeight),
-                'mark colors',
+                'mark glyphs',
                 callback=self.markColorsCallback,
                 sizeStyle='small',
             )
@@ -253,9 +253,9 @@ class GlyphValidator:
             ctx.translate(w + 2 * scale, 0)
         ctx.restore()
         
-        ctx.save()
-        ctx.text('hello world', (x + glyph.width, glyph.font.info.xHeight))
-        ctx.restore()
+        # ctx.save()
+        # ctx.text('hello world', (x + glyph.width, glyph.font.info.xHeight))
+        # ctx.restore()
 
         ctx.restore()
 
@@ -267,14 +267,7 @@ class GlyphValidator:
         if currentFont is None or defaultFont is None:
             return
 
-        colors = {
-            'components'      : self.colorBackgroundComponents,
-            'componentsEqual' : self.colorBackgroundComponentsEqual,
-            'default'         : self.colorBackgroundDefault,
-            'warning'         : self.colorBackgroundWarning,
-        }
-
-        applyValidationColors(currentFont, defaultFont, colors)
+        applyValidationColors(currentFont, defaultFont)
 
 
 if __name__ == '__main__':

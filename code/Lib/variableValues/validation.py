@@ -345,7 +345,15 @@ def validateFonts2(targetFonts, sourceFont, width=True, points=True, components=
         results[fileName] = validateFont2(targetFont, sourceFont, width=width, points=points, components=components, anchors=anchors, unicodes=unicodes)
     return results
 
-def applyValidationColors(font, defaultFont, colors, glyphNames=None):
+def applyValidationColors(font, defaultFont, colors=None, glyphNames=None):
+
+    if colors is None:
+        colors = {
+            'components'      : (1.00, 0.30, 0.00, 0.35),
+            'componentsEqual' : (1.00, 0.65, 0.00, 0.35),
+            'default'         : (0.00, 0.65, 1.00, 0.35),
+            'warning'         : (1.00, 0.00, 0.00, 0.65),
+        }
 
     if glyphNames is None:
         glyphNames = font.glyphOrder

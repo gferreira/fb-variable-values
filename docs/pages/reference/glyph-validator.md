@@ -30,14 +30,20 @@ Options
 get default…
 : Open a dialog to select the default source to check the current font against.
 
-glyph tests
-: Click to select which glyph attributes to check and report on.
+reload
+: Reload the default font from disk (in case it has changed).
+
+checks
+: Select which glyph attributes to check and report on.
 
 font window
 : Show/hide check results in the Font Overview’s glyph cells.
 
 glyph window
 : Show/hide check results in the Glyph View.
+
+mark glyphs
+: Apply mark colors to different types of glyphs.
 
 </div>
 </div>
@@ -62,39 +68,101 @@ Labels with check results are shown in the Glyph View if the option *glyph windo
 Validation details
 ------------------
 
-##### Glyph checks
+##### Color codes
 
-Different glyph attributes are checked for compatibility.  
-Check results are identified by the attribute's initial letter.  
-Different checks are performed depending on which glyph attribute is tested.  
+Check results are displayed as a string of colored labels. Label colors have the following meaning:
+
+<!--
+| color                                                 | meaning        |
+|-------------------------------------------------------|----------------|
+| <span style='color:red;'>red</span>                   | not compatible |
+| <span style='color:rgba(0, 216.75, 0);'>green</span>  | compatible     |
+| <span style='color:rgba(0, 114.75, 255);'>blue</span> | equal\*        |
+{: .table .table-hover }
+-->
 
 <table class='table table-hover'>
 <tr>
-<th>label</th>
 <th>glyph attribute</th>
+<th>label</th>
+<th>red</th>
+<th>green</th>
+<th>blue</th>
+</tr>
+<tr>
+<td>width</td>
+<td>W</td>
+<td><span class='red'>different</span></td>
+<td><span class='green'>equal</span></td>
+<td>–</td>
+</tr>
+<tr>
+<td>left margin</td>
+<td>L</td>
+<td><span class='red'>different</span></td>
+<td><span class='green'>equal</span></td>
+<td>–</td>
+</tr>
+<tr>
+<td>right margin</td>
+<td>R</td>
+<td><span class='red'>different</span></td>
+<td><span class='green'>equal</span></td>
+<td>–</td>
+</tr>
+<tr>
+<td>points</td>
+<td>P</td>
+<td><span class='red'>incompatible</span></td>
+<td><span class='green'>compatible</span></td>
+<td><span class='blue'>equal</span></td>
+</tr>
+<tr>
+<td>components</td>
+<td>C</td>
+<td><span class='red'>incompatible</span></td>
+<td><span class='green'>compatible</span></td>
+<td><span class='blue'>equal</span></td>
+</tr>
+<tr>
+<td>anchors</td>
+<td>A</td>
+<td><span class='red'>incompatible</span></td>
+<td><span class='green'>compatible</span></td>
+<td><span class='blue'>equal</span></td>
+</tr>
+<tr>
+<td>unicodes</td>
+<td>U</td>
+<td><span class='red'>different</span></td>
+<td><span class='green'>equal</span></td>
+<td>–</td>
+</tr>
+</table>
+
+##### Compatibility checks
+
+Glyph attributes are considered **compatible** if the following conditions are met:
+
+<table class='table table-hover'>
+<tr>
+<th>glyph attribute</th>
+<th>label</th>
 <th>conditions</th>
 </tr>
 <tr>
-<td>W</td>
-<td>width</td>
-<td markdown='1'>
-- same advance width
-</td>
-</tr>
-<tr>
-<td>P</td>
 <td>points</td>
+<td>P</td>
 <td markdown='1'>
 - same number of contours
 - same number of segments
 - same segment types
 - same number of points (implied)
-- same point positions\*
 </td>
 </tr>
 <tr>
-<td>C</td>
 <td>components</td>
+<td>C</td>
 <td markdown='1'>
 - same number of components
 - same component names
@@ -102,33 +170,73 @@ Different checks are performed depending on which glyph attribute is tested.
 </td>
 </tr>
 <tr>
+<td>anchors</td>
 <td>A</td>
-<td>Anchors</td>
 <td markdown='1'>
 - same number of anchors
 - same anchor names
 - same anchor order
 </td>
 </tr>
+</table>
+
+##### Equality checks
+
+Glyph attributes are considered **identical** if the following conditions are met:
+
+<table class='table table-hover'>
 <tr>
+<th>glyph attribute</th>
+<th>label</th>
+<th>conditions</th>
+</tr>
+<tr>
+<td>width</td>
+<td>W</td>
+<td markdown='1'>
+- same advance width
+</td>
+</tr>
+<tr>
+<td>left margin</td>
+<td>L</td>
+<td markdown='1'>
+- same left margin (rounded)
+</td>
+</tr>
+<tr>
+<td>right margin</td>
+<td>R</td>
+<td markdown='1'>
+- same right margin (rounded)
+</td>
+</tr>
+<tr>
+<td>points</td>
+<td>P</td>
+<td markdown='1'>
+- same point positions
+</td>
+</tr>
+<tr>
+<td>components</td>
+<td>C</td>
+<td markdown='1'>
+- same point positions (flattened)
+</td>
+</tr>
+<tr>
+<td>anchors</td>
+<td>A</td>
+<td markdown='1'>
+- same anchor positions
+</td>
+</tr>
+<tr>
+<td>unicodes</td>
 <td>U</td>
-<td>Unicodes</td>
 <td markdown='1'>
 - same unicode value(s)
 </td>
 </tr>
 </table>
-
-##### Color codes
-
-Check results are displayed as a string of colored labels. Label colors have the following meaning:
-
-| color                                                 | meaning        |
-|-------------------------------------------------------|----------------|
-| <span style='color:red;'>red</span>                   | not compatible |
-| <span style='color:rgba(0, 216.75, 0);'>green</span>  | compatible     |
-| <span style='color:rgba(0, 114.75, 255);'>blue</span> | equal\*        |
-{: .table .table-hover }
-
-\* The blue label is available only for *points* check: a blue P means that glyph points are not only compatible, but also all point positions match.
-
