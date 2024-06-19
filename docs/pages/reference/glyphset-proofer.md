@@ -22,38 +22,36 @@ A tool to create informative PDF glyphset proofs of designspace sources.
 Options
 -------
 
-<div class='row'>
-<div class='col' markdown='1'>
-![]({{ site.url }}/images/GlyphValidator.png){: .img-fluid}
-</div>
-<div class='col' markdown='1'>
-get default…
+![]({{ site.url }}/images/GlyphSetProofer.png){: .img-fluid}
+
+
+designspaces
 : Open a dialog to select the default source to check the current font against.
 
-glyph tests
+sources
 : Click to select which glyph attributes to check and report on.
 
-font window
+make proof
 : Show/hide check results in the Font Overview’s glyph cells.
 
-glyph window
+save PDF…
 : Show/hide check results in the Glyph View.
 
-</div>
-</div>
 
+Validation details
+------------------
 
-Colors
-------
+##### Check colors
 
-Check results are displayed as a string of colored labels. Label colors have the following meaning:
+see [Glyph Validator > Validation details > Color codes](glyph-validator)
 
-| color                                                 | meaning        |
-|-------------------------------------------------------|----------------|
-| <span style='color:red;'>red</span>                   | not compatible |
-| <span style='color:rgba(0, 216.75, 0);'>green</span>  | compatible     |
-| <span style='color:rgba(0, 114.75, 255);'>blue</span> | equal\*        |
-{: .table .table-hover }
+##### Cell colors
 
-\* The blue label is available only for *points* check: a blue P means that glyph points are not only compatible, but also all point positions match.
-
+| background color | meaning                                        | 
+|------------------|------------------------------------------------|
+| blue             | contours only, equal to default                |
+| white            | contours only, different from default          |
+| light orange     | components only, equal to default              |
+| dark orange      | components only, different from default        |
+| red              | nested components, or mixed contour/components |
+{: .table }
