@@ -26,16 +26,19 @@ Options
 
 
 designspaces
-: Open a dialog to select the default source to check the current font against.
+: Drag one or more `.designspace` files into the list.
 
 sources
-: Click to select which glyph attributes to check and report on.
+: A list of all sources\* in the selected designspace. Select one or more sources to proof.
 
 make proof
-: Show/hide check results in the Font Overview’s glyph cells.
+: Make a proof document for the selected sources, with one source per page.
 
 save PDF…
-: Show/hide check results in the Glyph View.
+: Save the current proof as a PDF file.
+
+\* The default source is always shown in the first page of the proof, and is not included in the sources list.  
+
 
 
 Validation details
