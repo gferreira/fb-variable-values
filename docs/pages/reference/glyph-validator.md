@@ -240,3 +240,9 @@ Glyph attributes are considered **identical** if the following conditions are me
 </td>
 </tr>
 </table>
+
+
+##### Mark colors 
+
+See [GlyphSetProofer > Validation details > Cell colors](glyphset-proofer).
+

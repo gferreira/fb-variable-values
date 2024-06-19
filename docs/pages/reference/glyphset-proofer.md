@@ -46,15 +46,39 @@ Validation details
 
 ##### Check colors
 
-see [Glyph Validator > Validation details > Color codes](glyph-validator)
+See [GlyphValidator > Validation details > Color codes](glyph-validator).
 
 ##### Cell colors
 
-| background color | meaning                                        | 
-|------------------|------------------------------------------------|
-| blue             | contours only, equal to default                |
-| white            | contours only, different from default          |
-| light orange     | components only, equal to default              |
-| dark orange      | components only, different from default        |
-| red              | nested components, or mixed contour/components |
-{: .table }
+<table class='table'>
+<tr>
+<th>background color</th>
+<th>status</th>
+<th>contents</th>
+</tr>
+<tr>
+<td class='cells-contours-equal'>blue</td>
+<td>equal to default</td>
+<td>contours only</td>
+</tr>
+<tr>
+<td class='cells-contours-different'>white</td>
+<td>different from default</td>
+<td>contours only</td>
+</tr>
+<tr>
+<td class='cells-components-equal'>light orange</td>
+<td>equal to default</td>
+<td>components only</td>
+</tr>
+<tr>
+<td class='cells-components-different'>dark orange</td>
+<td>different from default</td>
+<td>components only</td>
+</tr>
+<tr>
+<td class='cells-warning'>red</td>
+<td>warning: not allowed</td>
+<td>nested components, or mixed contour/components</td>
+</tr>
+</table>
