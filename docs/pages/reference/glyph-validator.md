@@ -12,7 +12,7 @@ permalink : /reference/glyph-validator
   </ol>
 </nav>
 
-A tool to validate glyphs in the current font against glyphs from another font.
+A tool to validate glyphs in the _current font_ that is open and selected against glyphs from a selected source.
 {: .lead}
 
 * Table of Contents
@@ -28,10 +28,10 @@ Options
 </div>
 <div class='col' markdown='1'>
 get default…
-: Open a dialog to select the default source to check the current font against.
+: Open a dialog to select the source to check against the _current font_ 
 
 reload
-: Reload the default font from disk (in case it has changed).
+: Reload the selected source from disk (in case it has changed).
 
 checks
 : Select which glyph attributes to check and report on.
