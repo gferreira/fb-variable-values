@@ -39,7 +39,7 @@ types of changes:
 -----
 
 - <span class='badge'>Added</span> Adding new `GlyphSetProofer` to create informative PDF proofs of the full glyph set of designspace sources.
-- <span class='badge'>Added</span> Adding new `VarProject` tool to apply various actions to some or all sources in a designspace.
+- <span class='badge'>Added</span> Adding new `VarProject` tool to apply various actions to some or all sources in a designspace (WIP).
 - <span class='badge'>Changed</span> Rewriting `GlyphValidator` with left/right margin checks, component equality, refresh button, mark glyph types.
 
 

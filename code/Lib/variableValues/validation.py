@@ -108,7 +108,7 @@ def checkEqualContours(g1, g2):
     Returns: `True` or `False`.
 
     '''
-    if not len(g1.contours) or not len(g2.contours):
+    if not len(g1) or not len(g2):
         return False
 
     pen1 = DigestPointPen()
@@ -210,39 +210,15 @@ def checkEqualUnicodes(g1, g2):
 
 # checkers
 
-# def validateGlyph(g1, g2, width=True, points=True, components=True, anchors=True, unicodes=True):
-#     '''
-#     Check if two glyphs match.
-
-#     Returns:
-#         A dictionary of glyph attribute names and `True` or `False` results.
-
-#     DEPRECATED: use checkCompatibility and/or checkEquality instead.
-
-#     '''
-#     results = {}
-#     if width:
-#         results['width']          = validateWidth(g1, g2)
-#     if points:
-#         results['points']         = checkContoursCompatible(g1, g2)
-#         results['pointPositions'] = checkEqualContours(g1, g2)
-#     if components:
-#         results['components']     = checkComponentsCompatible(g1, g2)
-#     if anchors:
-#         results['anchors']        = checkAnchorsCompatible(g1, g2)
-#     if unicodes:
-#         results['unicodes']       = validateUnicodes(g1, g2)
-#     return results
-
 # def checkGlyph(g1, g2):
 #     # DEPRECATED: use checkCompatibility and/or checkEquality instead.
 #     return {
-#         'width'          : validateWidth(g1, g2),
+#         'width'          : checkEqualWidth(g1, g2),
 #         'points'         : checkContoursCompatible(g1, g2),
 #         'pointPositions' : checkEqualContours(g1, g2),
 #         'components'     : checkComponentsCompatible(g1, g2),
 #         'anchors'        : checkAnchorsCompatible(g1, g2),
-#         'unicodes'       : validateUnicodes(g1, g2),
+#         'unicodes'       : checkEqualUnicodes(g1, g2),
 #     }
 
 def checkCompatibility(g1, g2):
@@ -267,7 +243,7 @@ def checkEquality(g1, g2):
 # font-level validation
 # ---------------------
 
-def validateFont(f1, f2, width=True, points=True, components=True, anchors=True, unicodes=True):
+def validateFont(f1, f2, options):
     '''
     Check if the *glyphs* in two fonts match.
 
@@ -289,8 +265,9 @@ def validateFont(f1, f2, width=True, points=True, components=True, anchors=True,
             txt += f"\t- glyph not in font\n"
             txt += '\n'
             continue
-        checks = validateGlyph(f1[gName], f2[gName], width=width, points=points, components=components, anchors=anchors, unicodes=unicodes)
-        del checks['pointPositions']
+        checks = validateGlyph(f1[gName], f2[gName], options)
+        if 'pointPositions' in checks:
+            del checks['pointPositions']
         if not all(checks.values()):
             txt += f'\t{gName}:\n'
             for check, result in checks.items():
@@ -300,7 +277,7 @@ def validateFont(f1, f2, width=True, points=True, components=True, anchors=True,
 
     return txt
 
-def validateFonts(targetFonts, sourceFont, width=True, points=True, components=True, anchors=True, unicodes=True):
+def validateFonts(targetFonts, sourceFont, options):
     '''
     Batch check if all fonts in `targetFonts` match the ones in sourceFont.
 
@@ -310,7 +287,7 @@ def validateFonts(targetFonts, sourceFont, width=True, points=True, components=T
     '''
     txt = ''
     for targetFont in targetFonts:
-        txt += validateFont(targetFont, sourceFont, width=width, points=points, components=components, anchors=anchors, unicodes=unicodes)
+        txt += validateFont(targetFont, sourceFont, options)
     return txt
 
 def validateFont2(f1, f2, width=True, points=True, components=True, anchors=True, unicodes=True):

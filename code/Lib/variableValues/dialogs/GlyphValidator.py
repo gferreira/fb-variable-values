@@ -19,13 +19,9 @@ class GlyphValidator:
     verbose     = False
     defaultFont = None
 
-    colorCheckTrue                 = 0.00, 0.85, 0.00
-    colorCheckFalse                = 1.00, 0.00, 0.00
-    colorCheckEqual                = 0.00, 0.33, 1.00
-    # colorBackgroundComponents      = 1.00, 0.30, 0.00, 0.35
-    # colorBackgroundComponentsEqual = 1.00, 0.65, 0.00, 0.35
-    # colorBackgroundDefault         = 0.00, 0.65, 1.00, 0.35
-    # colorBackgroundWarning         = 1.00, 0.00, 0.00, 0.65
+    colorCheckTrue   = 0.00, 0.85, 0.00
+    colorCheckFalse  = 1.00, 0.00, 0.00
+    colorCheckEqual  = 0.00, 0.33, 1.00
 
     checks = {
         'width'      : True,

@@ -6,9 +6,10 @@ import os
 import AppKit
 from vanilla import *
 from fontTools.ufoLib.glifLib import GlyphSet
+from fontParts.world import OpenFont
 from mojo.UI import OutputWindow
-from mojo.roboFont import OpenFont, OpenWindow, CurrentFont
-from variableValues.validation import validateGlyph, validateFonts
+from mojo.roboFont import OpenWindow, CurrentFont, RGlyph
+from variableValues.validation import validateFonts, checkCompatibility, checkEquality
 from defcon import Glyph
 
 
@@ -22,9 +23,18 @@ class SourceValidator:
     width        = 123*5
     height       = 640
     _tabsTitles  = ['fonts', 'glyphs']
-    _checks      = ['width', 'points', 'components', 'anchors', 'unicodes']
+    _checks      = {
+        'width'         : False,
+        'left'          : False,
+        'right'         : False,
+        'points'        : True,
+        'components'    : True,
+        'anchors'       : True,
+        'unicodes'      : True,
+    }
+    
     _colLeft     = 123
-    _colValue    = 70
+    _colValue    = 20
     _colFontName = 160
     colorTrue    = 0, 1, 0
     colorFalse   = 1, 0, 0
@@ -63,28 +73,27 @@ class SourceValidator:
         tab = self._tabs['fonts']
 
         x = p = self.padding
-        y = p/2
+        y = p / 2
         x2 = -(self._colLeft + p)
 
         tab.checksLabel = TextBox(
-                (x2 + p*1.5, y, -p, self.lineHeight),
+                (x2 + p * 1.5, y, -p, self.lineHeight),
                 'checks')
 
         y += self.lineHeight
-        for i, check in enumerate(self._checks):
-            value = False if i == 0 else True
+        for check, value in self._checks.items():
             checkbox = CheckBox(
-                (x2 + p*1.5, y, -p, self.lineHeight),
+                (x2 + p * 1.5, y, -p, self.lineHeight),
                 check, value=value)
             setattr(tab, check, checkbox)
             y += self.lineHeight
 
-        y = p/2
+        y = p / 2
         tab.sourcesLabel = TextBox(
                 (x, y, x2, self.lineHeight),
                 'reference font')
 
-        y += self.lineHeight + p/2
+        y += self.lineHeight + p / 2
         tab.sources = List(
                 (x, y, x2, self.lineHeight*3),
                 [],
@@ -97,12 +106,12 @@ class SourceValidator:
                     callback=self.dropSourcesCallback),
                 doubleClickCallback=self.openFontCallback)
 
-        y += self.lineHeight*3 + p
+        y += self.lineHeight * 3 + p
         tab.targetsLabel = TextBox(
                 (x, y, x2, self.lineHeight),
                 'other fonts')
 
-        y += self.lineHeight + p/2
+        y += self.lineHeight + p / 2
         tab.targets = List(
                 (x, y, x2, -(self.lineHeight + p*2)),
                 [],
@@ -126,32 +135,32 @@ class SourceValidator:
         tab = self._tabs['glyphs']
 
         x = p = self.padding
-        y = p/2
+        y = p / 2
         x2 = x + self._colLeft + p
 
         tab.glyphsLabel = TextBox(
                 (x, y, self._colLeft, self.lineHeight),
                 'glyphs')
 
-        y += self.lineHeight + p/2
+        y += self.lineHeight + p / 2
         tab.glyphs = List(
-                (x, y, self._colLeft, -(self.lineHeight + p*2)),
+                (x, y, self._colLeft, -(self.lineHeight + p * 2)),
                 [],
                 selectionCallback=self.selectGlyphCallback,
             )
 
-        columnDescriptions = [{ "title": "source", 'width': self._colFontName*1.5, 'minWidth': self._colFontName  }]
+        columnDescriptions = [{ "title": "source", 'width': self._colFontName * 2, 'minWidth': self._colFontName }]
         for check in self._checks:
-            columnDescriptions.append({ "title": check, "width": self._colValue })
+            columnDescriptions.append({ "title": check[0].upper(), "width": self._colValue })
 
         y = p/2
         tab.resultsLabel = TextBox(
                 (x2, y, -p, self.lineHeight),
                 'check results')
 
-        y += self.lineHeight + p/2
+        y += self.lineHeight + p / 2
         tab.results = List(
-                (x2, y, -p, -(self.lineHeight + p*2)),
+                (x2, y, -p, -(self.lineHeight + p * 2)),
                 [],
                 columnDescriptions=columnDescriptions)
 
@@ -250,7 +259,7 @@ class SourceValidator:
     @property
     def showMarks(self):
         tab = self._tabs['fonts']
-        return [ check for check in self._checks if getattr(tab, check).get()]
+        return [check for check in self._checks if getattr(tab, check).get()]
 
     # ---------
     # callbacks
@@ -349,7 +358,7 @@ class SourceValidator:
         # get target fonts
         targetFonts = [OpenFont(targetFontPath, showInterface=False) for targetFontPath in self.targetFontPaths]
 
-        txt += validateFonts(targetFonts, sourceFont, width=options['width'], points=options['points'], components=options['components'], anchors=options['anchors'], unicodes=options['unicodes'])
+        txt += validateFonts(targetFonts, sourceFont, options)
         txt += '...done.\n\n'
 
         O = OutputWindow()
@@ -367,35 +376,51 @@ class SourceValidator:
 
         tab = self._tabs['glyphs']
 
+        options = {check: True for check in self._checks.keys()}
+
+        # read source glyph from .glif file
         sourceGlyphsFolder = os.path.join(self.sourceFontPath, 'glyphs')
         sourceGlyphSet = GlyphSet(sourceGlyphsFolder)
         sourceGlyph = Glyph()
-        sourceGlyphSet.readGlyph(self.selectedGlyph, glyphObject=sourceGlyph)
+        sourceGlyphSet.readGlyph(self.selectedGlyph, glyphObject=sourceGlyph, pointPen=sourceGlyph.getPointPen())
+        sourceGlyph = RGlyph(sourceGlyph)
+        for c in sourceGlyph.components:
+            g = Glyph()
+            sourceGlyphSet.readGlyph(c.baseGlyph, glyphObject=g, pointPen=g.getPointPen())
 
         items = []
         for targetFontPath in self.targetFontPaths:
             targetGlyphsFolder = os.path.join(targetFontPath, 'glyphs')
             targetGlyphSet = GlyphSet(targetGlyphsFolder)
-
             targetName = os.path.splitext(os.path.split(targetFontPath)[-1])[0]
             item = {}
             item['source'] = targetName
 
             if self.selectedGlyph not in targetGlyphSet:
-                item['width']      = '⚪'
-                item['points']     = '⚪'
-                item['components'] = '⚪'
-                item['anchors']    = '⚪'
-                item['unicodes']   = '⚪'
+                for checkName in options.keys():
+                    item[checkName] = '⚪'
             else:
+                # read target glyph from .glif file
                 targetGlyph = Glyph()
-                targetGlyphSet.readGlyph(self.selectedGlyph, glyphObject=targetGlyph)
-                results = validateGlyph(sourceGlyph, targetGlyph)
-                item['width']      = '🟢' if results['width']      else '🔴'
-                item['points']     = '🟢' if results['points']     else '🔴'
-                item['components'] = '🟢' if results['components'] else '🔴'
-                item['anchors']    = '🟢' if results['anchors']    else '🔴'
-                item['unicodes']   = '🟢' if results['unicodes']   else '🔴'
+                targetGlyphSet.readGlyph(self.selectedGlyph, glyphObject=targetGlyph, pointPen=targetGlyph.getPointPen())
+                targetGlyph = RGlyph(targetGlyph)
+                for c in targetGlyph.components:
+                    g = Glyph()
+                    targetGlyphSet.readGlyph(c.baseGlyph, glyphObject=g, pointPen=g.getPointPen())
+
+                resultsCompatibility = checkCompatibility(sourceGlyph, targetGlyph)
+                resultsEquality      = checkEquality(sourceGlyph, targetGlyph)
+
+                for checkName in options.keys():
+                    isCompatible = resultsCompatibility.get(checkName)
+                    isEqual      = resultsEquality.get(checkName)
+                    _checkName = checkName[0].upper()
+                    if isCompatible and isEqual:
+                        item[_checkName] = '🔵'
+                    elif isCompatible or isEqual:
+                        item[_checkName] = '🟢'
+                    else:
+                        item[_checkName] = '🔴'
 
             items.append(item)
 
