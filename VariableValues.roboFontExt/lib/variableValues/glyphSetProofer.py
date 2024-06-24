@@ -264,3 +264,20 @@ class GlyphSetProofer:
             DB.saveImage(pdfPath)
 
 
+
+class GlyphSetProoferDesignspace:
+    '''
+    TO-DO: Same as GlyphSetProofer but built around a designspace file.
+
+    so instead of:
+        GlyphSetProofer(familyName, defaultFontPath, sourcePaths)
+    
+    we can do:
+        GlyphSetProoferDesignspace(designspace, sourceNames)
+
+    as implemented in dialogs.GlyphSetProoferUI
+
+    '''
+    pass
+
+

@@ -9,7 +9,7 @@ import AppKit
 import math
 from defconAppKit.windows.baseWindow import BaseWindowController
 from vanilla import *
-from mojo.UI import UpdateCurrentGlyphView, CurrentFontWindow, PutFile, GetFile
+from mojo.UI import UpdateCurrentGlyphView, CurrentFontWindow, CurrentGlyphWindow, PutFile, GetFile
 from mojo import drawingTools as ctx
 from mojo.roboFont import *
 from mojo.events import addObserver, removeObserver
@@ -958,6 +958,19 @@ class Measurements2(BaseWindowController):
                     _drawLinkMeasurement(P1, P2, name, direction)
 
             ctx.restore()
+
+        # # draw measurement values
+        # window = CurrentGlyphWindow()
+        # x, y, w, h = window.getVisibleRect()
+        # txt = f"{'name'.ljust(5, ' ')} {'units'.rjust(6, ' ')} {'permil'.rjust(6, ' ')}\n"
+        # txt += f"{'-' * len(txt)}\n"
+        # for item in tab.measurements.get():
+        #     txt += f"{item['name'].ljust(5, ' ')} {str(item['units']).rjust(6, ' ')} {str(item['permill']).rjust(6, ' ')}\n"
+        # ctx.fill(*self.measurementsColor)
+        # ctx.font('Menlo-Bold')
+        # ctx.fontSize(12 * previewScale)
+        # ctx.lineHeight(8 * previewScale)
+        # ctx.text(txt, (x + glyph.width, y))
 
         ctx.restore()
 

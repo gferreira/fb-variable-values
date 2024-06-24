@@ -44,12 +44,10 @@ class GlyphSetProoferUI:
 
         group1 = Group((0, 0, -0, -0))
 
-        x = p = self.padding
-        y = 0
+        x = y = p = self.padding
         group1.designspacesLabel = TextBox(
                 (x, y, -p, self.lineHeight),
-                'designspaces', 
-                sizeStyle='small')
+                'designspaces')
 
         y += self.lineHeight
         group1.designspaces = List(
@@ -68,9 +66,7 @@ class GlyphSetProoferUI:
         y += self.lineHeight*3 + p
         group1.sourcesLabel = TextBox(
                 (x, y, -p, self.lineHeight),
-                'sources',
-                # sizeStyle='small'
-                )
+                'sources')
 
         y += self.lineHeight
         group1.sources = List(
@@ -83,15 +79,13 @@ class GlyphSetProoferUI:
         y = -self.lineHeight*2 - p*2
         group1.makeProof = Button(
                 (x, y, -p, self.lineHeight),
-                'make proofs',
-                # sizeStyle='small',
+                'make proof',
                 callback=self.makeProofsCallback)
 
         y = -self.lineHeight*1 - p*1
         group1.savePDF = Button(
                 (x, y, -p, self.lineHeight),
-                'save PDF',
-                # sizeStyle='small',
+                'save PDF…',
                 callback=self.savePDFCallback)
 
         group2 = Group((0, 0, -0, -0))
@@ -211,7 +205,7 @@ class GlyphSetProoferUI:
         group.canvas.setPDFDocument(pdfData)
 
     def savePDFCallback(self, sender):
-        
+
         default = self.selectedDesignspacePlus.default
         if default is None:
             return
@@ -226,4 +220,3 @@ class GlyphSetProoferUI:
 if __name__ == '__main__':
 
     OpenWindow(GlyphSetProoferUI)
-
