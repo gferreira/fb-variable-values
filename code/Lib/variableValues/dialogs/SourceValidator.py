@@ -10,7 +10,7 @@ from fontParts.world import OpenFont
 from mojo.UI import OutputWindow
 from mojo.roboFont import OpenWindow, CurrentFont, RGlyph
 from variableValues.validation import validateFonts, checkCompatibility, checkEquality
-from defcon import Glyph
+from defcon import Font, Glyph
 
 
 class SourceValidator:
@@ -38,8 +38,9 @@ class SourceValidator:
     _colFontName = 160
     colorTrue    = 0, 1, 0
     colorFalse   = 1, 0, 0
-    _sources     = {}
-    _targets     = {}
+    _sourcePaths = {}
+    _targetPaths = {}
+    _targetFonts = {}
     results      = {}
     verbose      = True
 
@@ -162,7 +163,8 @@ class SourceValidator:
         tab.results = List(
                 (x2, y, -p, -(self.lineHeight + p * 2)),
                 [],
-                columnDescriptions=columnDescriptions)
+                columnDescriptions=columnDescriptions,
+                doubleClickCallback=self.openFontCallback)
 
         y = -(self.lineHeight + p)
         tab.loadButton = Button(
@@ -195,7 +197,7 @@ class SourceValidator:
     def sourceFontPath(self):
         if not self.sourceFontName:
             return
-        return self._sources[self.sourceFontName]
+        return self._sourcePaths[self.sourceFontName]
 
     @property
     def sourceFont(self):
@@ -220,7 +222,7 @@ class SourceValidator:
 
     @property
     def targetFontPaths(self):
-        return [self._targets[targetFont] for targetFont in self.targetFontNames]
+        return [self._targetPaths[targetFont] for targetFont in self.targetFontNames]
 
     @property
     def selectedGlyph(self):
@@ -246,7 +248,7 @@ class SourceValidator:
 
     @property
     def selectedSourcePaths(self):
-        return [self._targets[targetFont] for targetFont in self.selectedSourceNames]
+        return [self._targetPaths[targetFont] for targetFont in self.selectedSourceNames]
 
     @property
     def markFont(self):
@@ -279,7 +281,7 @@ class SourceValidator:
         if not isProposal:
             for source in sources:
                 sourceName = os.path.splitext(os.path.split(source)[-1])[0]
-                self._sources[sourceName] = source
+                self._sourcePaths[sourceName] = source
                 self.sourcesList.append(sourceName)
                 self.sourcesList.setSelection([0])
 
@@ -299,7 +301,7 @@ class SourceValidator:
         if not isProposal:
             for target in targets:
                 targetName = os.path.splitext(os.path.split(target)[-1])[0]
-                self._targets[targetName] = target
+                self._targetPaths[targetName] = target
                 self.targetsList.append(targetName)
                 self.targetsList.setSelection([0])
 
@@ -318,7 +320,7 @@ class SourceValidator:
         if item == self.sourceFontName:
             ufoPath = self.sourceFontPath
         else:
-            ufoPath = self._targets.get(item)
+            ufoPath = self._targetPaths.get(item)
             if ufoPath is None:
                 return
 
@@ -356,7 +358,14 @@ class SourceValidator:
         txt += f'\tsource font: {self.sourceFontName}\n\n'
 
         # get target fonts
-        targetFonts = [OpenFont(targetFontPath, showInterface=False) for targetFontPath in self.targetFontPaths]
+        targetFonts = []
+        for targetFontName in targetFontNames:
+            if targetFontName in self._targetFonts:
+                targetFonts.append(self._targetFonts[targetFontName])
+            else:
+                targetFont = OpenFont(targetFontPath, showInterface=False)
+                self._targetFonts[targetFontName] = targetFont
+                targetFonts.append(targetFont)
 
         txt += validateFonts(targetFonts, sourceFont, options)
         txt += '...done.\n\n'
@@ -376,44 +385,37 @@ class SourceValidator:
 
         tab = self._tabs['glyphs']
 
-        options = {check: True for check in self._checks.keys()}
+        options = { check: True for check in self._checks.keys() }
 
-        # read source glyph from .glif file
-        sourceGlyphsFolder = os.path.join(self.sourceFontPath, 'glyphs')
-        sourceGlyphSet = GlyphSet(sourceGlyphsFolder)
-        sourceGlyph = Glyph()
-        sourceGlyphSet.readGlyph(self.selectedGlyph, glyphObject=sourceGlyph, pointPen=sourceGlyph.getPointPen())
+        sourceFont  = Font(self.sourceFontPath)
+        sourceGlyph = sourceFont[self.selectedGlyph]
         sourceGlyph = RGlyph(sourceGlyph)
-        for c in sourceGlyph.components:
-            g = Glyph()
-            sourceGlyphSet.readGlyph(c.baseGlyph, glyphObject=g, pointPen=g.getPointPen())
 
         items = []
         for targetFontPath in self.targetFontPaths:
-            targetGlyphsFolder = os.path.join(targetFontPath, 'glyphs')
-            targetGlyphSet = GlyphSet(targetGlyphsFolder)
             targetName = os.path.splitext(os.path.split(targetFontPath)[-1])[0]
+            if targetName in self._targetFonts:
+                targetFont = self._targetFonts[targetName]
+            else:
+                targetFont = Font(targetFontPath)
+                self._targetFonts[targetName] = targetFont
+
             item = {}
             item['source'] = targetName
 
-            if self.selectedGlyph not in targetGlyphSet:
+            if self.selectedGlyph not in targetFont: # targetGlyphSet:
                 for checkName in options.keys():
                     item[checkName] = '⚪'
             else:
-                # read target glyph from .glif file
-                targetGlyph = Glyph()
-                targetGlyphSet.readGlyph(self.selectedGlyph, glyphObject=targetGlyph, pointPen=targetGlyph.getPointPen())
+                targetGlyph = targetFont[self.selectedGlyph]
                 targetGlyph = RGlyph(targetGlyph)
-                for c in targetGlyph.components:
-                    g = Glyph()
-                    targetGlyphSet.readGlyph(c.baseGlyph, glyphObject=g, pointPen=g.getPointPen())
 
                 resultsCompatibility = checkCompatibility(sourceGlyph, targetGlyph)
                 resultsEquality      = checkEquality(sourceGlyph, targetGlyph)
 
                 for checkName in options.keys():
                     isCompatible = resultsCompatibility.get(checkName)
-                    isEqual      = resultsEquality.get(checkName)
+                    isEqual = resultsEquality.get(checkName)
                     _checkName = checkName[0].upper()
                     if isCompatible and isEqual:
                         item[_checkName] = '🔵'

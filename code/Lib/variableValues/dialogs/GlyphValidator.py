@@ -17,7 +17,12 @@ class GlyphValidator:
     padding     = 10
     lineHeight  = 20
     verbose     = False
+    
+    defaultPath = None
     defaultFont = None
+
+    measurementPath = None
+    measurementFont = None
 
     colorCheckTrue   = 0.00, 0.85, 0.00
     colorCheckFalse  = 1.00, 0.00, 0.00
@@ -141,7 +146,7 @@ class GlyphValidator:
     # callbacks
 
     def getDefaultCallback(self, sender):
-        defaultPath = GetFile(message='Get default source…', title=self.title)
+        self.defaultPath = GetFile(message='Get default source…', title=self.title)
         self.defaultFont = OpenFont(defaultPath, showInterface=False)
         self.updateGlyphViewCallback(sender)
         self.updateFontViewCallback(sender)
@@ -149,8 +154,7 @@ class GlyphValidator:
     def reloadDefaultCallback(self, sender):
         if self.defaultFont is None:
             return
-        defaultPath = self.defaultFont.path
-        self.defaultFont = OpenFont(defaultPath, showInterface=False)
+        self.defaultFont = OpenFont(self.defaultPath, showInterface=False)
 
     def updateGlyphViewCallback(self, sender):
         UpdateCurrentGlyphView()
@@ -249,10 +253,6 @@ class GlyphValidator:
             ctx.translate(w + 2 * scale, 0)
         ctx.restore()
         
-        # ctx.save()
-        # ctx.text('hello world', (x + glyph.width, glyph.font.info.xHeight))
-        # ctx.restore()
-
         ctx.restore()
 
     def markColorsCallback(self, sender):
