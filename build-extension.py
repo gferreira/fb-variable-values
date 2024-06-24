@@ -81,6 +81,11 @@ def buildExtension():
             'preferredName' : 'TempGlyphs',
             'shortKey'      : '',
         },
+        {
+            'path'          : 'variableValues/dialogs/GlyphGauge.py',
+            'preferredName' : 'GlyphGauge',
+            'shortKey'      : '',
+        },
     ]
     with open(licensePath) as license:
         B.license = license.read()

@@ -147,7 +147,7 @@ class GlyphValidator:
 
     def getDefaultCallback(self, sender):
         self.defaultPath = GetFile(message='Get default source…', title=self.title)
-        self.defaultFont = OpenFont(defaultPath, showInterface=False)
+        self.defaultFont = OpenFont(self.defaultPath, showInterface=False)
         self.updateGlyphViewCallback(sender)
         self.updateFontViewCallback(sender)
 
