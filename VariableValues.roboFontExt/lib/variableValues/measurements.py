@@ -58,7 +58,7 @@ class Measurement:
 
     '''
 
-    font     = None
+    font = None
 
     def __init__(self, name, direction, glyphName1, pointIndex1, glyphName2, pointIndex2, parent=None):
         self.name        = name

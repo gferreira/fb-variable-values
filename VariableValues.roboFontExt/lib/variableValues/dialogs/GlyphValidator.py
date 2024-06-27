@@ -226,7 +226,7 @@ class GlyphValidator:
 
         self.checkGlyph(glyph)
 
-        x, y = 4, 4
+        x, y = 3, 3
 
         ctx.save()
         ctx.font('Menlo-Bold')
