@@ -23,10 +23,10 @@ Options
 -------
 
 <div class='row'>
-<div class='col' markdown='1'>
+<div class='col-4' markdown='1'>
 ![]({{ site.url }}/images/GlyphValidator.png){: .img-fluid}
 </div>
-<div class='col' markdown='1'>
+<div class='col-8' markdown='1'>
 get default…
 : Open a dialog to select the source to check against the _current font_ 
 

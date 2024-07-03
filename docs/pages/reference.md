@@ -17,6 +17,7 @@ Dialogs
 - [GlyphSetProofer](glyphset-proofer)
 - [TempEdit](temp-edit)
 - [TempGlyphs](temp-glyphs)
+- [GlyphGauge](glyph-gauge)
 </div>
 <div class='col' markdown='1'>
 Formats
