@@ -5,10 +5,13 @@ reload(variableValues.dialogs.DesignSpaceSelector)
 import AppKit
 import os, sys
 import plistlib
+from operator import itemgetter 
 from vanilla import  Window, EditText, TextBox, Box, List, Button, Tabs, LevelIndicatorListCell
 from mojo.roboFont import OpenWindow, OpenFont
 from mojo.smartSet import readSmartSets
 from variableValues.dialogs.DesignSpaceSelector import DesignSpaceSelector
+from variableValues.linkPoints import readMeasurements
+from variableValues.measurements import Measurement
 
 
 def getSegmentTypes(glyph):
@@ -16,11 +19,11 @@ def getSegmentTypes(glyph):
     for ci, c in enumerate(glyph.contours):
         for si, s in enumerate(c.segments):
             if s.type == 'curve':
-                segmentType = 'C' # △ 
+                segmentType = 'C'
             elif s.type == 'qcurve':
-                segmentType = 'Q' # □
+                segmentType = 'Q'
             else:
-                segmentType = 'L' # ◯ 
+                segmentType = 'L'
             segments.append(segmentType)
     return segments
 
@@ -30,7 +33,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
     title = 'VarGlyph Assistant'
     key   = 'com.fontBureau.varGlyphAssistant'
 
-    _tabsTitles = ['designspace', 'glyph sets', 'attributes', 'segments']
+    _tabsTitles = ['designspace', 'glyph sets', 'attributes', 'segments', 'measurements']
 
     _glyphAttrs = {}
     _glyphAttrsLabels = [
@@ -48,6 +51,11 @@ class VarGlyphAssistant(DesignSpaceSelector):
     _glyphSetsFiles = {}
     _glyphSets = {}
 
+    _measurementFiles    = {}
+    _measurements        = {}
+    _measurementsUnits   = {}
+    _measurementsPermill = {}
+
     def __init__(self):
         self.w = Window(
                 (self.width, self.height), title=self.title,
@@ -60,6 +68,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
         self.initializeGlyphsTab()
         self.initializeAttributesTab()
         self.initializeCompatibilityTab()
+        self.initializeMeasurementsTab()
 
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
         self.w.open()
@@ -103,24 +112,20 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
         y += self.lineHeight + p/2
         tab.glyphSets = List(
-                (x, y, self._colLeft, -self.lineHeight-p*2),
+                (x, y, self._colLeft, -self.lineHeight - p*2),
                 [],
                 allowsMultipleSelection=True,
                 allowsEmptySelection=False,
-                selectionCallback=self.selectGlyphSetCallback,
-            )
+                selectionCallback=self.selectGlyphSetCallback)
 
         tab.glyphNames = EditText(
-                (x2, y, -p, -self.lineHeight-p*2),
-                '',
-            )
+                (x2, y, -p, -self.lineHeight - p*2),
+                'a b c A B C one two three')
 
         y = -(self.lineHeight + p)
         tab.updateGlyphs = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
-                'load',
-                # callback=self.updateMeasurementsCallback,
-            )
+                'load')
 
     def initializeAttributesTab(self):
 
@@ -138,14 +143,13 @@ class VarGlyphAssistant(DesignSpaceSelector):
                 [],
                 allowsMultipleSelection=False,
                 allowsEmptySelection=False,
-                selectionCallback=self.selectGlyphAttrsCallback,
-            )
+                selectionCallback=self.selectGlyphAttrsCallback)
 
         y = p/2
         x2 = x + self._colLeft + p
         tab.glyphAttributesLabel = TextBox(
                 (x2, y, -p, self.lineHeight),
-                'attributes')
+                'glyph attributes')
 
         y += self.lineHeight + p/2
         tab.glyphAttributes = List(
@@ -153,15 +157,14 @@ class VarGlyphAssistant(DesignSpaceSelector):
                 [],
                 allowsMultipleSelection=False,
                 allowsEmptySelection=True,
-                columnDescriptions=[{"title": t, 'width': self._colFontName*1.5, 'minWidth': self._colFontName} if ti == 0 else {"title": t, 'width': self._colValue*1.25} for ti, t in enumerate(['file name'] + self._glyphAttrsLabels)],
+                columnDescriptions=[{"title": t, "key": t, 'width': self._colFontName, 'minWidth': self._colFontName*0.9, 'maxWidth': self._colFontName*2} if ti == 0 else {"title": t, "key": t, 'width': self._colValue*1.6} for ti, t in enumerate(['file name'] + self._glyphAttrsLabels)],
             )
 
         y = -(self.lineHeight + p)
         tab.updateValues = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
                 'load',
-                callback=self.updateAttributesCallback,
-            )
+                callback=self.updateAttributesCallback)
 
     def initializeCompatibilityTab(self):
 
@@ -179,27 +182,124 @@ class VarGlyphAssistant(DesignSpaceSelector):
                 [],
                 allowsMultipleSelection=False,
                 allowsEmptySelection=False,
-                selectionCallback=self.selectGlyphCompatibilityCallback,
-            )
+                selectionCallback=self.selectGlyphCompatibilityCallback)
 
         y = p/2
         x2 = x + self._colLeft + p
         tab.segmentsLabel = TextBox(
                 (x2, y, -p, self.lineHeight),
-                'segments')
+                'glyph segments')
 
         y += self.lineHeight + p/2
         tab.segments = List(
                 (x2, y, -p, -(self.lineHeight + p*2)),
-                [],
-            )
+                [])
 
         y = -(self.lineHeight + p)
         tab.updateValues = Button(
                 (x, y, self.buttonWidth, self.lineHeight),
                 'load',
-                callback=self.updateCompatibilityCallback,
-            )
+                callback=self.updateCompatibilityCallback)
+
+    def initializeMeasurementsTab(self):
+
+        tab = self._tabs['measurements']
+
+        x = p = self.padding
+        y = p/2
+        col1 = self._colLeft
+        col2 = 220
+        x2 = x  + col1 + p
+        x3 = x2 + col2 + p
+
+        tab.measurementFilesLabel = TextBox(
+                (x, y, -p, self.lineHeight),
+                'measurement files')
+
+        y += self.lineHeight + p/2
+        tab.measurementFiles = List(
+                (x, y, -p, self.lineHeight*3),
+                [],
+                allowsMultipleSelection=False,
+                allowsEmptySelection=False,
+                enableDelete=True,
+                # editCallback=self.selectDesignspaceCallback,
+                selectionCallback=self.selectMeasurementFileCallback,
+                otherApplicationDropSettings=dict(
+                    type=AppKit.NSFilenamesPboardType,
+                    operation=AppKit.NSDragOperationCopy,
+                    callback=self.dropMeasurementFileCallback),
+                )
+
+        y += self.lineHeight*3 + p
+        tab.glyphsLabel = TextBox(
+                (x, y, col1, self.lineHeight),
+                'glyphs')
+
+        y += self.lineHeight + p/2
+        tab.glyphs = List(
+                (x, y, col1, -(self.lineHeight + p*2)),
+                [],
+                allowsMultipleSelection=False,
+                allowsEmptySelection=False,
+                selectionCallback=self.updateGlyphMeasurementsCallback)
+
+        y = self.lineHeight*4 + p*2
+        tab.glyphMeasurementsLabel = TextBox(
+                (x2, y, -p, self.lineHeight),
+                'measurements')
+
+        y += self.lineHeight + p/2
+        columnDescriptions = [
+            { "title": "name", 'width': 60 },
+            { "title": "dir",  'width': 30 },
+            { "title": "pt1",  'width': 30 },
+            { "title": "pt2",  'width': 30 },
+        ]
+        tab.glyphMeasurements = List(
+                (x2, y, col2, -(self.lineHeight + p*2)),
+                [],
+                allowsMultipleSelection=False,
+                allowsEmptySelection=False,
+                columnDescriptions=columnDescriptions,
+                allowsSorting=True,
+                # editCallback=self.editFontInfoValueCallback,
+                enableDelete=False,
+                selectionCallback=self.updateGlyphMeasurementValuesCallback)
+
+        y = self.lineHeight*4 + p*2
+        tab.glyphMeasurementValuesLabel = TextBox(
+                (x3, y, -p, self.lineHeight),
+                'values')
+
+        y += self.lineHeight + p/2
+        columnDescriptions = [
+            { "title": "file name", 'width': self._colFontName },
+            { "title": "units",     'width': 60 },
+            { "title": "permill",   'width': 60 },
+        ]
+        tab.glyphMeasurementValues = List(
+                (x3, y, -p, -(self.lineHeight + p*2)),
+                [],
+                allowsMultipleSelection=False,
+                allowsEmptySelection=False,
+                columnDescriptions=columnDescriptions,
+                allowsSorting=True,
+                # editCallback=self.editFontInfoValueCallback,
+                enableDelete=False)
+
+        y = -(self.lineHeight + p)
+        tab.updateMeasurements = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'load',
+                callback=self.updateMeasurementGlyphsCallback)
+
+        # x = -(p + self.buttonWidth)
+        # tab.exportMeasurements = Button(
+        #         (x, y, self.buttonWidth, self.lineHeight),
+        #         'export',
+        #         # callback=self.exportMeasurementsCallback,
+        #     )
 
     # -------------
     # dynamic attrs
@@ -250,6 +350,36 @@ class VarGlyphAssistant(DesignSpaceSelector):
         if not len(selectedGlyphs):
             return
         return selectedGlyphs[0]
+
+    # measurements
+
+    @property
+    def selectedMeasurementFile(self):
+        tab = self._tabs['measurements']
+        selection = tab.measurementFiles.getSelection()
+        measurementFiles = tab.measurementFiles.get()
+        selectedMeasurementFiles = [measurementFile for i, measurementFile in enumerate(measurementFiles) if i in selection]
+        if not len(selectedMeasurementFiles):
+            return
+        return selectedMeasurementFiles[0]
+
+    @property
+    def selectedMeasurementsGlyph(self):
+        tab = self._tabs['measurements']
+        selection = tab.glyphs.getSelection()
+        glyphs = tab.glyphs.get()
+        selectedGlyphs = [a for i, a in enumerate(glyphs) if i in selection]
+        if not len(selectedGlyphs):
+            return
+        return selectedGlyphs[0]
+
+    @property
+    def selectedGlyphMeasurement(self):
+        tab = self._tabs['measurements']
+        selection = tab.glyphMeasurements.getSelection()
+        if not len(selection):
+            return
+        return selection[0]
 
     # ---------
     # callbacks
@@ -460,6 +590,147 @@ class VarGlyphAssistant(DesignSpaceSelector):
                 allowsEmptySelection=False,
             )
 
+    # measurements
+
+    def dropMeasurementFileCallback(self, sender, dropInfo):
+        isProposal = dropInfo["isProposal"]
+        existingPaths = sender.get()
+
+        paths = dropInfo["data"]
+        paths = [path for path in paths if path not in existingPaths]
+        paths = [path for path in paths if os.path.splitext(path)[-1].lower() == '.json']
+
+        if not paths:
+            return False
+
+        if not isProposal:
+            tab = self._tabs['measurements']
+            for path in paths:
+                label = os.path.split(path)[-1]
+                self._measurementFiles[label] = path
+                tab.measurementFiles.append(label)
+                tab.measurementFiles.setSelection([0])
+
+        return True
+
+    def selectMeasurementFileCallback(self, sender):
+
+        tab = self._tabs['measurements']
+
+        if not self.selectedMeasurementFile:
+            tab.glyphMeasurements.set([])
+            return
+
+        measurementFilePath = self._measurementFiles[self.selectedMeasurementFile]
+        self._measurements = readMeasurements(measurementFilePath)
+
+    def updateMeasurementGlyphsCallback(self, sender):
+        tab = self._tabs['measurements']
+        glyphNames = self._tabs['glyph sets'].glyphNames.get().split(' ')
+        tab.glyphs.set(glyphNames)
+
+    def updateGlyphMeasurementsCallback(self, sender):
+
+        tab = self._tabs['measurements']
+
+        # no measurements file
+        if not self._measurements:
+            tab.glyphMeasurements.set([])
+            return
+
+        # no glyph measurements dict
+        if not self._measurements.get('glyphs'):
+            tab.glyphMeasurements.set([])
+            return
+
+        glyphName = self.selectedMeasurementsGlyph
+        glyphMeasurementsKeys = self._measurements['glyphs'].get(glyphName)
+        
+        # make glyph measurements list
+        listItems = []
+        for k in glyphMeasurementsKeys:
+            pt1, pt2 = k.split()
+            listItem = {
+                'name' : self._measurements['glyphs'][glyphName][k]['name'],
+                'dir'  : self._measurements['glyphs'][glyphName][k]['direction'],
+                'pt1'  : pt1,
+                'pt2'  : pt2,
+            }
+            listItems.append(listItem) 
+
+        # measure sources and store data
+
+        self._measurementsUnits   = {}
+        self._measurementsPermill = {}
+
+        for source in self.selectedSources:
+            sourceFileName = source['file name']
+            sourcePath = self._sources[sourceFileName]
+
+            f = OpenFont(sourcePath, showInterface=False)
+
+            self._measurementsUnits[sourceFileName]   = []
+            self._measurementsPermill[sourceFileName] = []
+
+            for key in glyphMeasurementsKeys:
+                parts = key.split()
+
+                # get point indexes
+                if len(parts) == 2:
+                    index1, index2 = parts
+                else:
+                    continue
+                try:
+                    index1 = int(index1)
+                except:
+                    pass
+                try:
+                    index2 = int(index2)
+                except:
+                    pass
+
+                # setup measurement
+                measurementName = self._measurements['glyphs'][glyphName][key]['name']
+                M = Measurement(measurementName,
+                    self._measurements['glyphs'][glyphName][key]['direction'],
+                    glyphName, index1, glyphName, index2)
+
+                # measure glyph
+                valueUnits = M.measure(f)
+                if valueUnits is None:
+                    valueUnits = valuePermill = '-'
+                elif valueUnits == 0:
+                    valuePermill = 0
+                else:
+                    valuePermill = round(valueUnits*1000 / f.info.unitsPerEm)
+
+                self._measurementsUnits[sourceFileName].append((measurementName, index1, index2, valueUnits, valuePermill))
+
+            f.close()
+
+        # update UI
+        tab.glyphMeasurements.set(listItems)
+        tab.glyphMeasurements.setSelection([0])
+
+    def updateGlyphMeasurementValuesCallback(self, sender):
+
+        tab = self._tabs['measurements']
+
+        listItems = []
+        for sourceName, measurements in self._measurementsUnits.items():
+            measurement = measurements[self.selectedGlyphMeasurement]
+            if measurement is None:
+                continue
+            measurementName, index1, index2, valueUnits, valuePermill = measurement
+            listItem = {
+                "file name" : sourceName,
+                "units"     : valueUnits,
+                "permill"   : valuePermill,
+            }
+            listItems.append(listItem)
+
+        sortedItems = sorted(listItems, key=itemgetter('units', 'file name'))
+        tab.glyphMeasurementValues.set(sortedItems)
 
 
 if __name__ == '__main__':

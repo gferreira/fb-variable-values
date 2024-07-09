@@ -363,7 +363,7 @@ class SourceValidator:
             if targetFontName in self._targetFonts:
                 targetFonts.append(self._targetFonts[targetFontName])
             else:
-                targetFont = OpenFont(targetFontPath, showInterface=False)
+                targetFont = OpenFont(self._targetFonts[targetFontName], showInterface=False)
                 self._targetFonts[targetFontName] = targetFont
                 targetFonts.append(targetFont)
 

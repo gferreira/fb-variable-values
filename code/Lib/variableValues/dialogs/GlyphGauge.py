@@ -214,9 +214,6 @@ class GlyphGauge:
             # draw table item
             c = 0,
 
-            # fontMeasurements = self.fontMeasurements
-            # if measurementName in fontMeasurements:
-
             # calculate scale factor
             if valueUnits == defaultUnits:
                 scaleValue = 1.0
@@ -231,10 +228,6 @@ class GlyphGauge:
                     c = self.colorCheckFalse
             if not isinstance(scaleValue, str):
                 scaleValue = f"{scaleValue:.2f}"
-
-            # else:
-            #     defaultUnits = '-'
-            #     scaleValue = '-'
 
             if not self.permille:
                 txt = f"{measurementName.ljust(4, ' ')} {str(valueUnits).rjust(5, ' ')} {str(defaultUnits).rjust(5, ' ')} {scaleValue.rjust(5, ' ')}"
@@ -269,9 +262,9 @@ class GlyphGauge:
 
         # draw table header
         if not self.permille:
-            txt = f"{'name'.ljust(4, ' ')} {'units'.rjust(5, ' ')} {'paren'.rjust(5, ' ')} {'scale'.rjust(5, ' ')}"
+            txt = f"{'name'.ljust(4, ' ')} {'units'.rjust(5, ' ')} {'paren'.rjust(5, ' ')} {'scale'.rjust(5, ' ')}  {'glyph'.rjust(5, ' ')}"
         else:
-            txt = f"{'name'.ljust(4, ' ')} {'perml'.rjust(5, ' ')} {'paren'.rjust(5, ' ')} {'scale'.rjust(5, ' ')}"
+            txt = f"{'name'.ljust(4, ' ')} {'perml'.rjust(5, ' ')} {'paren'.rjust(5, ' ')} {'scale'.rjust(5, ' ')}  {'glyph'.rjust(5, ' ')}"
         ctx.fill(*self.colorCheckEqual)
         ctx.text(txt, (_x, _y))
         _y -= lh
@@ -330,10 +323,12 @@ class GlyphGauge:
                 except:
                     pass
 
+                glyph1 = fontMeasurement.get('glyph 1')
+                glyph2 = fontMeasurement.get('glyph 2')
+
                 M2 = Measurement(measurementName,
                     fontMeasurement.get('direction'),
-                    fontMeasurement.get('glyph 1'), index1,
-                    fontMeasurement.get('glyph 2'), index2)
+                    glyph1, index1, glyph2, index2)
 
                 parentUnits = M2.measure(font)
 
@@ -366,9 +361,9 @@ class GlyphGauge:
                 scaleValue  = '-'
 
             if not self.permille:
-                txt = f"{measurementName.ljust(4, ' ')} {str(valueUnits).rjust(5, ' ')} {str(parentUnits).rjust(5, ' ')} {scaleValue.rjust(5, ' ')}"
+                txt = f"{measurementName.ljust(4, ' ')} {str(valueUnits).rjust(5, ' ')} {str(parentUnits).rjust(5, ' ')} {scaleValue.rjust(5, ' ')}  {glyph1}"
             else:
-                txt = f"{measurementName.ljust(4, ' ')} {str(valuePermill).rjust(5, ' ')} {str(parentPermille).rjust(5, ' ')} {scaleValue.rjust(5, ' ')}"
+                txt = f"{measurementName.ljust(4, ' ')} {str(valuePermill).rjust(5, ' ')} {str(parentPermille).rjust(5, ' ')}  {glyph1}"
 
             ctx.fill(*c)
             ctx.text(txt, (_x, _y))

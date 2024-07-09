@@ -35,25 +35,45 @@ class VarFontAssistant(DesignSpaceSelector):
     _measurementsPermill = {}
 
     _fontAttrs = {
-        'unitsPerEm'                   : 'unitsPerEm',
-        'xHeight'                      : 'xHeight',
-        'capHeight'                    : 'capHeight',
-        'descender'                    : 'descender',
-        'ascender'                     : 'ascender',
-        'italicAngle'                  : 'italic angle',
-        'openTypeOS2WeightClass'       : 'OS2 weight',
-        'openTypeOS2WidthClass'        : 'OS2 width',
-        'openTypeOS2WeightClass'       : 'OS2 weight',
-        'openTypeOS2TypoAscender'      : 'OS2 typo ascender',
-        'openTypeOS2TypoDescender'     : 'OS2 typo descender',
-        'openTypeOS2TypoLineGap'       : 'OS2 line gap',
-        'openTypeOS2WinAscent'         : 'OS2 win ascender',
-        'openTypeOS2WinDescent'        : 'OS2 win descender',
-        'openTypeOS2StrikeoutSize'     : 'OS2 strikeout size',
-        'openTypeOS2StrikeoutPosition' : 'OS2 strikeout position',
-        'openTypeHheaAscender'         : 'hhea ascender',
-        'openTypeHheaDescender'        : 'hhea descender',
-        'openTypeHheaLineGap'          : 'hhea line gap',
+        'familyName'                         : 'family name',
+        'styleName'                          : 'style name',
+        'unitsPerEm'                         : 'unitsPerEm',
+        'xHeight'                            : 'xHeight',
+        'capHeight'                          : 'capHeight',
+        'descender'                          : 'descender',
+        'ascender'                           : 'ascender',
+        'italicAngle'                        : 'italic angle',
+        'openTypeOS2WeightClass'             : 'OS2 weight',
+        'openTypeOS2WidthClass'              : 'OS2 width',
+        'openTypeOS2WeightClass'             : 'OS2 weight',
+        'openTypeOS2TypoAscender'            : 'OS2 typo ascender',
+        'openTypeOS2TypoDescender'           : 'OS2 typo descender',
+        'openTypeOS2TypoLineGap'             : 'OS2 line gap',
+        'openTypeOS2WinAscent'               : 'OS2 win ascender',
+        'openTypeOS2WinDescent'              : 'OS2 win descender',
+        'openTypeOS2StrikeoutSize'           : 'OS2 strikeout size',
+        'openTypeOS2StrikeoutPosition'       : 'OS2 strikeout position',
+        'openTypeHheaAscender'               : 'hhea ascender',
+        'openTypeHheaDescender'              : 'hhea descender',
+        'openTypeHheaLineGap'                : 'hhea line gap',
+        'styleMapFamilyName'                 : 'style map family',
+        'styleMapStyleName'                  : 'style map style',
+        'copyright'                          : 'copyright',
+        'trademark'                          : 'trademark',
+        'openTypeNameDesigner'               : 'designer',
+        'openTypeNameDesignerURL'            : 'designer URL',
+        'openTypeNameManufacturer'           : 'manufacturer',
+        'openTypeNameManufacturerURL'        : 'manufacturer URL',
+        'openTypeNameLicense'                : 'license',
+        'openTypeNameLicenseURL'             : 'license URL',
+        'openTypeNameVersion'                : 'version',
+        'openTypeNameUniqueID'               : 'uniqueID',
+        'openTypeNameDescription'            : 'description',
+        'openTypeNamePreferredFamilyName'    : 'preferred family',
+        'openTypeNamePreferredSubfamilyName' : 'preferred subfamily',
+        'openTypeNameCompatibleFullName'     : 'compatible name',
+        'openTypeNameWWSFamilyName'          : 'WWS family',
+        'openTypeNameWWSSubfamilyName'       : 'WWS subfamily',
     }
     _fontValues = {}
 
@@ -207,18 +227,19 @@ class VarFontAssistant(DesignSpaceSelector):
         columnDescriptions = [
             {
                 "title"    : 'file name',
-                'width'    : self._colFontName*1.5,
-                'minWidth' : self._colFontName,
+                'width'    : self._colFontName,
+                'minWidth' : self._colFontName*0.9,
+                'maxWidth' : self._colFontName*2,
             },
             {
                 "title"    : 'value',
-                'width'    : self._colValue,
+                # 'width'    : self._colValue,
             },
-            {
-                "title"    : 'level',
-                'width'    : self._colValue*1.5,
-                'cell'     : LevelIndicatorListCell(style="continuous", maxValue=1600),
-            },
+            # {
+            #     "title"    : 'level',
+            #     'width'    : self._colValue*1.5,
+            #     'cell'     : LevelIndicatorListCell(style="continuous", maxValue=1600),
+            # },
         ]
         y += self.lineHeight + p/2
         tab.fontValues = List(
@@ -438,8 +459,10 @@ class VarFontAssistant(DesignSpaceSelector):
 
     def loadFontValuesCallback(self, sender):
 
+        print('HEY!')
         if not self.selectedSources:
             return
+        print('HO!')
 
         tab = self._tabs['font info']
 
@@ -479,11 +502,11 @@ class VarFontAssistant(DesignSpaceSelector):
 
         fontAttr = self.selectedFontAttr
 
-        if self.verbose:
-            print('updating font info values...\n')
+        # if self.verbose:
+        #     print('updating font info values...\n')
 
         # create list items
-        values = []
+        # values = []
         fontInfoItems = []
         for fontName in self._fontValues.keys():
             value = self._fontValues[fontName][fontAttr]
@@ -493,9 +516,9 @@ class VarFontAssistant(DesignSpaceSelector):
                 "file name" : fontName,
                 "value"     : value,
             }
-            if value is not None:
-                listItem["level"] = abs(value)
-                values.append(value)
+            # if value is not None:
+            #     listItem["level"] = abs(value)
+            #     values.append(value)
             
             fontInfoItems.append(listItem)
 
@@ -506,19 +529,19 @@ class VarFontAssistant(DesignSpaceSelector):
         columnDescriptions = [
             {
                 "title"    : 'file name',
-                'width'    : self._colFontName*1.5,
-                'minWidth' : self._colFontName,
-                'maxWidth' : self._colFontName*3,
+                'width'    : self._colFontName,
+                'minWidth' : self._colFontName*0.9,
+                'maxWidth' : self._colFontName*2,
             },
             {
                 "title"    : 'value',
-                'width'    : self._colValue,
+                # 'width'    : self._colValue,
             },
-            {
-                "title"    : 'level',
-                'width'    : self._colValue*1.5,
-                'cell'     : LevelIndicatorListCell(style="continuous", minValue=min(values), maxValue=max(values)),
-            },
+            # {
+            #     "title"    : 'level',
+            #     'width'    : self._colValue*1.5,
+            #     'cell'     : LevelIndicatorListCell(style="continuous", minValue=min(values), maxValue=max(values)),
+            # },
         ]
         tab.fontValues = List(
             fontInfoValuesPosSize,
@@ -652,8 +675,8 @@ class VarFontAssistant(DesignSpaceSelector):
 
         pair, pairIndex = self.selectedKerningPair
 
-        if self.verbose:
-            print(f'updating kerning values for pair {pair} ({pairIndex})...\n')
+        # if self.verbose:
+        #     print(f'updating kerning values for pair {pair} ({pairIndex})...\n')
 
         # create list items
         values = []
@@ -926,8 +949,8 @@ class VarFontAssistant(DesignSpaceSelector):
 
         measurementName = self.selectedMeasurement
 
-        if self.verbose:
-            print('updating font measurements...\n')
+        # if self.verbose:
+        #     print('updating font measurements...\n')
 
         # create list items
         values = []

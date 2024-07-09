@@ -5,12 +5,10 @@ reload(variableValues.designspacePlus)
 import AppKit
 import os
 from operator import itemgetter
-from vanilla import Window, TextBox, CheckBox, List, Tabs
+from vanilla import Window, TextBox, CheckBox, List, Tabs, Button
 from mojo.roboFont import OpenFont, OpenWindow
 from variableValues.designspacePlus import DesignSpacePlus, getVarDistance
 
-# TO-DO
-# - turn off axis == hide sources which are not in the default location for that axis
 
 class DesignSpaceSelector:
 
@@ -23,7 +21,7 @@ class DesignSpaceSelector:
     verbose       = True
 
     _colLeft      = 160
-    _colFontName  = 160
+    _colFontName  = 240
     _colValue     = 50
 
     _tabsTitles   = ['designspace'] # expand in subclass
@@ -84,37 +82,38 @@ class DesignSpaceSelector:
                 )
 
         y += self.lineHeight*3 + p
-        tab.axesLabel = TextBox(
-                (x, y, -p, self.lineHeight),
-                'axes')
 
-        y += self.lineHeight + p/2
-        axesDescriptions = []
-        for i, columnTitle in enumerate(self._axisColumns):
-            D = {}
-            D["title"] = columnTitle
-            if i:
-                D["width"] = 80
-            else:
-                D["minWidth"] = 80
-                D["width"]    = 120
-                D["maxWidth"] = 200
-            axesDescriptions.append(D)
-        tab.axes = List(
-                (x, y, -p, self.lineHeight*7),
-                [],
-                drawFocusRing=False,
-                editCallback=self.editAxesCallback,
-                allowsSorting=False,
-                selfDropSettings=dict(type="genericListPboardType",
-                        operation=AppKit.NSDragOperationMove,
-                        callback=self.genericDropSelfCallback),
-                dragSettings=dict(type="genericListPboardType",
-                        callback=self.genericDragCallback),
-                columnDescriptions=axesDescriptions,
-            )
+        # tab.axesLabel = TextBox(
+        #         (x, y, -p, self.lineHeight),
+        #         'axes')
 
-        y += self.lineHeight*7 + p
+        # y += self.lineHeight + p/2
+        # axesDescriptions = []
+        # for i, columnTitle in enumerate(self._axisColumns):
+        #     D = {}
+        #     D["title"] = columnTitle
+        #     if i:
+        #         D["width"] = 80
+        #     else:
+        #         D["minWidth"] = 80
+        #         D["width"]    = 120
+        #         D["maxWidth"] = 200
+        #     axesDescriptions.append(D)
+        # tab.axes = List(
+        #         (x, y, -p, self.lineHeight*7),
+        #         [],
+        #         drawFocusRing=False,
+        #         # editCallback=self.editAxesCallback,
+        #         allowsSorting=True,
+        #         # selfDropSettings=dict(type="genericListPboardType",
+        #         #         operation=AppKit.NSDragOperationMove,
+        #         #         callback=self.genericDropSelfCallback),
+        #         # dragSettings=dict(type="genericListPboardType",
+        #         #         callback=self.genericDragCallback),
+        #         columnDescriptions=axesDescriptions,
+        #     )
+
+        # y += self.lineHeight*7 + p
         tab.sourcesLabel = TextBox(
                 (x, y, -p, self.lineHeight),
                 'sources')
@@ -134,6 +133,13 @@ class DesignSpaceSelector:
                 sizeStyle='small')
             setattr(tab, sourceType, checkBox)
             x += labelWidth
+
+        x = -(p + self.buttonWidth)
+        tab.openSelectedSources = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'open',
+                callback=self.openSelectedSourcesCallback,
+            )
 
     # -------------
     # dynamic attrs
@@ -227,41 +233,6 @@ class DesignSpaceSelector:
             sourceFileName = os.path.splitext(os.path.split(source.path)[-1])[0]
             self._sources[sourceFileName] = source.path
 
-    def updateSourcesListCallback(self, sender):
-
-        # make list items
-        sourcesDescriptions  = [{'title': 'n', 'width': 20}]
-        sourcesDescriptions += [{'title': 'file name', 'width': self._colFontName*1.5, 'minWidth': self._colFontName}] # , 'maxWidth': self._colFontName*3
-        sourcesDescriptions += [{'title': axis.tag, 'width': self._colValue} for axis in self.selectedDesignspacePlus.document.axes]
-        sourcesItems = []
-        for source in self.sources:
-            sourceFileName = os.path.splitext(os.path.split(source.path)[-1])[0]
-            n = getVarDistance(source, self.selectedDesignspacePlus.default)
-            sourceItem = {
-                'n'         : n,
-                'file name' : sourceFileName,
-            }
-            for axis in self.selectedDesignspacePlus.document.axes:
-                sourceItem[axis.tag] = source.location[axis.name]
-            sourcesItems.append(sourceItem)
-
-        # update source list
-        tab = self._tabs['designspace']
-        sourcesListPosSize = tab.sources.getPosSize()
-        del tab.sources
-        tab.sources = List(
-            sourcesListPosSize, sourcesItems,
-            columnDescriptions=sourcesDescriptions,
-            allowsMultipleSelection=True,
-            allowsSorting=False, ### this breaks list item selection :(
-            enableDelete=False,
-            selectionCallback=self.selectedSourcesCallback,
-            doubleClickCallback=self.openSourceCallback)
-
-    def selectedSourcesCallback(self, sender):
-        # print(self.selectedSources) # list items
-        pass
-
     # ---------
     # callbacks
     # ---------
@@ -292,20 +263,21 @@ class DesignSpaceSelector:
         tab = self._tabs['designspace']
 
         if not self.selectedDesignspace:
-            tab.axes.set([])
+            # tab.axes.set([])
             tab.sources.set([])
             return
 
         # update axes list
-        axesItems = []
-        for axis in self.selectedDesignspacePlus.document.axes:
-            axisItem = { attr : getattr(axis, attr) for attr in self._axisColumns }
-            axesItems.append(axisItem)
-        tab.axes.set(axesItems)
+        # axesItems = []
+        # for axis in self.selectedDesignspacePlus.document.axes:
+        #     axisItem = { attr : getattr(axis, attr) for attr in self._axisColumns }
+        #     axesItems.append(axisItem)
+        # tab.axes.set(axesItems)
 
         self.collectAllSources()
         self.updateSourcesListCallback(None)
 
+    '''
     def editAxesCallback(self, sender):
         tab = self._tabs['designspace']
         self.axesOrder = [a['tag'] for a in tab.axes.get()]
@@ -345,19 +317,73 @@ class DesignSpaceSelector:
                 rowIndex += 1
             sender.set(items)
         return True
+    '''
 
-    def openSourceCallback(self, sender):
-        selectedSource = self.selectedSources[0]
-        sourcePath = self._sources[selectedSource['file name']]
-        if not os.path.exists(sourcePath):
-            if self.verbose:
-                print(f"this source does not exist: '{sourcePath}'")
+    def updateSourcesListCallback(self, sender):
+
+        # make list items
+        sourcesDescriptions  = [{'title': 'n', 'width': 20}]
+        sourcesDescriptions += [{'title': 'file name', 'width': self._colFontName, 'minWidth': self._colFontName*0.9}] # , 'maxWidth': self._colFontName*3
+        sourcesDescriptions += [{'title': axis.tag, 'width': self._colValue} for axis in self.selectedDesignspacePlus.document.axes]
+        sourcesItems = []
+        for source in self.sources:
+            sourceFileName = os.path.splitext(os.path.split(source.path)[-1])[0]
+            n = getVarDistance(source, self.selectedDesignspacePlus.default)
+            sourceItem = {
+                'n'         : n,
+                'file name' : sourceFileName,
+            }
+            for axis in self.selectedDesignspacePlus.document.axes:
+                sourceItem[axis.tag] = source.location[axis.name]
+            sourcesItems.append(sourceItem)
+
+        # update source list
+        tab = self._tabs['designspace']
+        sourcesListPosSize = tab.sources.getPosSize()
+        del tab.sources
+        tab.sources = List(
+            sourcesListPosSize, sourcesItems,
+            columnDescriptions=sourcesDescriptions,
+            allowsMultipleSelection=True,
+            allowsSorting=True,
+            enableDelete=False,
+            # selectionCallback=self.selectedSourcesCallback,
+            # doubleClickCallback=self.openSourceCallback
+        )
+
+    # def selectedSourcesCallback(self, sender):
+    #     # print(self.selectedSources) # list items
+    #     pass
+
+    def openSelectedSourcesCallback(self, sender):
+
+        print(self.selectedSources)
+
+        if not self.selectedSources:
             return
-        if self.verbose:
-            print(f"opening '{sourcePath}'...", end=' ')
-        f = OpenFont(sourcePath, showInterface=True)
-        if self.verbose:
-            print('done!\n')
+
+        for srcItem in self.selectedSources:
+            sourcePath = self._sources[srcItem['file name']]
+            if not os.path.exists(sourcePath):
+                if self.verbose:
+                    print(f"this source does not exist: '{sourcePath}'")
+                continue
+            if self.verbose:
+                print(f"opening '{sourcePath}'...", end=' ')
+            f = OpenFont(sourcePath, showInterface=True)
+
+    # def openSourceCallback(self, sender):
+    #     selectedSource = self.selectedSources[0]
+    #     sourcePath = self._sources[selectedSource['file name']]
+    #     if not os.path.exists(sourcePath):
+    #         if self.verbose:
+    #             print(f"this source does not exist: '{sourcePath}'")
+    #         return
+    #     if self.verbose:
+    #         print(f"opening '{sourcePath}'...", end=' ')
+    #     f = OpenFont(sourcePath, showInterface=True)
+    #     if self.verbose:
+    #         print('done!\n')
 
 # ----
 # test

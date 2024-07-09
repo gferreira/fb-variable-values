@@ -46,19 +46,19 @@ class MeasurementsController(ezui.WindowController):
         > (+-) @fontMeasurementsAddRemoveButton
 
         * Tab: glyph @glyphsTab
-        > |-------------------------------------------------------------------------------------|
-        > | name | direction | point1 | point2 | units | permill | parent | scale | description |  @glyphMeasurements
-        > |------|-----------|--------|--------|-------|---------|--------|-------|-------------|
-        > |      |           |        |        |       |         |        |       |             |
-        > |-------------------------------------------------------------------------------------|
+        > |-----------------------------------------------------------------------|
+        > | name | direction | point1 | point2 | units | permill | parent | scale |  @glyphMeasurements
+        > |------|-----------|--------|--------|-------|---------|--------|-------|
+        > |      |           |        |        |       |         |        |       |
+        > |-----------------------------------------------------------------------|
         > > (+-)        @glyphMeasurementsAddRemoveButton
         > > * ColorWell @colorButton 
         > > (flip)      @flipButton
 
         =============
 
-        ( load ) @loadButton
-        ( save ) @saveButton
+        ( load… ) @loadButton
+        ( save… ) @saveButton
         """
 
         descriptionData = dict(
@@ -197,14 +197,6 @@ class MeasurementsController(ezui.WindowController):
                         width=self.colWidth,
                         editable=False
                     ),
-                    dict(
-                        identifier="description",
-                        title="description",
-                        width=self.colWidth*6,
-                        minWidth=self.colWidth*4,
-                        maxWidth=self.colWidth*10,
-                        editable=False
-                    ),
                 ],
                 itemPrototype=dict(
                     name='_new',
@@ -215,7 +207,6 @@ class MeasurementsController(ezui.WindowController):
                     permill=None,
                     parent=None,
                     scale=None,
-                    description=None,
                 ),
             ),
             colorButton=dict(
