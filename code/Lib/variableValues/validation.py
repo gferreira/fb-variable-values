@@ -210,16 +210,40 @@ def checkEqualUnicodes(g1, g2):
 
 # checkers
 
-# def checkGlyph(g1, g2):
-#     # DEPRECATED: use checkCompatibility and/or checkEquality instead.
-#     return {
-#         'width'          : checkEqualWidth(g1, g2),
-#         'points'         : checkContoursCompatible(g1, g2),
-#         'pointPositions' : checkEqualContours(g1, g2),
-#         'components'     : checkComponentsCompatible(g1, g2),
-#         'anchors'        : checkAnchorsCompatible(g1, g2),
-#         'unicodes'       : checkEqualUnicodes(g1, g2),
-#     }
+def validateGlyph(g1, g2, options):
+    '''
+    Check if two glyphs match.
+
+    Returns:
+        A dictionary of glyph attribute names and `True` or `False` results.
+
+    DEPRECATED: use checkCompatibility and/or checkEquality instead.
+
+    '''
+    results = {}
+    if options['width']:
+        results['width']          = checkEqualWidth(g1, g2)
+    if options['points']:
+        results['points']         = checkContoursCompatible(g1, g2)
+        results['pointPositions'] = checkEqualContours(g1, g2)
+    if options['components']:
+        results['components']     = checkComponentsCompatible(g1, g2)
+    if options['anchors']:
+        results['anchors']        = checkAnchorsCompatible(g1, g2)
+    if options['unicodes']:
+        results['unicodes']       = checkEqualUnicodes(g1, g2)
+    return results
+
+def checkGlyph(g1, g2):
+    # DEPRECATED: use checkCompatibility and/or checkEquality instead.
+    return {
+        'width'          : checkEqualWidth(g1, g2),
+        'points'         : checkContoursCompatible(g1, g2),
+        'pointPositions' : checkEqualContours(g1, g2),
+        'components'     : checkComponentsCompatible(g1, g2),
+        'anchors'        : checkAnchorsCompatible(g1, g2),
+        'unicodes'       : checkEqualUnicodes(g1, g2),
+    }
 
 def checkCompatibility(g1, g2):
     return {
@@ -258,7 +282,7 @@ def validateFont(f1, f2, options):
         A string with a report of all differences found.
 
     '''
-    txt = f"validating font {f1.info.familyName} {f1.info.styleName}...\n\n" # {f1.path}
+    txt = f"validating '{f1.info.familyName} {f1.info.styleName}'...\n\n"
     for gName in f1.glyphOrder:
         if gName not in f2:
             txt += f'\t{gName}:\n'
@@ -371,7 +395,6 @@ def applyValidationColors(font, defaultFont, colors=None, glyphNames=None):
                     currentGlyph.markColor = None
 
     font.changed()
-
 
 # ----------------------
 # designspace validation

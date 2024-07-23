@@ -33,7 +33,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
     title = 'VarGlyph Assistant'
     key   = 'com.fontBureau.varGlyphAssistant'
 
-    _tabsTitles = ['designspace', 'glyph sets', 'attributes', 'segments', 'measurements']
+    _tabsTitles = ['designspace', 'glyphs', 'attributes', 'segments', 'measurements']
 
     _glyphAttrs = {}
     _glyphAttrsLabels = [
@@ -77,7 +77,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     def initializeGlyphsTab(self):
 
-        tab = self._tabs['glyph sets']
+        tab = self._tabs['glyphs']
 
         x = p = self.padding
         y = p/2
@@ -104,7 +104,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
         y += self.lineHeight*3 + p
         tab.glyphSetsLabel = TextBox(
                 (x, y, self._colLeft, self.lineHeight),
-                'glyph sets')
+                'glyphs sets')
 
         tab.glyphNamesLabel = TextBox(
                 (x2, y, -p, self.lineHeight),
@@ -307,7 +307,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     @property
     def selectedGlyphSetsFile(self):
-        tab = self._tabs['glyph sets']
+        tab = self._tabs['glyphs']
         selection = tab.glyphSetsFiles.getSelection()
         glyphSetsFiles = tab.glyphSetsFiles.get()
         selectedGlyphSetsFiles = [gs for i, gs in enumerate(glyphSetsFiles) if i in selection]
@@ -323,7 +323,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     @property
     def selectedGlyphSets(self):
-        tab = self._tabs['glyph sets']
+        tab = self._tabs['glyphs']
         selection = tab.glyphSets.getSelection()
         glyphSets = tab.glyphSets.get()
         selectedGlyphSets = [gs for i, gs in enumerate(glyphSets) if i in selection]
@@ -399,7 +399,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
             return False
 
         if not isProposal:
-            tab = self._tabs['glyph sets']
+            tab = self._tabs['glyphs']
             for path in paths:
                 label = os.path.split(path)[-1]
                 self._glyphSetsFiles[label] = path
@@ -410,7 +410,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     def selectGlyphSetsFileCallback(self, sender):
 
-        tab = self._tabs['glyph sets']
+        tab = self._tabs['glyphs']
 
         if not self.selectedGlyphSetsFile:
             tab.glyphSets.set([])
@@ -431,7 +431,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
         tab.glyphSets.set(self._glyphSets.keys())
 
     def selectGlyphSetCallback(self, sender):
-        tab = self._tabs['glyph sets']
+        tab = self._tabs['glyphs']
 
         if not self.selectedGlyphSets:
             tab.glyphNames.set([])
@@ -451,7 +451,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
             return
 
         tab = self._tabs['attributes']
-        glyphNames = self._tabs['glyph sets'].glyphNames.get().split(' ')
+        glyphNames = self._tabs['glyphs'].glyphNames.get().split(' ')
 
         # collect glyph values into dict
         self._glyphAttrs = {}
@@ -520,7 +520,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
             return
 
         tab = self._tabs['segments']
-        glyphNames = self._tabs['glyph sets'].glyphNames.get().split(' ')
+        glyphNames = self._tabs['glyphs'].glyphNames.get().split(' ')
 
         # collect glyph compatibility data into dict
         self._glyphCompatibility = {}
@@ -626,7 +626,7 @@ class VarGlyphAssistant(DesignSpaceSelector):
 
     def updateMeasurementGlyphsCallback(self, sender):
         tab = self._tabs['measurements']
-        glyphNames = self._tabs['glyph sets'].glyphNames.get().split(' ')
+        glyphNames = self._tabs['glyphs'].glyphNames.get().split(' ')
         tab.glyphs.set(glyphNames)
 
     def updateGlyphMeasurementsCallback(self, sender):

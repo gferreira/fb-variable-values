@@ -5,22 +5,25 @@ import variableValues.dialogs.DesignSpaceSelector
 reload(variableValues.dialogs.DesignSpaceSelector)
 import variableValues.kerningPreview
 reload(variableValues.kerningPreview)
+import variableValues.validation
+reload(variableValues.validation)
 
 import AppKit
 import os, csv
-from vanilla import Window, TextBox, List, Button, Tabs, LevelIndicatorListCell, Group, CheckBox, SplitView
+from vanilla import Window, TextBox, List, Button, Tabs, LevelIndicatorListCell, Group, CheckBox, SplitView, TextEditor
 from fontParts.world import OpenFont
 try:
     import drawBot as DB
     from drawBot.ui.drawView import DrawView
 except:
     print('DrawBot extension not installed.')
-from mojo.UI import PutFile
+from mojo.UI import PutFile, CodeEditor
 from mojo.roboFont import OpenWindow
 from variableValues.dialogs.DesignSpaceSelector import DesignSpaceSelector
-from variableValues.kerningPreview import VariableKerningPreview
+from variableValues.kerningPreview  import VariableKerningPreview
 from variableValues.linkPoints import readMeasurements
 from variableValues.measurements import Measurement
+from variableValues.validation import validateFonts # checkCompatibility, checkEquality
 
 
 class VarFontAssistant(DesignSpaceSelector):
@@ -28,7 +31,7 @@ class VarFontAssistant(DesignSpaceSelector):
     title = 'VarFont Assistant'
     key   = 'com.fontBureau.varFontAssistant'
 
-    _tabsTitles = ['designspace', 'font info', 'kerning', 'measurements']
+    _tabsTitles = ['designspace', 'font info', 'kerning', 'measurements', 'validation']
 
     _measurementFiles = {}
     _measurements = {}
@@ -80,6 +83,16 @@ class VarFontAssistant(DesignSpaceSelector):
     _kerningPairsAll  = []
     _kerning          = {}
 
+    _checks      = {
+        'width'         : False,
+        'left'          : False,
+        'right'         : False,
+        'points'        : True,
+        'components'    : True,
+        'anchors'       : True,
+        'unicodes'      : True,
+    }
+
     settings = {
         'kerningSampleWidth'    : 900,
         'kerningSampleHeight'   : 100,
@@ -99,6 +112,7 @@ class VarFontAssistant(DesignSpaceSelector):
         self.initializeFontValuesTab()
         self.initializeKerningTab()
         self.initializeMeasurementsTab()
+        self.initializeValidationTab()
 
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
         self.w.open()
@@ -382,6 +396,44 @@ class VarFontAssistant(DesignSpaceSelector):
                 callback=self.saveKerningCallback,
             )
 
+    def initializeValidationTab(self):
+        tab = self._tabs['validation']
+
+        x = p = self.padding
+        y = p/2
+        col = self._colLeft
+        x2 = x + col + p
+
+        tab.checksLabel = TextBox(
+                (x, y, col, self.lineHeight),
+                'checks')
+
+        y += self.lineHeight + p/2
+        for check, value in self._checks.items():
+            checkbox = CheckBox(
+                (x, y, -p, self.lineHeight),
+                check, value=value)
+            setattr(tab, check, checkbox)
+            y += self.lineHeight
+
+        y = p/2
+        tab.checkResultsLabel = TextBox(
+                (x2, y, -p, self.lineHeight),
+                'result')
+
+        y += self.lineHeight + p/2
+        tab.checkResults = CodeEditor(
+                (x2, y, -p, -(self.lineHeight + p*2)),
+                text='',
+                readOnly=True,
+                showLineNumbers=False)
+
+        y = -(self.lineHeight + p)
+        tab.validate = Button(
+                (x, y, self.buttonWidth, self.lineHeight),
+                'validate',
+                callback=self.validateSourcesCallback)
+
     # -------------
     # dynamic attrs
     # -------------
@@ -451,6 +503,13 @@ class VarFontAssistant(DesignSpaceSelector):
             return
         return selectedMeasurements[0]
 
+    # validation
+
+    @property
+    def selectedChecks(self):
+        tab = self._tabs['validation']
+        return [check for check in self._checks if getattr(tab, check).get()]
+
     # ---------
     # callbacks
     # ---------
@@ -459,10 +518,8 @@ class VarFontAssistant(DesignSpaceSelector):
 
     def loadFontValuesCallback(self, sender):
 
-        print('HEY!')
         if not self.selectedSources:
             return
-        print('HO!')
 
         tab = self._tabs['font info']
 
@@ -1040,6 +1097,44 @@ class VarFontAssistant(DesignSpaceSelector):
 
         if self.verbose:
             print('done.\n')
+
+    # validation
+
+    def validateSourcesCallback(self, sender):
+
+        # print(self.selectedSources)
+
+        if not self.selectedSources:
+            return
+
+        tab = self._tabs['validation']
+
+        # --------------
+        # batch validate
+        # --------------
+
+        options = { check: check in self.selectedChecks for check in self._checks.keys() }
+
+        txt = 'validating selected sources...\n\n'
+        for check in self.selectedChecks:
+            txt += f'\t- {check}\n'
+        txt += '\n'
+
+        # get default font
+        defaultPath = self.selectedDesignspacePlus.default.path
+        defaultFont = OpenFont(defaultPath, showInterface=False)
+        txt += f'\tdefault font: {defaultFont.info.familyName} {defaultFont.info.styleName}\n\n'
+
+        # get target sources
+        targetPaths = [self._sources[f['file name']] for f in self.selectedSources]
+        if defaultPath in targetPaths:
+            targetPaths.remove(defaultPath)
+        targetFonts = [OpenFont(f, showInterface=False) for f in targetPaths]
+
+        txt += validateFonts(targetFonts, defaultFont, options)
+        txt += '...done!\n\n'
+
+        tab.checkResults.set(txt)
 
 
 # ----

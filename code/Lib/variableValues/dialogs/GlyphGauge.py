@@ -6,7 +6,7 @@ from vanilla import FloatingWindow, Button, TextBox, CheckBox, RadioGroup
 from mojo import drawingTools as ctx
 from mojo.UI import UpdateCurrentGlyphView, CurrentGlyphWindow, GetFile
 from mojo.events import addObserver, removeObserver
-from mojo.roboFont import OpenWindow, CurrentFont
+from mojo.roboFont import OpenWindow, CurrentFont, OpenFont
 from hTools3.dialogs.misc.numberEditText001 import NumberEditText_001
 from variableValues.linkPoints import readMeasurements
 from variableValues.measurements import Measurement

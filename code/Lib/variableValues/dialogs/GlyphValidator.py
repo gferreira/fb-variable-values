@@ -194,9 +194,9 @@ class GlyphValidator:
             return
 
         ctx.save()
-        ctx.font('Menlo-Bold')
+        ctx.font('LucidaGrande-Bold')
         ctx.fontSize(10)
-        ctx.translate(3, 3)
+        ctx.translate(3, 5)
         for checkName in self.checks.keys():
             checkbox = getattr(self.w, checkName)
             # check is hidden
@@ -229,7 +229,7 @@ class GlyphValidator:
         x, y = 3, 3
 
         ctx.save()
-        ctx.font('Menlo-Bold')
+        ctx.font('LucidaGrande-Bold')
         ctx.fontSize(12 * scale)
 
         ctx.save()

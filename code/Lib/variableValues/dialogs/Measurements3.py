@@ -19,7 +19,7 @@ from variableValues.measurements import Measurement
 
 
 '''
-M E A S U R E M E N T S v2
+M E A S U R E M E N T S v2 -> v3 (WIP)
 
 A tool to measure distances in glyphs and store them in an external file.
 
@@ -83,10 +83,10 @@ def nscolor2rgb(nsColor):
 
 
 
-class Measurements2(BaseWindowController):
+class Measurements3(BaseWindowController):
 
     title        = 'Measurements'
-    key          = 'com.fontBureau.measurements2'
+    key          = 'com.fontBureau.measurements3'
 
     width        = 123*5
     height       = 640
@@ -96,6 +96,7 @@ class Measurements2(BaseWindowController):
     buttonWidth  = 90
     buttonHeight = 25
     sizeStyle    = 'normal'
+    rowHeight    = 17
 
     _tabsTitles  = ['font', 'glyph']
     _colName     = 55
@@ -172,30 +173,45 @@ class Measurements2(BaseWindowController):
 
         tab = self._tabs['font']
 
-        _columnDescriptions  = [{"title": self.fontMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}] # name
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.fontMeasurementParameters[1:-5])]   # dir, g1, p1, g2, p2
-        _columnDescriptions += [{"title": self.fontMeasurementParameters[-5], 'width': self._colValue, 'editable': False}]                             # units
-        _columnDescriptions += [{"title": self.fontMeasurementParameters[-4], 'width': self._colValue, 'editable': False}]                             # permill
-        _columnDescriptions += [{"title": self.fontMeasurementParameters[-3], 'width': self._colValue, 'editable': True}]                              # parent
-        _columnDescriptions += [{"title": self.fontMeasurementParameters[-2], 'width': self._colValue, 'editable': False}]                             # scale
-        _columnDescriptions += [{"title": self.fontMeasurementParameters[-1], 'editable': True}]                                                       # description
+        columnDescriptions  = [{"title": self.fontMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}] # name
+        columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True} for i, t in enumerate(self.fontMeasurementParameters[1:-5])]   # dir, g1, p1, g2, p2
+        columnDescriptions += [{"title": self.fontMeasurementParameters[-5], 'width': self._colValue, 'editable': False}]                             # units
+        columnDescriptions += [{"title": self.fontMeasurementParameters[-4], 'width': self._colValue, 'editable': False}]                             # permill
+        columnDescriptions += [{"title": self.fontMeasurementParameters[-3], 'width': self._colValue, 'editable': True}]                              # parent
+        columnDescriptions += [{"title": self.fontMeasurementParameters[-2], 'width': self._colValue, 'editable': False}]                             # scale
+        columnDescriptions += [{"title": self.fontMeasurementParameters[-1], 'editable': True}]                                                       # description
+        # quick hack to make List2 work
+        for D in columnDescriptions:
+            D["identifier"] = D["title"]
+
+        # drag-and-drop reordering of font-level measurements
+        dragSettings = dict(
+            makeDragDataCallback=self.makeDragDataCallback
+        )
+        dropSettings = dict(
+            pasteboardTypes=[
+                "string",
+                "com.fontBureau.measurements3.fontMeasurementIndexes"
+            ],
+            dropCandidateEnteredCallback=self.dropCandidateEnteredCallback,
+            dropCandidateCallback=self.dropCandidateCallback,
+            performDropCallback=self.performDropCallback
+        )
 
         x = y = p = self.padding
-        tab.measurements = List(
+        tab.measurements = List2(
                 (x, y, -p, -(self.lineHeight + p*2)),
                 [],
-                columnDescriptions=_columnDescriptions,
+                columnDescriptions=columnDescriptions,
                 allowsMultipleSelection=True,
                 allowsEmptySelection=True,
                 allowsSorting=False,
                 enableDelete=True,
                 editCallback=self.editFontMeasurementCallback,
-                selfDropSettings=dict(type="genericListPboardType",
-                        operation=AppKit.NSDragOperationMove,
-                        callback=self.genericDropSelfCallback),
-                dragSettings=dict(type="genericListPboardType",
-                        callback=self.genericDragCallback)
+                dragSettings=dragSettings,
+                dropSettings=dropSettings
             )
+        tab.measurements.getNSTableView().setRowHeight_(self.rowHeight)
 
         y = -(self.lineHeight + p)
         tab.newMeasurement = Button(
@@ -208,17 +224,20 @@ class Measurements2(BaseWindowController):
 
         tab = self._tabs['glyph']
 
-        _columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]     # name
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-5])]      # dir, p1, p2
-        _columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-5:-2])]     # units, permill, parent
-        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-2], 'width': self._colValue, }]                                                  # scale
-        _columnDescriptions += [{"title": self.glyphMeasurementParameters[-1]}]                                                                             # description
+        columnDescriptions  = [{"title": self.glyphMeasurementParameters[0], 'width': self._colName*1.5, 'minWidth': self._colName, 'editable': True}]     # name
+        columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': True}  for i, t in enumerate(self.glyphMeasurementParameters[1:-5])]      # dir, p1, p2
+        columnDescriptions += [{"title": t, 'width': self._colValue, 'editable': False} for i, t in enumerate(self.glyphMeasurementParameters[-5:-2])]     # units, permill, parent
+        columnDescriptions += [{"title": self.glyphMeasurementParameters[-2], 'width': self._colValue, }]                                                  # scale
+        columnDescriptions += [{"title": self.glyphMeasurementParameters[-1]}]                                                                             # description
+        # hack to make List2 work
+        for D in columnDescriptions:
+            D["identifier"] = D["title"]
 
         x = y = p = self.padding
-        tab.measurements = List(
+        tab.measurements = List2(
                 (x, y, -p, -(self.lineHeight + p*2)),
                 [],
-                columnDescriptions=_columnDescriptions,
+                columnDescriptions=columnDescriptions,
                 allowsMultipleSelection=True,
                 allowsEmptySelection=True,
                 allowsSorting=False,
@@ -226,6 +245,7 @@ class Measurements2(BaseWindowController):
                 selectionCallback=self.updatePreviewCallback,
                 editCallback=self.editGlyphMeasurementCallback,
             )
+        tab.measurements.getNSTableView().setRowHeight_(17)
 
         y = -(self.lineHeight + p)
         tab.newMeasurement = Button(
@@ -343,24 +363,72 @@ class Measurements2(BaseWindowController):
     # callbacks
     # ---------
 
-    def genericDragCallback(self, sender, indexes):
-        return indexes
+    # def genericDragCallback(self, sender, indexes):
+    #     return indexes
 
-    def genericDropSelfCallback(self, sender, dropInfo):
-        isProposal = dropInfo["isProposal"]
-        if not isProposal:
-            indexes = [int(i) for i in sorted(dropInfo["data"])]
-            indexes.sort()
-            rowIndex = dropInfo["rowIndex"]
-            items = sender.get()
-            toMove = [items[index] for index in indexes]
-            for index in reversed(indexes):
-                del items[index]
-            rowIndex -= len([index for index in indexes if index < rowIndex])
-            for font in toMove:
-                items.insert(rowIndex, font)
-                rowIndex += 1
-            sender.set(items)
+    # def genericDropSelfCallback(self, sender, dropInfo):
+    #     isProposal = dropInfo["isProposal"]
+    #     if not isProposal:
+    #         indexes = [int(i) for i in sorted(dropInfo["data"])]
+    #         indexes.sort()
+    #         rowIndex = dropInfo["rowIndex"]
+    #         items = sender.get()
+    #         toMove = [items[index] for index in indexes]
+    #         for index in reversed(indexes):
+    #             del items[index]
+    #         rowIndex -= len([index for index in indexes if index < rowIndex])
+    #         for font in toMove:
+    #             items.insert(rowIndex, font)
+    #             rowIndex += 1
+    #         sender.set(items)
+    #     return True
+
+    def makeDragDataCallback(self, index):
+        tab = self._tabs['font']
+        typesAndValues = {
+            "string" : tab.measurements.get()[index],
+            "com.fontBureau.measurements3.fontMeasurementIndexes" : index
+        }
+        return typesAndValues
+
+    def dropCandidateEnteredCallback(self, info):
+        return "generic"
+
+    def dropCandidateCallback(self, info):
+        tab = self._tabs['font']
+        source = info["source"]
+        if source == tab.measurements:
+            return "move"
+        return "copy"
+
+    def performDropCallback(self, info):
+        tab = self._tabs['font']
+        sender = info["sender"]
+        source = info["source"]
+        index = info["index"]
+        items = info["items"]
+        # reorder
+        if source == tab.measurements:
+            indexes = sender.getDropItemValues(items, "com.fontBureau.measurements3.fontMeasurementIndexes")
+            # XXX this is wrong
+            items = list(tab.measurements.get())
+            move = [items.pop(i) for i in indexes]
+            # insert
+            if index is not None:
+                items[index:index] = move
+            # append
+            else:
+                items += move
+        else:
+            items = sender.getDropItemValues(items, "string")
+            allItems = list(tab.measurements.get())
+            # insert
+            if index is not None:
+                items = allItems[:index] + items + allItems[index:]
+            # append
+            else:
+                items = allItems + items
+        tab.measurements.set(items)
         return True
 
     def windowCloseCallback(self, sender):
@@ -643,10 +711,11 @@ class Measurements2(BaseWindowController):
 
         # replace `None` with empty string to avoid `<null>`
         items = []
-        for item in listItems:
-            listItem = { k : ('' if v is None else v) for k, v in item.items() }
-            items.append(listItem)
+        for listItem in listItems:
+            item = { k : ('' if v is None else v) for k, v in listItem.items() }
+            items.append(item)
 
+        print(items)
         tab.measurements.set(items)
 
     def updateFontMeasurements(self):
@@ -977,5 +1046,5 @@ class Measurements2(BaseWindowController):
 
 if __name__ == '__main__':
 
-    OpenWindow(Measurements2)
+    OpenWindow(Measurements3)
 
