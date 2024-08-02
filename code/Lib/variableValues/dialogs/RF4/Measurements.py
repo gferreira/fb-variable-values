@@ -1,50 +1,31 @@
-import os
+import os, json
 import ezui
 from mojo.UI import PutFile, GetFile
-from mojo.roboFont import CurrentFont, CurrentGlyph
-from mojo.subscriber import Subscriber, registerGlyphEditorSubscriber, unregisterGlyphEditorSubscriber, registerRoboFontSubscriber, unregisterRoboFontSubscriber
-from variableValues.linkPoints import readMeasurements
+from mojo.roboFont import OpenFont, CurrentFont, CurrentGlyph
+from mojo.subscriber import Subscriber, registerGlyphEditorSubscriber, unregisterGlyphEditorSubscriber, registerRoboFontSubscriber, unregisterRoboFontSubscriber, registerSubscriberEvent, roboFontSubscriberEventRegistry
+from mojo.events import postEvent
+from variableValues.linkPoints import readMeasurements, getPointAtIndex, getIndexForPoint, getAnchorPoint
 from variableValues.measurements import Measurement
 
+
 '''
-M E A S U R E M E N T S v3
+M E A S U R E M E N T S v4
 
 RoboFont4 = EZUI + Subscriber + Merz
 
 '''
 
-class MeasurementsSubscriberRoboFont(Subscriber):
-
-    def fontDocumentDidBecomeCurrent(self, info):
-        self.controller.font = info['font']
-        self.controller.updateFontMeasurements()
-
-    def fontDocumentDidOpen(self, info):
-        self.controller.font = info['font']
-        self.controller.updateFontMeasurements()
-
-    def roboFontDidSwitchCurrentGlyph(self, info):
-        self.controller.glyph = info["glyph"]
-        self.controller.loadGlyphMeasurements()
-
-
-class MeasurementsSubscriberGlyphEditor(Subscriber):
-
-    def roboFontDidSwitchCurrentGlyph(self, info):
-        self.controller.glyph = info["glyph"]
-        self.controller.loadGlyphMeasurements()
-
-    def glyphEditorGlyphDidChange(self, info):
-        self.controller.updateGlyphMeasurements()
+DEBUG = False
 
 
 class MeasurementsController(ezui.WindowController):
 
     title       = 'Measurements'
-    key         = 'com.fontBureau.measurements'
-    buttonWidth = 70
+    key         = 'com.fontBureau.measurements4'
+    buttonWidth = 75
     colWidth    = 55
-    verbose     = True
+    verbose     = False
+    debug       = DEBUG
 
     fontMeasurements  = {}
     glyphMeasurements = {}
@@ -52,33 +33,36 @@ class MeasurementsController(ezui.WindowController):
     font  = None
     glyph = None
 
+    defaultFont = None
+
     def build(self):
         content = """
         = Tabs
 
         * Tab: font @fontTab
-        > |-------------------------------------------------------------------------------------------------------|
-        > | name | direction | glyph1 | point1 | glyph2 | point2 | units | permill | parent | scale | description |  @fontMeasurements
-        > |------|-----------|--------|--------|--------|--------|-------|---------|--------|-------|-------------|
-        > |      |           |        |        |        |        |       |         |        |       |             |
-        > |-------------------------------------------------------------------------------------------------------|
+        > |---------------------------------------------------------------------------------------------------------|
+        > | name | direction | glyph1 | point1 | glyph2 | point2 | units | permill | parent | p-scale | description |  @fontMeasurements
+        > |------|-----------|--------|--------|--------|--------|-------|---------|--------|---------|-------------|
+        > |      |           |        |        |        |        |       |         |        |         |             |
+        > |---------------------------------------------------------------------------------------------------------|
         > (+-) @fontMeasurementsAddRemoveButton
 
         * Tab: glyph @glyphsTab
-        > |-----------------------------------------------------------------------|
-        > | name | direction | point1 | point2 | units | permill | parent | scale |  @glyphMeasurements
-        > |------|-----------|--------|--------|-------|---------|--------|-------|
-        > |      |           |        |        |       |         |        |       |
-        > |-----------------------------------------------------------------------|
-        > > (+-)              @glyphMeasurementsAddRemoveButton
-        > > [X] show preview  @preview
-        > > * ColorWell       @colorButton
-        > > (flip)            @flipButton
+        > |-------------------------------------------------------------------------------------------|
+        > | name | direction | point1 | point2 | units | permill | font | f-scale | default | d-scale |  @glyphMeasurements
+        > |------|-----------|--------|--------|-------|---------|------|---------|---------|---------|
+        > |      |           |        |        |       |         |      |         |         |         |
+        > |-------------------------------------------------------------------------------------------|
+        > > (+-)         @glyphMeasurementsAddRemoveButton
+        > > [X] preview  @preview
+        > > * ColorWell  @colorButton
+        > > (flip)       @flipButton
 
         =============
 
-        ( load… ) @loadButton
-        ( save… ) @saveButton
+        ( load… )     @loadButton
+        ( save… )     @saveButton
+        ( default… )  @defaultButton
         """
 
         descriptionData = dict(
@@ -94,7 +78,7 @@ class MeasurementsController(ezui.WindowController):
                         identifier="direction",
                         title="direction",
                         width=self.colWidth,
-                        editable=True
+                        editable=True,
                     ),
                     dict(
                         identifier="glyph1",
@@ -124,13 +108,21 @@ class MeasurementsController(ezui.WindowController):
                         identifier="units",
                         title="units",
                         width=self.colWidth,
-                        editable=False
+                        editable=False,
+                        cellDescription=dict(
+                            cellType='TextField',
+                            valueType='integer',
+                        ),
                     ),
                     dict(
                         identifier="permill",
                         title="permill",
                         width=self.colWidth,
-                        editable=False
+                        editable=False,
+                        cellDescription=dict(
+                            cellType='TextField',
+                            valueType='integer',
+                        ),
                     ),
                     dict(
                         identifier="parent",
@@ -140,7 +132,7 @@ class MeasurementsController(ezui.WindowController):
                     ),
                     dict(
                         identifier="scale",
-                        title="scale",
+                        title="p-scale",
                         width=self.colWidth,
                         editable=False
                     ),
@@ -197,23 +189,43 @@ class MeasurementsController(ezui.WindowController):
                         identifier="units",
                         title="units",
                         width=self.colWidth,
-                        editable=False
+                        editable=False,
+                        cellDescription=dict(
+                            cellType='TextField',
+                            valueType='integer',
+                        ),
                     ),
                     dict(
                         identifier="permill",
                         title="permill",
                         width=self.colWidth,
-                        editable=False
+                        editable=False,
+                        cellDescription=dict(
+                            cellType='TextField',
+                            valueType='integer',
+                        ),
                     ),
                     dict(
-                        identifier="parent",
-                        title="parent",
+                        identifier="font",
+                        title="font",
                         width=self.colWidth,
                         editable=False
                     ),
                     dict(
-                        identifier="scale",
-                        title="scale",
+                        identifier="scale_f",
+                        title="f-scale",
+                        width=self.colWidth,
+                        editable=False
+                    ),
+                    dict(
+                        identifier="default",
+                        title="default",
+                        width=self.colWidth,
+                        editable=False
+                    ),
+                    dict(
+                        identifier="scale_d",
+                        title="d-scale",
                         width=self.colWidth,
                         editable=False
                     ),
@@ -225,12 +237,14 @@ class MeasurementsController(ezui.WindowController):
                     point2=None,
                     units=None,
                     permill=None,
-                    parent=None,
-                    scale=None,
+                    default=None,
+                    scale_d=None,
+                    font=None,
+                    scale_f=None,
                 ),
             ),
             colorButton=dict(
-                color=(1, 0, 0, 0.8),
+                color=(1, 0.3, 0, 0.8),
                 width=self.buttonWidth,
             ),
             flipButton=dict(
@@ -240,6 +254,9 @@ class MeasurementsController(ezui.WindowController):
                 width=self.buttonWidth,
             ),
             saveButton=dict(
+                width=self.buttonWidth,
+            ),
+            defaultButton=dict(
                 width=self.buttonWidth,
             ),
         )
@@ -252,21 +269,21 @@ class MeasurementsController(ezui.WindowController):
             size=(800, 600),
             minSize=(600, 400),
         )
-
-    def started(self):
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
         # self.w.getItem("fontMeasurements").getNSTableView().setRowHeight_(17)
         # self.w.getItem("glyphMeasurements").getNSTableView().setRowHeight_(17)
         self.w.open()
 
-        self.font  = CurrentFont()
-        self.glyph = CurrentGlyph()
+    def started(self):
 
         MeasurementsSubscriberRoboFont.controller = self
         registerRoboFontSubscriber(MeasurementsSubscriberRoboFont)
 
         MeasurementsSubscriberGlyphEditor.controller = self
         registerGlyphEditorSubscriber(MeasurementsSubscriberGlyphEditor)
+
+        self.font  = CurrentFont()
+        self.glyph = CurrentGlyph()
 
     def destroy(self):
         unregisterRoboFontSubscriber(MeasurementsSubscriberRoboFont)
@@ -280,61 +297,174 @@ class MeasurementsController(ezui.WindowController):
     # ---------
 
     def loadButtonCallback(self, sender):
-
-        if self.verbose:
-            print("loading measurement data from file...")
+        if self.debug:
+            print('MeasurementsController.loadButtonCallback')
 
         jsonPath = GetFile(message='Select JSON file with measurements:')
+        if jsonPath is None:
+            return
 
         if self.verbose:
-            print(f'\tloading data from {os.path.split(jsonPath)[-1]}...')
+            print(f'loading data from {os.path.split(jsonPath)[-1]}... ', end='')
 
         measurements = readMeasurements(jsonPath)
 
         self.fontMeasurements  = measurements['font']
         self.glyphMeasurements = measurements['glyphs']
 
-        self.loadFontMeasurements()
+        self._loadFontMeasurements()
+        self._loadGlyphMeasurements()
 
         if self.verbose:
-            print('...done.\n')
+            print('done.\n')
 
     def saveButtonCallback(self, sender):
-        print("save button was pushed.")
+        if self.debug:
+            print('MeasurementsController.saveButtonCallback')
+
+        fontItems = self.w.getItem("fontMeasurements").get()
+
+        fontMeasurements = {
+            i['name']: {
+                'direction'   : i['direction'],
+                'glyph 1'     : i['glyph1'],
+                'point 1'     : i['point1'],
+                'glyph 2'     : i['glyph2'],
+                'point 2'     : i['point2'],
+                'parent'      : i['parent'],
+                'description' : i['description'],
+            } for i in fontItems
+        }
+
+        glyphMeasurements = self.glyphMeasurements
+
+        measurementsDict = {
+            'font'   : fontMeasurements,
+            'glyphs' : glyphMeasurements,
+        }
+
+        # get JSON file path
+        jsonFileName = 'measurements.json'
+        jsonPath = PutFile(message='Save measurements to JSON file:', fileName=jsonFileName)
+
+        if jsonPath is None:
+            if self.verbose:
+                print('[cancelled]\n')
+            return
+
+        if os.path.exists(jsonPath):
+            os.remove(jsonPath)
+
+        if self.verbose:
+            print(f'saving measurements to {jsonPath}...', end=' ')
+
+        with open(jsonPath, 'w', encoding='utf-8') as f:
+            json.dump(measurementsDict, f, indent=2)
+
+        if self.verbose:
+            print('done.\n')
+
+    def defaultButtonCallback(self, sender):
+        if self.debug:
+            print('MeasurementsController.defaultButtonCallback')
+
+        defaultPath = GetFile(message='Select default UFO source:')
+        if defaultPath is None:
+            return
+
+        if self.verbose:
+            print(f'loading default source from {os.path.split(defaultPath)[-1]}... ', end='')
+
+        self.defaultFont = OpenFont(defaultPath, showInterface=False)
+
+        if self.verbose:
+            print('done.\n')
+
+        postEvent(f"{self.key}.changed")
 
     # font
 
     def fontMeasurementsAddRemoveButtonAddCallback(self, sender):
+        if self.debug:
+            print('MeasurementsController.fontMeasurementsAddRemoveButtonAddCallback')
         table = self.w.getItem("fontMeasurements")
         item = table.makeItem()
         table.appendItems([item])
+        postEvent(f"{self.key}.changed")
 
     def fontMeasurementsAddRemoveButtonRemoveCallback(self, sender):
+        if self.debug:
+            print('MeasurementsController.fontMeasurementsAddRemoveButtonRemoveCallback')
         table = self.w.getItem("fontMeasurements")
         table.removeSelectedItems()
+        postEvent(f"{self.key}.changed")
+
+    def fontMeasurementsEditCallback(self, sender):
+        if self.debug:
+            print('MeasurementsController.fontMeasurementsEditCallback')
+        postEvent(f"{self.key}.changed")
 
     # glyph
 
     def glyphMeasurementsAddRemoveButtonAddCallback(self, sender):
+        if self.debug:
+            print('MeasurementsController.glyphMeasurementsAddRemoveButtonAddCallback')
         table = self.w.getItem("glyphMeasurements")
         item = table.makeItem()
         table.appendItems([item])
 
     def glyphMeasurementsAddRemoveButtonRemoveCallback(self, sender):
+        if self.debug:
+            print('MeasurementsController.glyphMeasurementsAddRemoveButtonRemoveCallback')
         table = self.w.getItem("glyphMeasurements")
         table.removeSelectedItems()
+        postEvent(f"{self.key}.changed")
+
+    def glyphMeasurementsSelectionCallback(self, sender):
+        if self.debug:
+            print('MeasurementsController.glyphMeasurementsSelectionCallback')
+        postEvent(f"{self.key}.changed")
+
+    def glyphMeasurementsEditCallback(self, sender):
+        if self.debug:
+            print('MeasurementsController.glyphMeasurementsEditCallback')
+        items = self.w.getItem("glyphMeasurements").get()
+        glyphMeasurements = {}
+        for item in items:
+            # auto set direction from name
+            if not len(item['direction'].strip()):
+                if item['name'][0] == 'X':
+                    direction = 'x'
+                    item['direction'] = 'x'
+                if item['name'][0] == 'Y':
+                    direction = 'y'
+                    item['direction'] = 'y'
+            # make glyph measurement dict
+            meamsurementID = f"{item['point1']} {item['point2']}"
+            glyphMeasurements[meamsurementID] = {
+                'name'      : item['name'],
+                'direction' : item['direction'],
+            }
+        self.glyphMeasurements[self.glyph.name] = glyphMeasurements
+        postEvent(f"{self.key}.changed")
 
     def colorButtonCallback(self, sender):
-        print("color button was pushed.")
+        if self.debug:
+            print('MeasurementsController.colorButtonCallback')
+        postEvent(f"{self.key}.changed")
 
     def flipButtonCallback(self, sender):
-        print("flip button was pushed.")
+        if self.debug:
+            print('MeasurementsController.flipButtonCallback')
+        postEvent(f"{self.key}.changed")
 
     # -------
     # methods
     # -------
 
-    def loadFontMeasurements(self):
+    def _loadFontMeasurements(self):
+        if self.debug:
+            print('MeasurementsController._loadFontMeasurements')
         table = self.w.getItem("fontMeasurements")
         items = []
         for name, data in self.fontMeasurements.items():
@@ -354,10 +484,14 @@ class MeasurementsController(ezui.WindowController):
             items.append(item)
         table.set(items)
 
-        self.updateFontMeasurements()
-        self.loadGlyphMeasurements()
+        # self._updateFontMeasurements()
+        # self._loadGlyphMeasurements()
 
-    def updateFontMeasurements(self):
+        postEvent(f"{self.key}.changed")
+
+    def _updateFontMeasurements(self):
+        if self.debug:
+            print('MeasurementsController._updateFontMeasurements')
 
         if self.font is None:
             return
@@ -365,46 +499,56 @@ class MeasurementsController(ezui.WindowController):
         table = self.w.getItem("fontMeasurements")
         items = table.get()
 
-        # if self.verbose:
-        #     print(f'getting font measurements for {self.font.info.familyName} {self.font.info.styleName}...')
-
-        _items = []
-        for i, item in enumerate(items):
-            _item = item.copy()
-
+        needReload = []
+        for itemIndex, item in enumerate(items):
             try:
-                index1 = int(item['point1'])
+                pt1_index = int(item['point1'])
             except:
-                index1 = item['point1']
+                pt1_index = item['point1']
             try:
-                index2 = int(item['point2'])
+                pt2_index = int(item['point2'])
             except:
-                index2 = item['point2']
+                pt2_index = item['point2']
 
             M = Measurement(
-                item['name'], item['direction'],
-                item['glyph1'], index1,
-                item['glyph2'], index2,
+                item['name'],
+                item['direction'],
+                item['glyph1'], pt1_index,
+                item['glyph2'], pt2_index,
                 item['parent']
             )
+            distanceUnits = M.measure(self.font)
+            item['units'] = distanceUnits
 
-            distance = M.measure(self.font)
-            _item['units'] = distance
+            if distanceUnits and self.font.info.unitsPerEm:
+                distancePermill = round(distanceUnits * 1000 / self.font.info.unitsPerEm)
+                item['permill'] = distancePermill
 
-            if distance and self.font.info.unitsPerEm:
-                distancePermill = round(distance * 1000 / self.font.info.unitsPerEm)
-                _item['permill'] = distancePermill
+            needReload.append(itemIndex)
 
-            _items.append(_item)
+        for item in items:
+            item['scale'] = None
+            if item['parent']:
+                distanceParent = None
+                for i in items:
+                    if i['name'] == item['parent']:
+                        distanceParent = i['units']
+                if distanceParent:
+                    scaleParent = item['units'] / distanceParent
+                    item['scale'] = f'{scaleParent:.2f}'
 
-        table.set(_items)
+        table.reloadData(needReload)
 
-    def loadGlyphMeasurements(self):
+    def _loadGlyphMeasurements(self):
+        if self.debug:
+            print('MeasurementsController._loadGlyphMeasurements')
 
         table = self.w.getItem("glyphMeasurements")
         items = []
 
         if not self.glyph:
+            if self.debug:
+                print('\tno current glyph!')
             table.set(items)
             return
 
@@ -427,90 +571,255 @@ class MeasurementsController(ezui.WindowController):
                 point2=index2,
                 units=None,
                 permill=None,
-                parent=measurements[key].get('parent'),
-                scale=None,
+                font=measurements[key].get('parent'),
+                scale_f=None,
+                default=None,
+                scale_d=None,
             )
             items.append(item)
 
         table.set(items)
 
-        self.updateGlyphMeasurements()
+        # self._updateGlyphMeasurements()
+        postEvent(f"{self.key}.changed")
 
-    def updateGlyphMeasurements(self):
+    def _updateGlyphMeasurements(self):
+        if self.debug:
+            print('MeasurementsController._updateGlyphMeasurements')
 
         table = self.w.getItem("glyphMeasurements")
-
-        if not self.glyph:
-            table.set([])
-            return
-
         items = table.get()
 
-        # get font-level values to calculate scale
-        fontItems        = self.w.getItem("fontMeasurements").get()
-        fontValues       = { i['name']: i['units'] for i in fontItems }
-        fontDescriptions = { i['name']: i['description'] for i in fontItems }
+        # get font-level values
+        fontMeasurements = self.w.getItem("fontMeasurements").get()
+        fontValues       = { i['name']: i['units'] for i in fontMeasurements }
 
-        _items = []
+        needReload = []
+        for itemIndex, item in enumerate(items):
 
-        # measure distances
-        for i, item in enumerate(items):
-            _item = item.copy()
+            # measure distance
             try:
-                index1 = int(item['point1'])
+                pt1_index = int(item['point1'])
             except:
-                index1 = item['point1']
+                pt1_index = item['point1']
             try:
-                index2 = int(item['point2'])
+                pt2_index = int(item['point2'])
             except:
-                index2 = item['point2']
+                pt2_index = item['point2']
 
             M = Measurement(
-                item['name'], item['direction'],
-                self.glyph.name, index1,
-                self.glyph.name, index2,
-                item['parent']
+                item['name'],
+                item['direction'],
+                self.glyph.name, pt1_index,
+                self.glyph.name, pt2_index,
+                item['font']
             )
+            distanceUnits = M.measure(self.font)
 
-            distance = M.measure(self.glyph.font)
+            # no measurement value
+            if distanceUnits is None:
+                item['units']   = None
+                item['permill'] = None
+                item['font']    = None
+                item['scale_f'] = None
 
-            if distance is None:
-                _item['units']   = None
-                _item['permill'] = None
-                _item['scale']   = None
             else:
-                # table.setItemValue(i, 'units', distance)
-                _item['units'] = distance
+                item['units'] = distanceUnits
 
-                # convert value to permill
-                if distance and self.glyph.font.info.unitsPerEm:
-                    distancePermill = round(distance * 1000 / self.glyph.font.info.unitsPerEm)
-                    _item['permill'] = distancePermill
+                # calculate permille value
+                if distanceUnits and self.font.info.unitsPerEm:
+                    item['permill'] = round(distanceUnits * 1000 / self.font.info.unitsPerEm)
+                elif distanceUnits == 0:
+                    item['permill'] = 0
+                else:
+                    item['permill'] = None
 
-                # connect with font-level measurement
+                # get font-level value
                 name = item['name']
                 if name in fontValues:
-                    parent = fontValues.get(name)
-                    if parent is not None:
-                        parentValue = fontValues[name]
-                        _item['parent'] = parentValue
-                        try:
-                            _item['scale'] = f'{distance/parentValue:.2f}'
-                        except:
-                            _item['scale'] = None
+                    distanceFont = fontValues.get(name)
+                    item['font'] = distanceFont
+                    # calculate f-scale
+                    if distanceUnits and distanceFont:
+                        item['scale_f'] = f'{distanceUnits / distanceFont:.2f}'
                     else:
-                        _item['parent'] = None
+                        item['scale_f'] = None
 
-            _items.append(_item)
+            # get default value
+            if self.defaultFont:
+                distanceDefault = M.measure(self.defaultFont)
+                item['default'] = distanceDefault
+                # calculate d-scale
+                if distanceUnits and distanceDefault:
+                    item['scale_d'] = f'{distanceUnits / distanceDefault:.2f}'
+                else:
+                    item['scale_d'] = None
 
-        # refresh table with updated items
-        table.set(_items)
+            needReload.append(itemIndex)
+
+        table.reloadData(needReload)
 
 
-# ----
-# test
-# ----
+class MeasurementsSubscriberRoboFont(Subscriber):
+
+    controller = None
+    debug = DEBUG
+
+    def fontDocumentDidBecomeCurrent(self, info):
+        if self.debug:
+            print('MeasurementsSubscriberRoboFont.fontDocumentDidBecomeCurrent')
+        self.controller.font = info['font']
+        self.controller._updateFontMeasurements()
+        self.controller._updateGlyphMeasurements()
+
+    def fontDocumentDidOpen(self, info):
+        if self.debug:
+            print('MeasurementsSubscriberRoboFont.fontDocumentDidOpen')
+        self.controller.font = info['font']
+        self.controller._updateFontMeasurements()
+        self.controller._updateGlyphMeasurements()
+
+    def roboFontDidSwitchCurrentGlyph(self, info):
+        if self.debug:
+            print('MeasurementsSubscriberRoboFont.roboFontDidSwitchCurrentGlyph')
+        self.controller.glyph = info["glyph"]
+        self.controller._loadGlyphMeasurements()
+        self.controller._updateGlyphMeasurements()
+
+    def measurementsDidChange(self, info):
+        if self.debug:
+            print('MeasurementsSubscriberRoboFont.measurementsDidChange')
+        self.controller._updateFontMeasurements()
+        self.controller._updateGlyphMeasurements()
+
+
+class MeasurementsSubscriberGlyphEditor(Subscriber):
+
+    controller = None
+    debug = DEBUG
+
+    def build(self):
+        if self.debug:
+            print('MeasurementsSubscriberGlyphEditor.build')
+        glyphEditor = self.getGlyphEditor()
+        container = glyphEditor.extensionContainer(
+            identifier=f"{self.controller.key}.foreground",
+            location="foreground",
+        )
+        self.measurementsLayer = container.appendBaseSublayer()
+        self._drawGlyphMeasurements()
+
+    def destroy(self):
+        if self.debug:
+            print('MeasurementsSubscriberGlyphEditor.destroy')
+        self.measurementsLayer.clearSublayers()
+
+    def glyphEditorGlyphDidChange(self, info):
+        if self.debug:
+            print('MeasurementsSubscriberGlyphEditor.glyphEditorGlyphDidChange')
+        self.controller._updateFontMeasurements()
+        self.controller._updateGlyphMeasurements()
+        self._drawGlyphMeasurements()
+
+    def measurementsDidChange(self, info):
+        if self.debug:
+            print('MeasurementsSubscriberGlyphEditor.measurementsDidChange')
+        self._drawGlyphMeasurements()
+
+    def _drawGlyphMeasurements(self):
+        if self.debug:
+            print('MeasurementsSubscriberGlyphEditor._drawGlyphMeasurements')
+
+        table = self.controller.w.getItem("glyphMeasurements")
+        items = table.get()
+        selectedItems = table.getSelectedItems()
+        color = self.controller.w.getItem("colorButton").get()
+
+        self.measurementsLayer.clearSublayers()
+
+        with self.measurementsLayer.sublayerGroup():
+            for item in items:
+                pt1_index = item['point1']
+                pt2_index = item['point2']
+
+                try:
+                    pt1 = getPointAtIndex(self.controller.glyph, int(pt1_index))
+                except:
+                    pt1 = getAnchorPoint(self.controller.font, pt1_index)
+
+                try:
+                    pt2 = getPointAtIndex(self.controller.glyph, int(pt2_index))
+                except:
+                    pt2 = getAnchorPoint(self.controller.font, pt2_index)
+
+                if pt1 is None or pt2 is None:
+                    continue
+
+                if item in selectedItems:
+                    direction = item['direction']
+                    if direction == 'x':
+                        P1 = pt1.x, pt1.y
+                        P2 = pt2.x, pt1.y
+                    elif direction == 'y':
+                        P1 = pt2.x, pt1.y
+                        P2 = pt2.x, pt2.y
+                    else: # angled
+                        P1 = pt1.x, pt1.y
+                        P2 = pt2.x, pt2.y
+
+                    R, G, B, a = color
+                    self.measurementsLayer.appendLineSublayer(
+                        startPoint=P1,
+                        endPoint=P2,
+                        strokeColor=(R, G, B, 0.3),
+                        strokeWidth=100000,
+                    )
+
+                strokeDash = (3, 3) if item not in selectedItems else None
+                strokeWidth = 2 if item in selectedItems else 1
+                self.measurementsLayer.appendLineSublayer(
+                    startPoint=(pt1.x, pt1.y),
+                    endPoint=(pt2.x, pt2.y),
+                    strokeColor=color,
+                    strokeWidth=strokeWidth,
+                    strokeDash=strokeDash,
+                )
+
+                if item in selectedItems:
+                    cx = pt1.x + (pt2.x - pt1.x) * 0.5
+                    cy = pt1.y + (pt2.y - pt1.y) * 0.5
+                    distance = item['units']
+                    self.measurementsLayer.appendTextLineSublayer(
+                        position=(cx, cy),
+                        backgroundColor=color,
+                        text=f"{distance}",
+                        font="system",
+                        weight="bold",
+                        pointSize=9,
+                        padding=(4, 0),
+                        cornerRadius=4,
+                        fillColor=(1, 1, 1, 1),
+                        horizontalAlignment='center',
+                        verticalAlignment='center',
+                    )
+
+
+measurementsEventName = f"{MeasurementsController.key}.changed"
+
+if measurementsEventName not in roboFontSubscriberEventRegistry:
+    registerSubscriberEvent(
+        subscriberEventName=measurementsEventName,
+        methodName="measurementsDidChange",
+        lowLevelEventNames=[measurementsEventName],
+        documentation="Send when the measurements window changes its parameters.",
+        dispatcher="roboFont",
+        delay=0,
+        debug=True
+    )
+
 
 if __name__ == '__main__':
 
     OpenWindow(MeasurementsController)
+
+
