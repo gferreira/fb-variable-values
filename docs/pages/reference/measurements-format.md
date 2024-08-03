@@ -30,18 +30,18 @@ The order of the points determine if the measurement is positive or negative.
 
 - A font may contain multiple font-level measurements.
 - Font measurement names must be unique.
-- The order of the measurements matters.
+- The order of the font measurements matters.
 
 | attribute   | description                                            |
 |-------------|--------------------------------------------------------|
 | name        | name of the measurement                                |
 | glyph 1     | name of the glyph containing the 1st measurement point |
-| point 1     | index of the 1st measurement point                     |
+| point 1     | index or shortcut of 1st measurement point             |
 | glyph 2     | name of the glyph containing the 2nd measurement point |
-| point 2     | index of the 2nd measurement point                     |
+| point 2     | index or shortcut of 2nd measurement point             |
 | direction   | direction of measurement                               |
 | parent      | parent measurement (optional)                          |
-| description | description of this measurement (optional)              |
+| description | description of this measurement (optional)             |
 {: .table .table-hover }
 
 ### Glyph-level measurements
@@ -55,8 +55,8 @@ The order of the points determine if the measurement is positive or negative.
 | attribute | description                                            |
 |-----------|--------------------------------------------------------|
 | name      | name of the measurement                                |
-| point 1   | index of the 1st measurement point                     |
-| point 2   | index of the 2nd measurement point                     |
+| point 1   | index or shortcut of 1st measurement point             |
+| point 2   | index or shortcut of 2nd measurement point             |
 | direction | direction of measurement                               |
 {: .table .table-hover }
 
@@ -71,11 +71,11 @@ The direction of measurement must be one of the following characters:
 | a          | angled measurement     |
 {: .table .table-hover }
 
-### Point indexes and keys
+### Point indexes or shortcuts
 
 Point indexes are expressed as integers.
 
-Special reference points are also acessible using the following characters:
+Font-level vertical metrics values are also acessible using the following shortcut characters:
 
 | character | description | x             | y                     |
 |-----------|-------------|---------------|-----------------------|
@@ -84,7 +84,6 @@ Special reference points are also acessible using the following characters:
 | C         | cap height  | `0`           | `font.info.capHeight` |
 | D         | descender   | `0`           | `font.info.descender` |
 | X         | x-height    | `0`           | `font.info.xHeight`   |
-| W         | width       | `glyph.width` | `0`                   |
 {: .table .table-hover }
 
 ### Sign of the measured values

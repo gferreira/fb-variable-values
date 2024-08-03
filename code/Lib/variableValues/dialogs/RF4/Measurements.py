@@ -324,6 +324,7 @@ class MeasurementsController(ezui.WindowController):
 
         fontItems = self.w.getItem("fontMeasurements").get()
 
+        # convert table items to font measurements format
         fontMeasurements = {
             i['name']: {
                 'direction'   : i['direction'],
@@ -456,6 +457,22 @@ class MeasurementsController(ezui.WindowController):
     def flipButtonCallback(self, sender):
         if self.debug:
             print('MeasurementsController.flipButtonCallback')
+
+        table = self.w.getItem("glyphMeasurements")
+        selectedItems = table.getSelectedItems()
+        if not selectedItems:
+            return
+
+        needReload = []
+        for itemIndex, item in enumerate(selectedItems):
+            p1 = item['point1']
+            p2 = item['point2']
+            item['point1'] = p2
+            item['point2'] = p1
+            needReload.append(itemIndex)
+
+        table.reloadData(needReload)
+
         postEvent(f"{self.key}.changed")
 
     # -------
