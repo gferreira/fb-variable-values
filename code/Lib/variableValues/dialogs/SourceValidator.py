@@ -32,7 +32,7 @@ class SourceValidator:
         'anchors'       : True,
         'unicodes'      : True,
     }
-    
+
     _colLeft     = 123
     _colValue    = 20
     _colFontName = 160
@@ -363,7 +363,7 @@ class SourceValidator:
             if targetFontName in self._targetFonts:
                 targetFonts.append(self._targetFonts[targetFontName])
             else:
-                targetFont = OpenFont(self._targetFonts[targetFontName], showInterface=False)
+                targetFont = OpenFont(self._targetPaths[targetFontName], showInterface=False)
                 self._targetFonts[targetFontName] = targetFont
                 targetFonts.append(targetFont)
 
