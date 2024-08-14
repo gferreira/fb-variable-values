@@ -1,13 +1,16 @@
 import ezui
-from mojo.roboFont import OpenWindow
+# from mojo.roboFont import OpenWindow, OpenFont()
 from fontTools.designspaceLib import DesignSpaceDocument
 
 
 class DesignSpaceSelector_(ezui.WindowController):
 
-    title  = 'DesignSpaceSelector'
-    width  = 123*5 
-    height = 640
+    title       = 'DesignSpaceSelector'
+    width       = 123*5 
+    height      = 640
+    buttonWidth = 75
+    verbose     = True
+    _sources    = []
 
     def build(self):
 
@@ -43,10 +46,10 @@ class DesignSpaceSelector_(ezui.WindowController):
                             showFullPath=True
                         )
                     ),
-                    dict(
-                        identifier="lines",
-                        title="line count"
-                    )
+                    # dict(
+                    #     identifier="lines",
+                    #     title="line count"
+                    # )
                 ]
             ),
             sources=dict(
@@ -59,6 +62,9 @@ class DesignSpaceSelector_(ezui.WindowController):
                         editable=False,
                     ),
                 ],
+            ),
+            openButton=dict(
+                width=self.buttonWidth,
             ),
         )
 
@@ -80,9 +86,8 @@ class DesignSpaceSelector_(ezui.WindowController):
     def designspacesCreateItemsForDroppedPathsCallback(self, sender, paths):
         items = []
         for path in paths:
-            item = dict(path=path, lines=None)
+            item = dict(path=path)
             items.append(item)
-
         return items
 
     def designspacesSelectionCallback(self, sender):
@@ -99,13 +104,37 @@ class DesignSpaceSelector_(ezui.WindowController):
         D = DesignSpaceDocument()
         D.read(designspacePath)
 
-        sourcesTable = self.w.getItem("sources")
+        self._sources = D.sources
 
+        sourcesTable = self.w.getItem("sources")
         sourcesItems = []
         for i, source in enumerate(D.sources):
             sourcesItems.append(dict(name=source.filename))
-        
         sourcesTable.set(sourcesItems)
+
+    def sourcesDoubleClickCallback(self, sender):
+        self.openButtonCallback(None)
+
+    def openButtonCallback(self, sender):
+
+        sourcesTable = self.w.getItem("sources")
+        selectedSources = sourcesTable.getSelectedItems()
+
+        if not selectedSources:
+            return
+
+        selectedSourceNames = [src['name'] for src in selectedSources]
+        if self.verbose:
+            print('opening selected sources...')
+
+        for src in self._sources:
+            if src.filename in selectedSourceNames:
+                if self.verbose:
+                    print(f'\topening {src.filename}...')
+                OpenFont(src.path)
+        
+        if self.verbose:
+            print('done...\n')
 
 
 # ----
