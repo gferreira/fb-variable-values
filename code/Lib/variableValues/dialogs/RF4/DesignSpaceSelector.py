@@ -1,77 +1,77 @@
 import ezui
-# from mojo.roboFont import OpenWindow, OpenFont()
+from mojo.roboFont import OpenWindow, OpenFont
 from fontTools.designspaceLib import DesignSpaceDocument
 
 
-class DesignSpaceSelector_(ezui.WindowController):
+class DesignSpaceSelector_EZUI(ezui.WindowController):
 
     title       = 'DesignSpaceSelector'
     width       = 123*5 
     height      = 640
-    buttonWidth = 75
+    buttonWidth = 100
     verbose     = True
-    _sources    = []
+    sources     = []
+
+    content = """
+    = Tabs
+    * Tab: designspace   @designspaceTab
+    >= VerticalStack
+    >> designspaces
+    >> |-files--------|
+    >> | designspaces |  @designspaces
+    >> |--------------|
+    >> sources
+    >> |--------------|
+    >> | sources      |  @sources
+    >> |--------------|
+    >> ( open ) @openButton
+    """
+
+    descriptionData = dict(
+        designspaces=dict(
+            alternatingRowColors=True,
+            height=100,
+            itemType="dict",
+            acceptedDropFileTypes=[".designspace"],
+            allowsDropBetweenRows=True,
+            allowsInternalDropReordering=True,
+            allowsMultipleSelection=False,
+            columnDescriptions=[
+                dict(
+                    identifier="path",
+                    title="path",
+                    cellClassArguments=dict(
+                        showFullPath=True
+                    )
+                ),
+                # dict(
+                #     identifier="lines",
+                #     title="line count"
+                # )
+            ]
+        ),
+        sources=dict(
+            alternatingRowColors=True,
+            height='auto',
+            columnDescriptions=[
+                dict(
+                    identifier="name",
+                    title="name",
+                    editable=False,
+                ),
+            ],
+        ),
+        openButton=dict(
+            width=buttonWidth,
+        ),
+    )
 
     def build(self):
 
-        content = """
-        = Tabs
-        * Tab: designspace   @designspaceTab
-        >= VerticalStack
-        >> designspaces
-        >> |-files--------|
-        >> | designspaces |  @designspaces
-        >> |--------------|
-        >> sources
-        >> |--------------|
-        >> | sources      |  @sources
-        >> |--------------|
-        >> ( open ) @openButton
-        """
-
-        descriptionData = dict(
-            designspaces=dict(
-                alternatingRowColors=True,
-                height=100,
-                itemType="dict",
-                acceptedDropFileTypes=[".designspace"],
-                allowsDropBetweenRows=True,
-                allowsInternalDropReordering=True,
-                allowsMultipleSelection=False,
-                columnDescriptions=[
-                    dict(
-                        identifier="path",
-                        title="path",
-                        cellClassArguments=dict(
-                            showFullPath=True
-                        )
-                    ),
-                    # dict(
-                    #     identifier="lines",
-                    #     title="line count"
-                    # )
-                ]
-            ),
-            sources=dict(
-                alternatingRowColors=True,
-                height='auto',
-                columnDescriptions=[
-                    dict(
-                        identifier="name",
-                        title="name",
-                        editable=False,
-                    ),
-                ],
-            ),
-            openButton=dict(
-                width=self.buttonWidth,
-            ),
-        )
-
         self.w = ezui.EZWindow(
             title=self.title,
-            content=content,
-            descriptionData=descriptionData,
+            content=self.content,
+            descriptionData=self.descriptionData,
             controller=self,
             size=(self.width, self.height),
             minSize=(self.width, 360),
@@ -82,6 +82,8 @@ class DesignSpaceSelector_(ezui.WindowController):
         # self.w.getItem("designspaces").getNSTableView().setRowHeight_(17)
         # self.w.getItem("sources").getNSTableView().setRowHeight_(17)
         self.w.open()
+
+    # callbacks
 
     def designspacesCreateItemsForDroppedPathsCallback(self, sender, paths):
         items = []
@@ -104,7 +106,7 @@ class DesignSpaceSelector_(ezui.WindowController):
         D = DesignSpaceDocument()
         D.read(designspacePath)
 
-        self._sources = D.sources
+        self.sources =  D.sources
 
         sourcesTable = self.w.getItem("sources")
         sourcesItems = []
@@ -127,7 +129,7 @@ class DesignSpaceSelector_(ezui.WindowController):
         if self.verbose:
             print('opening selected sources...')
 
-        for src in self._sources:
+        for src in self.sources:
             if src.filename in selectedSourceNames:
                 if self.verbose:
                     print(f'\topening {src.filename}...')
@@ -137,11 +139,6 @@ class DesignSpaceSelector_(ezui.WindowController):
             print('done...\n')
 
 
-# ----
-# test
-# ----
-
 if __name__ == '__main__':
 
-    OpenWindow(DesignSpaceSelector_)
-
+    OpenWindow(DesignSpaceSelector_EZUI)

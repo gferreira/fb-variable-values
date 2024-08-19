@@ -169,8 +169,9 @@ class VarFontAssistant(DesignSpaceSelector):
         columnDescriptions = [
             {
                 "title"    : 'file name',
-                'width'    : self._colFontName*1.5,
-                'minWidth' : self._colFontName,
+                'width'    : self._colFontName,
+                'minWidth' : self._colFontName*0.9,
+                'maxWidth' : self._colFontName*2,
             },
             {
                 "title"    : 'value',

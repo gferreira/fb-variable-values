@@ -53,10 +53,10 @@ class MeasurementsController(ezui.WindowController):
         > |------|-----------|--------|--------|-------|---------|------|---------|---------|---------|
         > |      |           |        |        |       |         |      |         |         |         |
         > |-------------------------------------------------------------------------------------------|
-        > > (+-)         @glyphMeasurementsAddRemoveButton
-        > > [X] preview  @preview
-        > > * ColorWell  @colorButton
-        > > (flip)       @flipButton
+        >> (+-)         @glyphMeasurementsAddRemoveButton
+        >> [X] preview  @preview
+        >> * ColorWell  @colorButton
+        >> (flip)       @flipButton
 
         =============
 
@@ -838,5 +838,3 @@ if measurementsEventName not in roboFontSubscriberEventRegistry:
 if __name__ == '__main__':
 
     OpenWindow(MeasurementsController)
-
-
