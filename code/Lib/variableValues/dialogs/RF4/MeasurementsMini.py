@@ -1,7 +1,8 @@
+import AppKit
 import ezui
 from math import hypot
 from mojo.roboFont import OpenWindow
-from mojo.subscriber import Subscriber, registerGlyphEditorSubscriber, registerSubscriberEvent, roboFontSubscriberEventRegistry, unregisterGlyphEditorSubscriber
+from mojo.subscriber import Subscriber, registerGlyphEditorSubscriber, unregisterGlyphEditorSubscriber, registerSubscriberEvent, roboFontSubscriberEventRegistry
 from mojo.events import postEvent
 
 
@@ -106,6 +107,7 @@ class MiniMeasurementsWindowController(ezui.WindowController):
             size=(300, 400),
         )
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
+        self.w.getItem("measurements").getNSTableView().setRowHeight_(17)
         self.w.open()
 
     def started(self):
