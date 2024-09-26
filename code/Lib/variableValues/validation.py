@@ -11,10 +11,12 @@ from variableValues.decomposePointPen import DecomposePointPen
 
 def getSegmentTypes(glyph):
     '''
-    Get a representation of all contour segments in a glyph, and their type.
+    Get a flat representation of all contour segments in a glyph, and their type.
 
     Returns:
         A list of 1-letter strings representing contour segments.
+
+    WARNING: This form of representation does not account for off-curve points!
 
     '''
     segments = []
@@ -28,6 +30,16 @@ def getSegmentTypes(glyph):
                 segmentType = 'L' # straight
             segments.append(segmentType)
     return segments
+
+def getPointTypes(glyph):
+    '''
+    Get a flat representation of all points in a glyph, and their type.
+
+    Returns:
+        A list of strings with the type of each point: either `line`, `curve`, `qcurve`, or `offcurve`.
+
+    '''
+    return [p.type for c in glyph for p in c.points]
 
 def getNestingLevels(g, levels=0, verbose=True):
     if g.components:
@@ -92,9 +104,12 @@ def checkContoursCompatible(g1, g2):
     '''
     if len(g1) != len(g2):
         return False
-    segments1 = getSegmentTypes(g1)
-    segments2 = getSegmentTypes(g2)
-    return segments1 == segments2
+    # segments1 = getSegmentTypes(g1)
+    # segments2 = getSegmentTypes(g2)
+    # return segments1 == segments2
+    points1 = getPointTypes(g1)
+    points2 = getPointTypes(g2)
+    return points1 == points2
 
 # equality
 

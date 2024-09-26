@@ -1,5 +1,11 @@
+# from importlib import reload
+# import variableValues.measurements
+# reload(variableValues.measurements)
+
+from random import random
 import os, json
 import ezui
+from merz import MerzView
 from mojo.UI import PutFile, GetFile
 from mojo.roboFont import OpenFont, CurrentFont, CurrentGlyph
 from mojo.subscriber import Subscriber, registerGlyphEditorSubscriber, unregisterGlyphEditorSubscriber, registerRoboFontSubscriber, unregisterRoboFontSubscriber, registerSubscriberEvent, roboFontSubscriberEventRegistry
@@ -7,15 +13,67 @@ from mojo.events import postEvent
 from variableValues.linkPoints import readMeasurements, getPointAtIndex, getIndexForPoint, getAnchorPoint
 from variableValues.measurements import Measurement
 
-
 '''
 M E A S U R E M E N T S v4
 
-RoboFont4 = EZUI + Subscriber + Merz
+RF4.5b + EZUI + Subscriber + Merz
 
 '''
 
-DEBUG = False
+colorCheckTrue  = 0.00, 0.85, 0.00, 1.00
+colorCheckFalse = 1.00, 0.00, 0.00, 1.00
+colorCheckEqual = 0.00, 0.33, 1.00, 1.00
+colorCheckNone  = 0.00, 0.00, 0.00, 1.00
+
+tresholdFontParent   = 0.1
+tresholdFontDefault  = 0.1
+tresholdGlyphFont    = 0.1
+tresholdGlyphDefault = 0.1
+
+
+def scaleColorFormatter(attributes, treshold):
+    value = attributes['value']
+    if value is None:
+        attributes["fillColor"] = colorCheckNone
+    elif value == 1:
+        attributes["fillColor"] = colorCheckEqual
+    elif (1.0 - treshold) < value < (1.0 + treshold):
+        attributes["fillColor"] = colorCheckTrue
+    else:
+        attributes["fillColor"] = colorCheckFalse
+
+def parentScaleColorFormatter(attributes):
+    scaleColorFormatter(attributes, tresholdFontParent)
+
+def defaultScaleFontColorFormatter(attributes):
+    scaleColorFormatter(attributes, tresholdFontDefault)
+
+def fontScaleColorFormatter(attributes):
+    scaleColorFormatter(attributes, tresholdGlyphFont)
+
+def defaultScaleColorFormatter(attributes):
+    scaleColorFormatter(attributes, tresholdGlyphDefault)
+
+def scaleValueToCellConverter(value):
+    if value is None:
+        return ''
+    else:
+        places = 3
+        s = "{value:." + str(places) + "f}"
+        s = s.format(value=value, places=places)
+        # s = s.rstrip("0").rstrip(".")
+        return s
+
+def scaleCellToValueConverter(value):
+    if value == '':
+        return None
+    try:
+        v = float(value)
+        if v == int(v):
+            v = int(v)
+        return v
+    except ValueError:
+        return None
 
 
 class MeasurementsController(ezui.WindowController):
@@ -25,270 +83,354 @@ class MeasurementsController(ezui.WindowController):
     buttonWidth = 75
     colWidth    = 55
     verbose     = False
-    debug       = DEBUG
 
     fontMeasurements  = {}
     glyphMeasurements = {}
 
-    font  = None
-    glyph = None
-
+    font        = None
+    glyph       = None
     defaultFont = None
 
+    content = """
+    = Tabs
+
+    * Tab: font @fontTab
+    > |---------------------------------------------------------------------------------------------------------|
+    > | name | direction | glyph1 | point1 | glyph2 | point2 | units | permill | parent | p-scale | description |  @fontMeasurements
+    > |------|-----------|--------|--------|--------|--------|-------|---------|--------|---------|-------------|
+    > |      |           |        |        |        |        |       |         |        |         |             |
+    > |---------------------------------------------------------------------------------------------------------|
+    >> (+-)         @fontMeasurementsAddRemoveButton
+    >> p-treshold
+    >> [__](±)      @tresholdFontParent
+    >> d-treshold
+    >> [__](±)      @tresholdFontDefault
+
+    * Tab: glyph @glyphsTab
+    > |-------------------------------------------------------------------------------------------|
+    > | name | direction | point1 | point2 | units | permill | font | f-scale | default | d-scale |  @glyphMeasurements
+    > |------|-----------|--------|--------|-------|---------|------|---------|---------|---------|
+    > |      |           |        |        |       |         |      |         |         |         |
+    > |-------------------------------------------------------------------------------------------|
+    >> (+-)         @glyphMeasurementsAddRemoveButton
+    >> f-treshold
+    >> [__](±)      @tresholdGlyphFont
+    >> d-treshold
+    >> [__](±)      @tresholdGlyphDefault
+    >> [X] display  @preview
+    >> * ColorWell  @colorButton
+    >> (flip)       @flipButton
+
+    =============
+
+    ( load… )       @loadButton
+    ( save… )       @saveButton
+    ( default… )    @defaultButton
+    """
+
+    descriptionData = dict(
+        fontMeasurements=dict(
+            columnDescriptions=[
+                dict(
+                    identifier="name",
+                    title="name",
+                    width=colWidth,
+                    editable=True,
+                ),
+                dict(
+                    identifier="direction",
+                    title="direction",
+                    width=colWidth,
+                    editable=True,
+                ),
+                dict(
+                    identifier="glyph1",
+                    title="glyph 1",
+                    width=colWidth,
+                    editable=True,
+                ),
+                dict(
+                    identifier="point1",
+                    title="point 1",
+                    width=colWidth,
+                    editable=True,
+                ),
+                dict(
+                    identifier="glyph2",
+                    title="glyph 2",
+                    width=colWidth,
+                    editable=True,
+                ),
+                dict(
+                    identifier="point2",
+                    title="point 2",
+                    width=colWidth,
+                    editable=True,
+                ),
+                dict(
+                    identifier="units",
+                    title="units",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        cellType='TextField',
+                        valueType='integer',
+                    ),
+                ),
+                dict(
+                    identifier="permill",
+                    title="permill",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        cellType='TextField',
+                        valueType='integer',
+                    ),
+                ),
+                dict(
+                    identifier="parent",
+                    title="parent",
+                    width=colWidth,
+                    editable=True,
+                ),
+                dict(
+                    identifier="scale_p",
+                    title="p-scale",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        valueToCellConverter=scaleValueToCellConverter,
+                        cellToValueConverter=scaleCellToValueConverter,
+                        stringFormatter=parentScaleColorFormatter,
+                    ),
+                ),
+                dict(
+                    identifier="default",
+                    title="default",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        cellType='TextField',
+                        valueType='integer',
+                    ),
+                ),
+                dict(
+                    identifier="scale_d",
+                    title="d-scale",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        valueToCellConverter=scaleValueToCellConverter,
+                        cellToValueConverter=scaleCellToValueConverter,
+                        stringFormatter=defaultScaleFontColorFormatter,
+                    ),
+                ),
+                dict(
+                    identifier="description",
+                    title="description",
+                    width=colWidth*6,
+                    minWidth=colWidth*4,
+                    maxWidth=colWidth*10,
+                    editable=True
+                ),
+            ],
+            itemPrototype=dict(
+                name='_new',
+                direction=None,
+                glyph1=None,
+                point1=None,
+                glyph2=None,
+                point2=None,
+                units=None,
+                permill=None,
+                parent=None,
+                scale_p=None,
+                default=None,
+                scale_d=None,
+                description=None,
+            ),
+        ),
+        tresholdFontParent=dict(
+            width=buttonWidth,
+            valueType="float",
+            value=tresholdFontParent,
+            minValue=0.0,
+            maxValue=10.0,
+            valueIncrement=0.01,
+        ),
+        tresholdFontDefault=dict(
+            width=buttonWidth,
+            valueType="float",
+            value=tresholdFontDefault,
+            minValue=0.0,
+            maxValue=10.0,
+            valueIncrement=0.01,
+        ),
+        glyphMeasurements=dict(
+            columnDescriptions=[
+                dict(
+                    identifier="name",
+                    title="name",
+                    width=colWidth,
+                    editable=True,
+                    continuous=False,
+                ),
+                dict(
+                    identifier="direction",
+                    title="direction",
+                    width=colWidth,
+                    editable=True,
+                    continuous=False,
+                ),
+                dict(
+                    identifier="point1",
+                    title="point 1",
+                    width=colWidth,
+                    editable=True,
+                    continuous=False,
+                ),
+                dict(
+                    identifier="point2",
+                    title="point 2",
+                    width=colWidth,
+                    editable=True,
+                    continuous=False,
+                ),
+                dict(
+                    identifier="units",
+                    title="units",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        cellType='TextField',
+                        valueType='integer',
+                    ),
+                ),
+                dict(
+                    identifier="permill",
+                    title="permill",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        cellType='TextField',
+                        valueType='integer',
+                    ),
+                ),
+                dict(
+                    identifier="font",
+                    title="font",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        cellType='TextField',
+                        valueType='integer',
+                    ),
+                ),
+                dict(
+                    identifier="scale_f",
+                    title="f-scale",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        valueToCellConverter=scaleValueToCellConverter,
+                        cellToValueConverter=scaleCellToValueConverter,
+                        stringFormatter=fontScaleColorFormatter,
+                    ),
+                ),
+                dict(
+                    identifier="default",
+                    title="default",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        cellType='TextField',
+                        valueType='integer',
+                    ),
+                ),
+                dict(
+                    identifier="scale_d",
+                    title="d-scale",
+                    width=colWidth,
+                    editable=False,
+                    cellDescription=dict(
+                        valueToCellConverter=scaleValueToCellConverter,
+                        cellToValueConverter=scaleCellToValueConverter,
+                        stringFormatter=defaultScaleColorFormatter,
+                    ),
+                ),
+            ],
+            itemPrototype=dict(
+                name='_new',
+                direction=None,
+                point1=None,
+                point2=None,
+                units=None,
+                permill=None,
+                default=None,
+                scale_d=None,
+                font=None,
+                scale_f=None,
+            ),
+        ),
+        colorButton=dict(
+            color=(1, 0.3, 0, 0.8),
+            width=buttonWidth,
+        ),
+        flipButton=dict(
+            width=buttonWidth,
+        ),
+        tresholdGlyphFont=dict(
+            width=buttonWidth,
+            valueType="float",
+            value=tresholdGlyphFont,
+            minValue=0.0,
+            maxValue=10.0,
+            valueIncrement=0.01,
+        ),
+        tresholdGlyphDefault=dict(
+            width=buttonWidth,
+            valueType="float",
+            value=tresholdGlyphDefault,
+            minValue=0.0,
+            maxValue=10.0,
+            valueIncrement=0.01,
+        ),
+        loadButton=dict(
+            width=buttonWidth,
+        ),
+        saveButton=dict(
+            width=buttonWidth,
+        ),
+        defaultButton=dict(
+            width=buttonWidth,
+        ),
+    )
+
     def build(self):
-        content = """
-        = Tabs
-
-        * Tab: font @fontTab
-        > |---------------------------------------------------------------------------------------------------------|
-        > | name | direction | glyph1 | point1 | glyph2 | point2 | units | permill | parent | p-scale | description |  @fontMeasurements
-        > |------|-----------|--------|--------|--------|--------|-------|---------|--------|---------|-------------|
-        > |      |           |        |        |        |        |       |         |        |         |             |
-        > |---------------------------------------------------------------------------------------------------------|
-        > (+-) @fontMeasurementsAddRemoveButton
-
-        * Tab: glyph @glyphsTab
-        > |-------------------------------------------------------------------------------------------|
-        > | name | direction | point1 | point2 | units | permill | font | f-scale | default | d-scale |  @glyphMeasurements
-        > |------|-----------|--------|--------|-------|---------|------|---------|---------|---------|
-        > |      |           |        |        |       |         |      |         |         |         |
-        > |-------------------------------------------------------------------------------------------|
-        >> (+-)         @glyphMeasurementsAddRemoveButton
-        >> [X] preview  @preview
-        >> * ColorWell  @colorButton
-        >> (flip)       @flipButton
-
-        =============
-
-        ( load… )     @loadButton
-        ( save… )     @saveButton
-        ( default… )  @defaultButton
-        """
-
-        descriptionData = dict(
-            fontMeasurements=dict(
-                columnDescriptions=[
-                    dict(
-                        identifier="name",
-                        title="name",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="direction",
-                        title="direction",
-                        width=self.colWidth,
-                        editable=True,
-                    ),
-                    dict(
-                        identifier="glyph1",
-                        title="glyph 1",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="point1",
-                        title="point 1",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="glyph2",
-                        title="glyph 2",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="point2",
-                        title="point 2",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="units",
-                        title="units",
-                        width=self.colWidth,
-                        editable=False,
-                        cellDescription=dict(
-                            cellType='TextField',
-                            valueType='integer',
-                        ),
-                    ),
-                    dict(
-                        identifier="permill",
-                        title="permill",
-                        width=self.colWidth,
-                        editable=False,
-                        cellDescription=dict(
-                            cellType='TextField',
-                            valueType='integer',
-                        ),
-                    ),
-                    dict(
-                        identifier="parent",
-                        title="parent",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="scale",
-                        title="p-scale",
-                        width=self.colWidth,
-                        editable=False
-                    ),
-                    dict(
-                        identifier="description",
-                        title="description",
-                        width=self.colWidth*6,
-                        minWidth=self.colWidth*4,
-                        maxWidth=self.colWidth*10,
-                        editable=True
-                    ),
-                ],
-                itemPrototype=dict(
-                    name='_new',
-                    direction=None,
-                    glyph1=None,
-                    point1=None,
-                    glyph2=None,
-                    point2=None,
-                    units=None,
-                    permill=None,
-                    parent=None,
-                    scale=None,
-                    description=None,
-                ),
-            ),
-            glyphMeasurements=dict(
-                columnDescriptions=[
-                    dict(
-                        identifier="name",
-                        title="name",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="direction",
-                        title="direction",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="point1",
-                        title="point 1",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="point2",
-                        title="point 2",
-                        width=self.colWidth,
-                        editable=True
-                    ),
-                    dict(
-                        identifier="units",
-                        title="units",
-                        width=self.colWidth,
-                        editable=False,
-                        cellDescription=dict(
-                            cellType='TextField',
-                            valueType='integer',
-                        ),
-                    ),
-                    dict(
-                        identifier="permill",
-                        title="permill",
-                        width=self.colWidth,
-                        editable=False,
-                        cellDescription=dict(
-                            cellType='TextField',
-                            valueType='integer',
-                        ),
-                    ),
-                    dict(
-                        identifier="font",
-                        title="font",
-                        width=self.colWidth,
-                        editable=False
-                    ),
-                    dict(
-                        identifier="scale_f",
-                        title="f-scale",
-                        width=self.colWidth,
-                        editable=False
-                    ),
-                    dict(
-                        identifier="default",
-                        title="default",
-                        width=self.colWidth,
-                        editable=False
-                    ),
-                    dict(
-                        identifier="scale_d",
-                        title="d-scale",
-                        width=self.colWidth,
-                        editable=False
-                    ),
-                ],
-                itemPrototype=dict(
-                    name='_new',
-                    direction=None,
-                    point1=None,
-                    point2=None,
-                    units=None,
-                    permill=None,
-                    default=None,
-                    scale_d=None,
-                    font=None,
-                    scale_f=None,
-                ),
-            ),
-            colorButton=dict(
-                color=(1, 0.3, 0, 0.8),
-                width=self.buttonWidth,
-            ),
-            flipButton=dict(
-                width=self.buttonWidth,
-            ),
-            loadButton=dict(
-                width=self.buttonWidth,
-            ),
-            saveButton=dict(
-                width=self.buttonWidth,
-            ),
-            defaultButton=dict(
-                width=self.buttonWidth,
-            ),
-        )
-
         self.w = ezui.EZPanel(
             title=self.title,
-            content=content,
-            descriptionData=descriptionData,
+            content=self.content,
+            descriptionData=self.descriptionData,
             controller=self,
             size=(800, 600),
             minSize=(600, 400),
         )
         self.w.getNSWindow().setTitlebarAppearsTransparent_(True)
-        # self.w.getItem("fontMeasurements").getNSTableView().setRowHeight_(17)
-        # self.w.getItem("glyphMeasurements").getNSTableView().setRowHeight_(17)
+        self.w.getItem("fontMeasurements").getNSTableView().setRowHeight_(17)
+        self.w.getItem("glyphMeasurements").getNSTableView().setRowHeight_(17)
         self.w.open()
 
     def started(self):
-
         MeasurementsSubscriberRoboFont.controller = self
         registerRoboFontSubscriber(MeasurementsSubscriberRoboFont)
-
         MeasurementsSubscriberGlyphEditor.controller = self
         registerGlyphEditorSubscriber(MeasurementsSubscriberGlyphEditor)
-
         self.font  = CurrentFont()
         self.glyph = CurrentGlyph()
 
     def destroy(self):
         unregisterRoboFontSubscriber(MeasurementsSubscriberRoboFont)
         MeasurementsSubscriberRoboFont.controller = None
-
         unregisterGlyphEditorSubscriber(MeasurementsSubscriberGlyphEditor)
         MeasurementsSubscriberGlyphEditor.controller = None
 
@@ -297,9 +439,6 @@ class MeasurementsController(ezui.WindowController):
     # ---------
 
     def loadButtonCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.loadButtonCallback')
-
         jsonPath = GetFile(message='Select JSON file with measurements:')
         if jsonPath is None:
             return
@@ -319,9 +458,6 @@ class MeasurementsController(ezui.WindowController):
             print('done.\n')
 
     def saveButtonCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.saveButtonCallback')
-
         fontItems = self.w.getItem("fontMeasurements").get()
 
         # convert table items to font measurements format
@@ -366,9 +502,6 @@ class MeasurementsController(ezui.WindowController):
             print('done.\n')
 
     def defaultButtonCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.defaultButtonCallback')
-
         defaultPath = GetFile(message='Select default UFO source:')
         if defaultPath is None:
             return
@@ -386,49 +519,45 @@ class MeasurementsController(ezui.WindowController):
     # font
 
     def fontMeasurementsAddRemoveButtonAddCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.fontMeasurementsAddRemoveButtonAddCallback')
         table = self.w.getItem("fontMeasurements")
         item = table.makeItem()
         table.appendItems([item])
         postEvent(f"{self.key}.changed")
 
     def fontMeasurementsAddRemoveButtonRemoveCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.fontMeasurementsAddRemoveButtonRemoveCallback')
         table = self.w.getItem("fontMeasurements")
         table.removeSelectedItems()
         postEvent(f"{self.key}.changed")
 
     def fontMeasurementsEditCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.fontMeasurementsEditCallback')
+        postEvent(f"{self.key}.changed")
+
+    def tresholdFontParentCallback(self, sender):
+        global tresholdFontParent
+        tresholdFontParent = self.w.getItem('tresholdFontParent').get()
+        postEvent(f"{self.key}.changed")
+
+    def tresholdFontDefaultCallback(self, sender):
+        global tresholdFontDefault
+        tresholdFontDefault = self.w.getItem('tresholdFontDefault').get()
         postEvent(f"{self.key}.changed")
 
     # glyph
 
     def glyphMeasurementsAddRemoveButtonAddCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.glyphMeasurementsAddRemoveButtonAddCallback')
         table = self.w.getItem("glyphMeasurements")
         item = table.makeItem()
         table.appendItems([item])
 
     def glyphMeasurementsAddRemoveButtonRemoveCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.glyphMeasurementsAddRemoveButtonRemoveCallback')
         table = self.w.getItem("glyphMeasurements")
         table.removeSelectedItems()
         postEvent(f"{self.key}.changed")
 
     def glyphMeasurementsSelectionCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.glyphMeasurementsSelectionCallback')
         postEvent(f"{self.key}.changed")
 
     def glyphMeasurementsEditCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.glyphMeasurementsEditCallback')
         items = self.w.getItem("glyphMeasurements").get()
         glyphMeasurements = {}
         for item in items:
@@ -449,14 +578,23 @@ class MeasurementsController(ezui.WindowController):
         self.glyphMeasurements[self.glyph.name] = glyphMeasurements
         postEvent(f"{self.key}.changed")
 
+    def tresholdGlyphFontCallback(self, sender):
+        global tresholdGlyphFont
+        tresholdGlyphFont = self.w.getItem('tresholdGlyphFont').get()
+        postEvent(f"{self.key}.changed")
+
+    def tresholdGlyphDefaultCallback(self, sender):
+        global tresholdGlyphDefault
+        tresholdGlyphDefault = self.w.getItem('tresholdGlyphDefault').get()
+        postEvent(f"{self.key}.changed")
+
+    def previewCallback(self, sender):
+        postEvent(f"{self.key}.changed")
+
     def colorButtonCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.colorButtonCallback')
         postEvent(f"{self.key}.changed")
 
     def flipButtonCallback(self, sender):
-        if self.debug:
-            print('MeasurementsController.flipButtonCallback')
 
         table = self.w.getItem("glyphMeasurements")
         selectedItems = table.getSelectedItems()
@@ -480,8 +618,6 @@ class MeasurementsController(ezui.WindowController):
     # -------
 
     def _loadFontMeasurements(self):
-        if self.debug:
-            print('MeasurementsController._loadFontMeasurements')
         table = self.w.getItem("fontMeasurements")
         items = []
         for name, data in self.fontMeasurements.items():
@@ -495,21 +631,17 @@ class MeasurementsController(ezui.WindowController):
                 units=data.get('units'),
                 permill=data.get('permill'),
                 parent=data.get('parent'),
-                scale=data.get('scale'),
+                scale_p=data.get('scale_p'),
+                default=data.get('default'),
+                scale_d=data.get('scale_d'),
                 description=data.get('description'),
             )
             items.append(item)
         table.set(items)
 
-        # self._updateFontMeasurements()
-        # self._loadGlyphMeasurements()
-
         postEvent(f"{self.key}.changed")
 
     def _updateFontMeasurements(self):
-        if self.debug:
-            print('MeasurementsController._updateFontMeasurements')
-
         if self.font is None:
             return
 
@@ -541,10 +673,20 @@ class MeasurementsController(ezui.WindowController):
                 distancePermill = round(distanceUnits * 1000 / self.font.info.unitsPerEm)
                 item['permill'] = distancePermill
 
+            # get default value
+            if self.defaultFont:
+                distanceDefault = M.measure(self.defaultFont)
+                item['default'] = distanceDefault
+                # calculate d-scale
+                if distanceUnits and distanceDefault:
+                    item['scale_d'] = distanceUnits / distanceDefault
+                else:
+                    item['scale_d'] = None
+
             needReload.append(itemIndex)
 
         for item in items:
-            item['scale'] = None
+            item['scale_p'] = None
             if item['parent']:
                 distanceParent = None
                 for i in items:
@@ -552,20 +694,15 @@ class MeasurementsController(ezui.WindowController):
                         distanceParent = i['units']
                 if distanceParent:
                     scaleParent = item['units'] / distanceParent
-                    item['scale'] = f'{scaleParent:.2f}'
+                    item['scale_p'] = scaleParent
 
         table.reloadData(needReload)
 
     def _loadGlyphMeasurements(self):
-        if self.debug:
-            print('MeasurementsController._loadGlyphMeasurements')
-
         table = self.w.getItem("glyphMeasurements")
         items = []
 
         if not self.glyph:
-            if self.debug:
-                print('\tno current glyph!')
             table.set(items)
             return
 
@@ -597,13 +734,9 @@ class MeasurementsController(ezui.WindowController):
 
         table.set(items)
 
-        # self._updateGlyphMeasurements()
         postEvent(f"{self.key}.changed")
 
     def _updateGlyphMeasurements(self):
-        if self.debug:
-            print('MeasurementsController._updateGlyphMeasurements')
-
         table = self.w.getItem("glyphMeasurements")
         items = table.get()
 
@@ -613,7 +746,6 @@ class MeasurementsController(ezui.WindowController):
 
         needReload = []
         for itemIndex, item in enumerate(items):
-
             # measure distance
             try:
                 pt1_index = int(item['point1'])
@@ -658,7 +790,7 @@ class MeasurementsController(ezui.WindowController):
                     item['font'] = distanceFont
                     # calculate f-scale
                     if distanceUnits and distanceFont:
-                        item['scale_f'] = f'{distanceUnits / distanceFont:.2f}'
+                        item['scale_f'] = distanceUnits / distanceFont
                     else:
                         item['scale_f'] = None
 
@@ -668,7 +800,7 @@ class MeasurementsController(ezui.WindowController):
                 item['default'] = distanceDefault
                 # calculate d-scale
                 if distanceUnits and distanceDefault:
-                    item['scale_d'] = f'{distanceUnits / distanceDefault:.2f}'
+                    item['scale_d'] = distanceUnits / distanceDefault
                 else:
                     item['scale_d'] = None
 
@@ -680,32 +812,23 @@ class MeasurementsController(ezui.WindowController):
 class MeasurementsSubscriberRoboFont(Subscriber):
 
     controller = None
-    debug = DEBUG
 
     def fontDocumentDidBecomeCurrent(self, info):
-        if self.debug:
-            print('MeasurementsSubscriberRoboFont.fontDocumentDidBecomeCurrent')
         self.controller.font = info['font']
         self.controller._updateFontMeasurements()
         self.controller._updateGlyphMeasurements()
 
     def fontDocumentDidOpen(self, info):
-        if self.debug:
-            print('MeasurementsSubscriberRoboFont.fontDocumentDidOpen')
         self.controller.font = info['font']
         self.controller._updateFontMeasurements()
         self.controller._updateGlyphMeasurements()
 
     def roboFontDidSwitchCurrentGlyph(self, info):
-        if self.debug:
-            print('MeasurementsSubscriberRoboFont.roboFontDidSwitchCurrentGlyph')
         self.controller.glyph = info["glyph"]
         self.controller._loadGlyphMeasurements()
         self.controller._updateGlyphMeasurements()
 
     def measurementsDidChange(self, info):
-        if self.debug:
-            print('MeasurementsSubscriberRoboFont.measurementsDidChange')
         self.controller._updateFontMeasurements()
         self.controller._updateGlyphMeasurements()
 
@@ -713,11 +836,8 @@ class MeasurementsSubscriberRoboFont(Subscriber):
 class MeasurementsSubscriberGlyphEditor(Subscriber):
 
     controller = None
-    debug = DEBUG
 
     def build(self):
-        if self.debug:
-            print('MeasurementsSubscriberGlyphEditor.build')
         glyphEditor = self.getGlyphEditor()
         container = glyphEditor.extensionContainer(
             identifier=f"{self.controller.key}.foreground",
@@ -727,32 +847,27 @@ class MeasurementsSubscriberGlyphEditor(Subscriber):
         self._drawGlyphMeasurements()
 
     def destroy(self):
-        if self.debug:
-            print('MeasurementsSubscriberGlyphEditor.destroy')
         self.measurementsLayer.clearSublayers()
 
     def glyphEditorGlyphDidChange(self, info):
-        if self.debug:
-            print('MeasurementsSubscriberGlyphEditor.glyphEditorGlyphDidChange')
         self.controller._updateFontMeasurements()
         self.controller._updateGlyphMeasurements()
         self._drawGlyphMeasurements()
 
     def measurementsDidChange(self, info):
-        if self.debug:
-            print('MeasurementsSubscriberGlyphEditor.measurementsDidChange')
         self._drawGlyphMeasurements()
 
     def _drawGlyphMeasurements(self):
-        if self.debug:
-            print('MeasurementsSubscriberGlyphEditor._drawGlyphMeasurements')
-
-        table = self.controller.w.getItem("glyphMeasurements")
-        items = table.get()
+        table         = self.controller.w.getItem("glyphMeasurements")
+        items         = table.get()
         selectedItems = table.getSelectedItems()
-        color = self.controller.w.getItem("colorButton").get()
+        color         = self.controller.w.getItem("colorButton").get()
+        preview       = self.controller.w.getItem("preview").get()
 
         self.measurementsLayer.clearSublayers()
+
+        if not preview:
+            return
 
         with self.measurementsLayer.sublayerGroup():
             for item in items:
@@ -805,18 +920,17 @@ class MeasurementsSubscriberGlyphEditor(Subscriber):
                 if item in selectedItems:
                     cx = pt1.x + (pt2.x - pt1.x) * 0.5
                     cy = pt1.y + (pt2.y - pt1.y) * 0.5
-                    distance = item['units']
                     self.measurementsLayer.appendTextLineSublayer(
                         position=(cx, cy),
                         backgroundColor=color,
-                        text=f"{distance}",
+                        text=f"{item['units']}",
                         font="system",
                         weight="bold",
                         pointSize=9,
                         padding=(4, 0),
                         cornerRadius=4,
                         fillColor=(1, 1, 1, 1),
-                        horizontalAlignment='center',
+                        horizontalAlignment='left',
                         verticalAlignment='center',
                     )
 
